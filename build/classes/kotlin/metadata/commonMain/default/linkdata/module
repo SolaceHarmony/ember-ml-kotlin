@@ -1,0 +1,2 @@
+
+<ember-ml-kotlin_commonMain>:ai.solace.emberml:ai.solace.emberml.actors:ai.solace.emberml.backend:ai.solace.emberml.nn:ai.solace.emberml.ops:ai.solace.emberml.tensor: ai.solace.emberml.tensor.bitwise:ai.solace.emberml.tensor.common:#ai.solace.emberml.tensor.interfaces:%ai.solace.emberml.tensor.ops.creation:ai.solace.emberml.training:ai.solace.emberml.utils

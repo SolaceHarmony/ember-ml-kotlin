@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="60022b6d-5989-43e4-bcd9-b8af586ead69" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.gradle/8.13/fileHashes/fileHashes.lock" beforeDir="false" afterPath="$PROJECT_DIR$/../.gradle/8.13/fileHashes/fileHashes.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../KOTLIN_PORT_CHECKLIST.md" beforeDir="false" afterPath="$PROJECT_DIR$/../KOTLIN_PORT_CHECKLIST.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../KOTLIN_PORT_STATUS.md" beforeDir="false" afterPath="$PROJECT_DIR$/../KOTLIN_PORT_STATUS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/nativeMain/kotlin/ai/solace/llamakotlin/core/GGMLAlloc.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../src/nativeMain/kotlin/ai/solace/llamakotlin/core/GGMLAlloc.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/nativeMain/kotlin/ai/solace/llamakotlin/core/GGMLGraph.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../src/nativeMain/kotlin/ai/solace/llamakotlin/core/GGMLGraph.kt" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ComposerSettings">
+    <execution />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <projects_view>
+          <tree_state>
+            <expand />
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass" module-name="ember-ml">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass" />
+    <option name="myModuleName" value="ember-ml" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;history&quot;: [
+    {
+      &quot;state&quot;: &quot;OPEN&quot;
+    }
+  ],
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;
+  }
+}</component>
+  <component name="GitHubPullRequestState">{
+  &quot;prStates&quot;: [
+    {
+      &quot;id&quot;: {
+        &quot;id&quot;: &quot;PR_kwDOOFb4Y86W-iKa&quot;,
+        &quot;number&quot;: 10
+      },
+      &quot;lastSeen&quot;: 1747804756182
+    }
+  ]
+}</component>
+  <component name="GithubDefaultAccount">
+    <option name="defaultAccountId" value="56bc1b9e-de01-4e95-949b-3aaed63cd49f" />
+  </component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/SolaceHarmony/llama.kotlin",
+    "accountId": "56bc1b9e-de01-4e95-949b-3aaed63cd49f"
+  }
+}]]></component>
+  <component name="GoLibraries">
+    <option name="indexEntireGoPath" value="true" />
+  </component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
+  <component name="PhpWorkspaceProjectConfiguration" interpreter_name="PHP" />
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="ProjectErrors" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5
+}</component>
+  <component name="ProjectId" id="2uloNBiUNL0nV8KNFJRk6dthLyE" />
+  <component name="ProjectViewState">
+    <option name="autoscrollFromSource" value="true" />
+    <option name="autoscrollToSource" value="true" />
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="openDirectoriesWithSingleClick" value="true" />
+    <option name="showLibraryContents" value="true" />
+    <option name="showMembers" value="true" />
+    <option name="showVisibilityIcons" value="true" />
+    <option name="sortByType" value="true" />
+    <option name="sortKey" value="BY_TYPE" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Notification.DisplayName-DoNotAsk-no.updates.available": "",
+    "Notification.DoNotAsk-no.updates.available": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.go.formatter.settings.were.checked": "true",
+    "RunOnceActivity.go.migrated.go.modules.settings": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "master",
+    "go.import.settings.migrated": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "/Volumes/stuff/Projects/SolaceCore/tmp/llama.kotlin/ember-ml-kotlin",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.22653219",
+    "run.code.analysis.last.selected.profile": "pProject Default",
+    "settings.editor.selected.configurable": "reference.settings.ide.settings.notifications",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="PyConsoleOptionsProvider">
+    <option name="myPythonConsoleState">
+      <console-settings module-name="ember-ml" sdk-home="$USER_HOME$/miniconda3/bin/python">
+        <option name="sdk">
+          <Sdk />
+        </option>
+        <option name="mySdkHome" value="$USER_HOME$/miniconda3/bin/python" />
+        <option name="mySdk">
+          <Sdk />
+        </option>
+        <option name="myModuleName" value="ember-ml" />
+      </console-settings>
+    </option>
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/sandbox" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="Application" factoryName="Application">
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="60022b6d-5989-43e4-bcd9-b8af586ead69" name="Changes" comment="" />
+      <created>1742832479775</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1742832479775</updated>
+      <workItem from="1742832480830" duration="3983000" />
+      <workItem from="1742853919320" duration="2582000" />
+      <workItem from="1747793812495" duration="55000" />
+      <workItem from="1747793910992" duration="343000" />
+      <workItem from="1747794312910" duration="99000" />
+      <workItem from="1747794469576" duration="51000" />
+      <workItem from="1747794539254" duration="82000" />
+      <workItem from="1747794636078" duration="110000" />
+      <workItem from="1747794767650" duration="734000" />
+      <workItem from="1747795980277" duration="59000" />
+      <workItem from="1747796068275" duration="94000" />
+      <workItem from="1747796181430" duration="10000" />
+      <workItem from="1747796201571" duration="16000" />
+      <workItem from="1747796228024" duration="91000" />
+      <workItem from="1747796329846" duration="9000" />
+      <workItem from="1747796354506" duration="8000" />
+      <workItem from="1747796373422" duration="50000" />
+      <workItem from="1747796438628" duration="8000" />
+      <workItem from="1747796460938" duration="10000" />
+      <workItem from="1747796481525" duration="9000" />
+      <workItem from="1747796499674" duration="11000" />
+      <workItem from="1747796523552" duration="7000" />
+      <workItem from="1747796544482" duration="7000" />
+      <workItem from="1747796561729" duration="8000" />
+      <workItem from="1747796585356" duration="8000" />
+      <workItem from="1747796617701" duration="10000" />
+      <workItem from="1747796639160" duration="7000" />
+      <workItem from="1747796670373" duration="8000" />
+      <workItem from="1747796690248" duration="9000" />
+      <workItem from="1747796710175" duration="8000" />
+      <workItem from="1747796734699" duration="10000" />
+      <workItem from="1747796754205" duration="8000" />
+      <workItem from="1747796771621" duration="9000" />
+      <workItem from="1747796797913" duration="17000" />
+      <workItem from="1747796825768" duration="9000" />
+      <workItem from="1747796845286" duration="11000" />
+      <workItem from="1747796865560" duration="8000" />
+      <workItem from="1747796886343" duration="7000" />
+      <workItem from="1747796903005" duration="13000" />
+      <workItem from="1747796925847" duration="39000" />
+      <workItem from="1747796974833" duration="22000" />
+      <workItem from="1747797007478" duration="9000" />
+      <workItem from="1747797032954" duration="19000" />
+      <workItem from="1747797062536" duration="8000" />
+      <workItem from="1747797085586" duration="10000" />
+      <workItem from="1747797106648" duration="9000" />
+      <workItem from="1747797131433" duration="11000" />
+      <workItem from="1747797153208" duration="8000" />
+      <workItem from="1747797172135" duration="6000" />
+      <workItem from="1747797197552" duration="8000" />
+      <workItem from="1747797217813" duration="80000" />
+      <workItem from="1747797309028" duration="18000" />
+      <workItem from="1747797337256" duration="14000" />
+      <workItem from="1747797366488" duration="9000" />
+      <workItem from="1747797391738" duration="50000" />
+      <workItem from="1747797466217" duration="8000" />
+      <workItem from="1747797488002" duration="65000" />
+      <workItem from="1747797764810" duration="15000" />
+      <workItem from="1747797792807" duration="9000" />
+      <workItem from="1747797817307" duration="7000" />
+      <workItem from="1747797835891" duration="23000" />
+      <workItem from="1747797869915" duration="60000" />
+      <workItem from="1747797949240" duration="41000" />
+      <workItem from="1747798001778" duration="34000" />
+      <workItem from="1747798046364" duration="5000" />
+      <workItem from="1747798067928" duration="6000" />
+      <workItem from="1747798084035" duration="14000" />
+      <workItem from="1747798108334" duration="68000" />
+      <workItem from="1747798188159" duration="71000" />
+      <workItem from="1747798269632" duration="59000" />
+      <workItem from="1747798339352" duration="9000" />
+      <workItem from="1747798359092" duration="27000" />
+      <workItem from="1747798397210" duration="11000" />
+      <workItem from="1747798419099" duration="109000" />
+      <workItem from="1747798538952" duration="44000" />
+      <workItem from="1747798594559" duration="116000" />
+      <workItem from="1747798721539" duration="17000" />
+      <workItem from="1747798748772" duration="9000" />
+      <workItem from="1747798768210" duration="8000" />
+      <workItem from="1747798789110" duration="21000" />
+      <workItem from="1747798821886" duration="18000" />
+      <workItem from="1747798851813" duration="49000" />
+      <workItem from="1747798912523" duration="9000" />
+      <workItem from="1747798932039" duration="43000" />
+      <workItem from="1747798985958" duration="94000" />
+      <workItem from="1747799098006" duration="8000" />
+      <workItem from="1747799119549" duration="39000" />
+      <workItem from="1747799170129" duration="10000" />
+      <workItem from="1747799190549" duration="42000" />
+      <workItem from="1747799243965" duration="16000" />
+      <workItem from="1747799271827" duration="8000" />
+      <workItem from="1747799291780" duration="86000" />
+      <workItem from="1747799403837" duration="8000" />
+      <workItem from="1747799426626" duration="28000" />
+      <workItem from="1747799465482" duration="25000" />
+      <workItem from="1747799502541" duration="137000" />
+      <workItem from="1747799652603" duration="11000" />
+      <workItem from="1747799675928" duration="9000" />
+      <workItem from="1747799699109" duration="265000" />
+      <workItem from="1747799976091" duration="70000" />
+      <workItem from="1747800058210" duration="17000" />
+      <workItem from="1747800087390" duration="84000" />
+      <workItem from="1747800183360" duration="40000" />
+      <workItem from="1747800237075" duration="42000" />
+      <workItem from="1747800293623" duration="114000" />
+      <workItem from="1747800421106" duration="13000" />
+      <workItem from="1747800444988" duration="155000" />
+      <workItem from="1747800611879" duration="36000" />
+      <workItem from="1747800660369" duration="9000" />
+      <workItem from="1747800681029" duration="8000" />
+      <workItem from="1747800699939" duration="27000" />
+      <workItem from="1747800738196" duration="333000" />
+      <workItem from="1747801082514" duration="8000" />
+      <workItem from="1747801102965" duration="26000" />
+      <workItem from="1747801158065" duration="34000" />
+      <workItem from="1747801205180" duration="17000" />
+      <workItem from="1747801233910" duration="11000" />
+      <workItem from="1747801257785" duration="19000" />
+      <workItem from="1747801286901" duration="12000" />
+      <workItem from="1747801309897" duration="8000" />
+      <workItem from="1747801328080" duration="6000" />
+      <workItem from="1747801357211" duration="87000" />
+      <workItem from="1747801455016" duration="37000" />
+      <workItem from="1747801502826" duration="26000" />
+      <workItem from="1747801539298" duration="606000" />
+      <workItem from="1747802159400" duration="14000" />
+      <workItem from="1747802187047" duration="12000" />
+      <workItem from="1747802211441" duration="11000" />
+      <workItem from="1747802232962" duration="12000" />
+      <workItem from="1747802254809" duration="10000" />
+      <workItem from="1747802275517" duration="8000" />
+      <workItem from="1747802299024" duration="13000" />
+      <workItem from="1747802323603" duration="10000" />
+      <workItem from="1747802344640" duration="19000" />
+      <workItem from="1747802373054" duration="11000" />
+      <workItem from="1747802395504" duration="10000" />
+      <workItem from="1747802423270" duration="26000" />
+      <workItem from="1747802459956" duration="12000" />
+      <workItem from="1747802482493" duration="8000" />
+      <workItem from="1747802500446" duration="26000" />
+      <workItem from="1747802551188" duration="11000" />
+      <workItem from="1747802574294" duration="8000" />
+      <workItem from="1747802615440" duration="10000" />
+      <workItem from="1747802638726" duration="12000" />
+      <workItem from="1747802661145" duration="7000" />
+      <workItem from="1747802678141" duration="6000" />
+      <workItem from="1747802701427" duration="14000" />
+      <workItem from="1747802726407" duration="8000" />
+      <workItem from="1747802744893" duration="10000" />
+      <workItem from="1747802764067" duration="53000" />
+      <workItem from="1747802828455" duration="20000" />
+      <workItem from="1747802858779" duration="14000" />
+      <workItem from="1747802883929" duration="30000" />
+      <workItem from="1747802951045" duration="91000" />
+      <workItem from="1747803058707" duration="13000" />
+      <workItem from="1747803082069" duration="69000" />
+      <workItem from="1747803176599" duration="6000" />
+      <workItem from="1747803193855" duration="7000" />
+      <workItem from="1747803218623" duration="156000" />
+      <workItem from="1747803379481" duration="164000" />
+      <workItem from="1747803554860" duration="29000" />
+      <workItem from="1747803595212" duration="8000" />
+      <workItem from="1747803614488" duration="35000" />
+      <workItem from="1747803659836" duration="56000" />
+      <workItem from="1747803726336" duration="7000" />
+      <workItem from="1747803744057" duration="31000" />
+      <workItem from="1747803785825" duration="8000" />
+      <workItem from="1747803829829" duration="18000" />
+      <workItem from="1747803859104" duration="21000" />
+      <workItem from="1747803891622" duration="71000" />
+      <workItem from="1747803973714" duration="43000" />
+      <workItem from="1747804027877" duration="36000" />
+      <workItem from="1747804077744" duration="13000" />
+      <workItem from="1747804101107" duration="15000" />
+      <workItem from="1747804125616" duration="127000" />
+      <workItem from="1747804555429" duration="2695000" />
+      <workItem from="1748497543316" duration="965000" />
+      <workItem from="1748498523809" duration="381000" />
+      <workItem from="1748498907892" duration="1308000" />
+      <workItem from="1748500224370" duration="266000" />
+      <workItem from="1748500492194" duration="122000" />
+      <workItem from="1748500626109" duration="1208000" />
+      <workItem from="1748501847901" duration="4419000" />
+      <workItem from="1748506346138" duration="1726000" />
+      <workItem from="1748658761721" duration="66000" />
+      <workItem from="1748658838395" duration="11408000" />
+      <workItem from="1749263232305" duration="308000" />
+      <workItem from="1749264758534" duration="3574000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="dependencySupport" implementationName="executable:docker" />
+    <option featureType="dependencySupport" implementationName="executable:podman" />
+    <option featureType="dependencySupport" implementationName="executable:kubectl" />
+    <option featureType="dependencySupport" implementationName="python:pyspark" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="MARK_IGNORED_AS_EXCLUDED" value="true" />
+  </component>
+  <component name="VgoProject">
+    <integration-enabled>false</integration-enabled>
+    <settings-migrated>true</settings-migrated>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>

@@ -1,0 +1,27 @@
+[
+  {
+    "moduleId": "module org.jetbrains.kotlinx:atomicfu:0.23.1",
+    "file": "/Volumes/stuff/Projects/SolaceCore/tmp/llama.kotlin/ember-ml-kotlin/build/kotlinTransformedMetadataLibraries/nativeMain/org.jetbrains.kotlinx-atomicfu-0.23.1-nativeMain-wFq7cg.klib",
+    "sourceSetName": "nativeMain"
+  },
+  {
+    "moduleId": "module org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0",
+    "file": "/Volumes/stuff/Projects/SolaceCore/tmp/llama.kotlin/ember-ml-kotlin/build/kotlinTransformedMetadataLibraries/nativeMain/org.jetbrains.kotlinx-kotlinx-coroutines-core-1.9.0-nativeMain-ENDfhw.klib",
+    "sourceSetName": "nativeMain"
+  },
+  {
+    "moduleId": "module org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0",
+    "file": "/Volumes/stuff/Projects/SolaceCore/tmp/llama.kotlin/ember-ml-kotlin/build/kotlinTransformedMetadataLibraries/nativeMain/org.jetbrains.kotlinx-kotlinx-coroutines-core-1.9.0-concurrentMain-ENDfhw.klib",
+    "sourceSetName": "concurrentMain"
+  },
+  {
+    "moduleId": "module org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3",
+    "file": "/Volumes/stuff/Projects/SolaceCore/tmp/llama.kotlin/ember-ml-kotlin/build/kotlinTransformedMetadataLibraries/nativeMain/org.jetbrains.kotlinx-kotlinx-serialization-json-1.7.3-nativeMain-O4ZS7Q.klib",
+    "sourceSetName": "nativeMain"
+  },
+  {
+    "moduleId": "module org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3",
+    "file": "/Volumes/stuff/Projects/SolaceCore/tmp/llama.kotlin/ember-ml-kotlin/build/kotlinTransformedMetadataLibraries/nativeMain/org.jetbrains.kotlinx-kotlinx-serialization-core-1.7.3-nativeMain-s2qClw.klib",
+    "sourceSetName": "nativeMain"
+  }
+]
