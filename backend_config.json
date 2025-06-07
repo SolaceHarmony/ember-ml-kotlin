@@ -1,0 +1,5 @@
+{
+  "numpy": true,
+  "torch": false,
+  "mlx": false
+}

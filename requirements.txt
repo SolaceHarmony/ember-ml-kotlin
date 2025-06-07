@@ -1,0 +1,46 @@
+# Core dependencies
+numpy>=1.26.4
+pandas>=2.2.3
+pandas-stubs>=2.2.3.250308  # For type checking
+matplotlib>=3.10.0
+scikit-learn>=1.0.0
+scipy>=1.13.1
+tqdm>=4.62.0
+
+# Optional backends (at least one is required)
+torch>=2.7.0
+mlx>=0.23.2  # Required for MLX backend
+
+# BigQuery and BigFrames
+google-cloud-bigquery>=3.29.0
+bigframes>=1.38.0
+
+# For visualization
+seaborn>=0.11.0
+
+# For distributed computing
+ray>=2.43.0
+
+# For neural network components
+einops>=0.8.1
+opt_einsum>=3.3.0
+ncps>=0.0.6  # Neural Circuit Policies
+transformers>=4.50.0
+
+# For image processing
+Pillow>=11.1.0  # PIL
+
+# For testing
+pytest>=8.3.4
+
+# For logging and monitoring
+tensorboard>=2.8.0
+
+# For saving and loading models
+h5py>=3.6.0
+
+# For deep learning
+keras>=3.8.0
+
+# For package management
+setuptools>=75.8.0
