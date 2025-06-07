@@ -21,9 +21,9 @@
     - [ ] Implement bit_ops.py functionality
     - [ ] Implement basic_ops.py functionality
     - [ ] Implement wave_ops.py functionality
-  - [ ] Port ember_ml/backend/numpy/bizarromath to Kotlin
-    - [ ] Implement MegaBinary class from mega_binary.py
-    - [ ] Implement MegaNumber class from mega_number.py
+  - [x] Port ember_ml/backend/numpy/bizarromath to Kotlin
+    - [x] Implement MegaBinary class from mega_binary.py
+    - [x] Implement MegaNumber class from mega_number.py
   - [ ] Create tensor implementation using these bitwise operations
   - [ ] Ensure Float64 workarounds for Apple MLX/Metal compatibility
 

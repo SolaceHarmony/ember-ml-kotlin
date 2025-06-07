@@ -1,8 +1,0 @@
-{
-  "name": "kotlin-test-js-runner",
-  "version": "0.0.2",
-  "devDependencies": {},
-  "dependencies": {
-    "format-util": "^1.0.5"
-  }
-}
