@@ -11,7 +11,6 @@ import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.karatsubaMulChunks
 import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.mulChunksStandard
 import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.shiftLeft
 import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.subChunks
-import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.zeroIntArray
 import kotlin.test.*
 
 class MegaNumberTest {
@@ -25,6 +24,12 @@ class MegaNumberTest {
         // Otherwise, it's in the format "mantissa * 2^(exponent * chunkBits)"
         // For our test cases, we just need the exponent value
         return 0 // Default value for complex cases, adjust as needed for specific tests
+    }
+
+    // Helper to extract exponent as signed Int from the new exponent MegaNumber
+    private fun expValue(exp: MegaNumber): Int {
+        val absVal = exp.mantissa.firstOrNull() ?: 0
+        return if (exp.negative) -absVal else absVal
     }
     @Test
     fun testBasicMultiplication() {
@@ -176,12 +181,6 @@ class MegaNumberTest {
         assertEquals(42, result[0])
     }
 
-    @Test
-    fun testZeroIntArray() {
-        val result = zeroIntArray()
-        assertEquals(1, result.size)
-        assertEquals(0, result[0])
-    }
 
     @Test
     fun testDecimalStringToChunks() {
@@ -254,24 +253,30 @@ class MegaNumberTest {
     @Test
     fun testNormalize() {
         // Test normalization of zero
-        val zero = MegaNumber(intArrayOf(0), intArrayOf(1), negative = true, isFloat = true, exponentNegative = true)
+        val zero = MegaNumber(
+            mantissa = intArrayOf(0),
+            exponent = MegaNumber(intArrayOf(1), negative = true),
+            negative = true,
+            isFloat = true
+        )
         zero.normalize()
         assertFalse(zero.negative)
-        assertFalse(zero.exponentNegative)
-        assertEquals(1, zero.exponent.size)
-        assertEquals(0, zero.exponent[0])
+        assertFalse(zero.exponent.negative)
+        assertEquals(1, zero.exponent.mantissa.size)
+        assertEquals(0, zero.exponent.mantissa[0])
 
         // Test trimming of mantissa
-        val num = MegaNumber(intArrayOf(1, 0, 0), intArrayOf(0))
+        val num = MegaNumber(intArrayOf(1, 0, 0), MegaNumber(intArrayOf(0)))
         num.normalize()
         assertEquals(1, num.mantissa.size)
         assertEquals(1, num.mantissa[0])
 
         // Test with keepLeadingZeros
-        val numWithZeros = MegaNumber(intArrayOf(0, 0, 1), intArrayOf(0),
+        val numWithZeros = MegaNumber(
+            mantissa = intArrayOf(0, 0, 1),
+            exponent = MegaNumber(intArrayOf(0)),
             negative = false,
             isFloat = false,
-            exponentNegative = false,
             keepLeadingZeros = true
         )
         numWithZeros.normalize()
@@ -326,20 +331,20 @@ class MegaNumberTest {
     @Test
     fun testAddFloat() {
         // Test float addition
-        val a = MegaNumber(intArrayOf(10), intArrayOf(1), negative = false, isFloat = true, exponentNegative = false)
-        val b = MegaNumber(intArrayOf(20), intArrayOf(1), negative = false, isFloat = true, exponentNegative = false)
+        val a = MegaNumber(intArrayOf(10), MegaNumber(intArrayOf(1)), negative = false, isFloat = true)
+        val b = MegaNumber(intArrayOf(20), MegaNumber(intArrayOf(1)), negative = false, isFloat = true)
         val sum = a.addFloat(b)
         assertTrue(sum.isFloat)
 
         // Test addition with different exponents
-        val c = MegaNumber(intArrayOf(10), intArrayOf(2), negative = false, isFloat = true, exponentNegative = false)
-        val d = MegaNumber(intArrayOf(10), intArrayOf(1), negative = false, isFloat = true, exponentNegative = false)
+        val c = MegaNumber(intArrayOf(10), MegaNumber(intArrayOf(2)), negative = false, isFloat = true)
+        val d = MegaNumber(intArrayOf(10), MegaNumber(intArrayOf(1)), negative = false, isFloat = true)
         val result = c.addFloat(d)
         assertTrue(result.isFloat)
 
         // Test addition with different signs
-        val e = MegaNumber(intArrayOf(30), intArrayOf(1), negative = true, isFloat = true, exponentNegative = false)
-        val f = MegaNumber(intArrayOf(20), intArrayOf(1), negative = false, isFloat = true, exponentNegative = false)
+        val e = MegaNumber(intArrayOf(30), MegaNumber(intArrayOf(1)), negative = true, isFloat = true)
+        val f = MegaNumber(intArrayOf(20), MegaNumber(intArrayOf(1)), negative = false, isFloat = true)
         val diff = e.addFloat(f)
         assertTrue(diff.negative)
         assertTrue(diff.isFloat)
@@ -390,21 +395,21 @@ class MegaNumberTest {
     @Test
     fun testMulFloat() {
         // Test float multiplication
-        val a = MegaNumber(intArrayOf(10), intArrayOf(1), false, isFloat = true, exponentNegative = false)
-        val b = MegaNumber(intArrayOf(20), intArrayOf(1), false, isFloat = true, exponentNegative = false)
+        val a = MegaNumber(intArrayOf(10), MegaNumber(intArrayOf(1)), false, isFloat = true)
+        val b = MegaNumber(intArrayOf(20), MegaNumber(intArrayOf(1)), false, isFloat = true)
         val product = a.mulFloat(b)
         assertTrue(product.isFloat)
 
         // Test multiplication with different exponents
-        val c = MegaNumber(intArrayOf(10), intArrayOf(2), negative = false, isFloat = true, exponentNegative = false)
-        val d = MegaNumber(intArrayOf(10), intArrayOf(1), negative = false, isFloat = true, exponentNegative = false)
+        val c = MegaNumber(intArrayOf(10), MegaNumber(intArrayOf(2)), negative = false, isFloat = true)
+        val d = MegaNumber(intArrayOf(10), MegaNumber(intArrayOf(1)), negative = false, isFloat = true)
         val result = c.mulFloat(d)
         assertTrue(result.isFloat)
-        assertEquals(expected = 3, actual = expAsInt(result.exponentValue())) // 2 + 1 = 3
+        assertEquals(expected = 3, actual = expValue(result.exponent)) // 2 + 1 = 3
 
         // Test multiplication with different signs
-        val e = MegaNumber(intArrayOf(30), intArrayOf(1), negative = true, isFloat = true, exponentNegative = false)
-        val f = MegaNumber(intArrayOf(20), intArrayOf(1), false, isFloat = true, exponentNegative = false)
+        val e = MegaNumber(intArrayOf(30), MegaNumber(intArrayOf(1)), negative = true, isFloat = true)
+        val f = MegaNumber(intArrayOf(20), MegaNumber(intArrayOf(1)), false, isFloat = true)
         val negProduct = e.mulFloat(f)
         assertTrue(negProduct.negative)
         assertTrue(negProduct.isFloat)
@@ -441,21 +446,21 @@ class MegaNumberTest {
     @Test
     fun testFloatDivide() {
         // Test float division
-        val a = MegaNumber(intArrayOf(100), intArrayOf(1), false, isFloat = true, exponentNegative = false)
-        val b = MegaNumber(intArrayOf(20), intArrayOf(1), negative = false, isFloat = true, exponentNegative = false)
+        val a = MegaNumber(intArrayOf(100), MegaNumber(intArrayOf(1)), false, isFloat = true)
+        val b = MegaNumber(intArrayOf(20), MegaNumber(intArrayOf(1)), negative = false, isFloat = true)
         val quotient = a.divide(b)
         assertTrue(quotient.isFloat)
 
         // Test division with different exponents
-        val c = MegaNumber(intArrayOf(10), intArrayOf(3), negative = false, isFloat = true, exponentNegative = false)
-        val d = MegaNumber(intArrayOf(10), intArrayOf(1), negative = false, isFloat = true, exponentNegative = false)
+        val c = MegaNumber(intArrayOf(10), MegaNumber(intArrayOf(3)), negative = false, isFloat = true)
+        val d = MegaNumber(intArrayOf(10), MegaNumber(intArrayOf(1)), negative = false, isFloat = true)
         val result = c.divide(d)
         assertTrue(result.isFloat)
-        assertEquals(expected = 2, actual = expAsInt(result.exponentValue())) // 3 - 1 = 2
+        assertEquals(expected = 2, actual = expValue(result.exponent)) // 3 - 1 = 2
 
         // Test division with different signs
-        val e = MegaNumber(intArrayOf(30), intArrayOf(1), negative = true, isFloat = true, exponentNegative = false)
-        val f = MegaNumber(intArrayOf(10), intArrayOf(1), negative = false, isFloat = true, exponentNegative = false)
+        val e = MegaNumber(intArrayOf(30), MegaNumber(intArrayOf(1)), negative = true, isFloat = true)
+        val f = MegaNumber(intArrayOf(10), MegaNumber(intArrayOf(1)), negative = false, isFloat = true)
         val negQuotient = e.divide(f)
         assertTrue(negQuotient.negative)
         assertTrue(negQuotient.isFloat)
@@ -488,15 +493,15 @@ class MegaNumberTest {
     @Test
     fun testFloatSqrt() {
         // Test float square root
-        val a = MegaNumber(intArrayOf(100), intArrayOf(0), negative = false, isFloat = true, exponentNegative = false)
+        val a = MegaNumber(intArrayOf(100), MegaNumber(intArrayOf(0)), negative = false, isFloat = true)
         val sqrt = a.sqrt()
         assertTrue(sqrt.isFloat)
 
         // Test with odd exponent
-        val b = MegaNumber(intArrayOf(100), intArrayOf(3), negative = false, isFloat = true, exponentNegative = false)
+        val b = MegaNumber(intArrayOf(100), MegaNumber(intArrayOf(3)), negative = false, isFloat = true)
         val oddExpSqrt = b.sqrt()
         assertTrue(oddExpSqrt.isFloat)
-        assertEquals(1, expAsInt(oddExpSqrt.exponentValue())) // 3/2 = 1.5, but integer division gives 1
+        assertEquals(1, expValue(oddExpSqrt.exponent)) // 3/2 = 1.5, but integer division gives 1
     }
 
     // Note: divideBy2ToThePower and multiplyBy2ToThePower are protected methods

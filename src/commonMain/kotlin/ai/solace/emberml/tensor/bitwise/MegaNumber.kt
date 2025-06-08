@@ -25,20 +25,21 @@ object MegaNumberConstants {
  * A chunk-based big integer (or float) with arbitrary precision arithmetic,
  * using IntArray with 32-bit values.
  *
- * @property mantissa IntArray of limbs (32-bit chunks)
- * @property exponent IntArray of limbs (32-bit chunks)
- * @property negative Sign flag
- * @property isFloat Float flag
- * @property exponentNegative Exponent sign flag
+ * @property mantissa     IntArray of limbs (32-bit chunks)
+ * @property exponent     `MegaNumber` representing the binary‑exponent; its `negative`
+ *                        flag encodes whether the overall exponent is positive
+ *                        or negative, and its `mantissa` holds the magnitude in
+ *                        32‑bit limbs.
+ * @property negative     Sign flag
+ * @property isFloat      Float flag
  * @property keepLeadingZeros Whether to keep leading zeros
  */
 open class MegaNumber(
-    open var mantissa: IntArray = IntArray(1) { 0 },
-    open var exponent: IntArray = IntArray(1) { 0 },
-    open var negative: Boolean = false,
-    open var isFloat: Boolean = false,
-    open var exponentNegative: Boolean = false,
-    open val keepLeadingZeros: Boolean = false
+    var mantissa: IntArray = intArrayOf(0),
+    var exponent: MegaNumber = MegaNumber(intArrayOf(0)),
+    var negative: Boolean = false,
+    var isFloat: Boolean = false,
+    val keepLeadingZeros: Boolean = false
 ) {
     companion object {
         /**
@@ -297,12 +298,6 @@ open class MegaNumber(
             return IntArray(1) { val_ }
         }
 
-        /**
-         * Create a zero IntArray with a single element.
-         */
-        internal fun zeroIntArray(): IntArray {
-            return IntArray(1) { 0 }
-        }
 
         /**
          * Combine chunk-limbs => a single Int. (May overflow if large.)
@@ -362,10 +357,9 @@ open class MegaNumber(
                 val mant = decimalStringToChunks(parts[0])
                 return MegaNumber(
                     mantissa = mant,
-                    exponent = intToIntArray(0),
+                    exponent = MegaNumber(intArrayOf(0)),
                     negative = negative,
-                    isFloat = false,
-                    exponentNegative = false
+                    isFloat = false
                 )
             } else {
                 // Float
@@ -383,10 +377,9 @@ open class MegaNumber(
 
                 return MegaNumber(
                     mantissa = mant,
-                    exponent = expChunks,
+                    exponent = MegaNumber(expChunks, negative = true),
                     negative = negative,
-                    isFloat = true,
-                    exponentNegative = true
+                    isFloat = true
                 )
             }
         }
@@ -444,28 +437,26 @@ open class MegaNumber(
                 mantissa = mantissa.copyOf(lastNonZero + 1)
             }
 
-            // Trim exponent if float
+            // Trim exponent mantissa if this number is a float
             if (isFloat) {
-                lastNonZero = exponent.size - 1
-                while (lastNonZero > 0 && exponent[lastNonZero] == 0) {
+                lastNonZero = exponent.mantissa.size - 1
+                while (lastNonZero > 0 && exponent.mantissa[lastNonZero] == 0) {
                     lastNonZero--
                 }
-                if (lastNonZero < exponent.size - 1) {
-                    exponent = exponent.copyOf(lastNonZero + 1)
+                if (lastNonZero < exponent.mantissa.size - 1) {
+                    exponent.mantissa = exponent.mantissa.copyOf(lastNonZero + 1)
                 }
             }
 
             // If zero => unify sign
             if (mantissa.size == 1 && mantissa[0] == 0) {
                 negative = false
-                exponent = zeroIntArray()
-                exponentNegative = false
+                exponent = MegaNumber(intArrayOf(0))
             }
         } else {
             // keepLeadingZeros = true: do not trim mantissa/exponent, but unify sign if all zero
             if (mantissa.all { it == 0 }) {
                 negative = false
-                exponentNegative = false
             }
         }
     }
@@ -636,25 +627,10 @@ open class MegaNumber(
         return digits.reversed().joinToString("")
     }
 
-    /**
-     * Compute exponent value as MegaNumber
-     */
-    internal fun exponentValue(): MegaNumber {
-        return MegaNumber(
-            mantissa = exponent.copyOf(),
-            exponent = zeroIntArray(),
-            negative = exponentNegative,
-            isFloat = false,
-            exponentNegative = false
-        )
-    }
-
-    /**
-     * Convert exponent MegaNumber to a signed Int value
-     */
-    internal fun expAsInt(mn: MegaNumber): Int {
-        val value = chunksToInt(mn.mantissa)
-        return if (mn.negative) -value else value
+    /** Treat `this` (a MegaNumber exponent) as a signed Int */
+    private fun MegaNumber.expAsInt(): Int {
+        val absVal = chunksToInt(this.mantissa)
+        return if (this.negative) -absVal else absVal
     }
 
     /**
@@ -667,15 +643,18 @@ open class MegaNumber(
         }
 
         // If exponent is zero or we are integer => treat as integer
-        val expNonZero = (exponent.size > 1 || exponent[0] != 0)
+        val expNonZero = !(exponent.mantissa.size == 1 && exponent.mantissa[0] == 0)
         if (!expNonZero) {
             // purely integer
             val s = chunkToDecimal(mantissa)
             return (if (negative) "-" else "") + s
         } else {
             // float => represent as "mantissa * 2^(exponent * chunkBits)" for simplicity
-            var eVal = chunksToInt(exponent)
-            if (exponentNegative) eVal = -eVal
+            val eVal = if (exponent.negative) {
+                -chunksToInt(exponent.mantissa)
+            } else {
+                chunksToInt(exponent.mantissa)
+            }
             val mantString = chunkToDecimal(mantissa)
             val signStr = if (negative) "-" else ""
             // This is a simplistic representation.
@@ -699,10 +678,9 @@ open class MegaNumber(
             val sign = this.negative
             return MegaNumber(
                 mantissa = sumMant,
-                exponent = zeroIntArray(),
+                exponent = MegaNumber(intArrayOf(0)),
                 negative = sign,
-                isFloat = false,
-                exponentNegative = false
+                isFloat = false
             )
         } else {
             // Different signs => subtract magnitudes
@@ -711,10 +689,9 @@ open class MegaNumber(
                 // Result is zero
                 return MegaNumber(
                     mantissa = intArrayOf(0),
-                    exponent = zeroIntArray(),
+                    exponent = MegaNumber(intArrayOf(0)),
                     negative = false,
-                    isFloat = false,
-                    exponentNegative = false
+                    isFloat = false
                 )
             } else if (cmp > 0) {
                 // self > other in magnitude
@@ -722,10 +699,9 @@ open class MegaNumber(
                 val sign = this.negative
                 return MegaNumber(
                     mantissa = diff,
-                    exponent = zeroIntArray(),
+                    exponent = MegaNumber(intArrayOf(0)),
                     negative = sign,
-                    isFloat = false,
-                    exponentNegative = false
+                    isFloat = false
                 )
             } else {
                 // other > self in magnitude
@@ -733,10 +709,9 @@ open class MegaNumber(
                 val sign = other.negative
                 return MegaNumber(
                     mantissa = diff,
-                    exponent = zeroIntArray(),
+                    exponent = MegaNumber(intArrayOf(0)),
                     negative = sign,
-                    isFloat = false,
-                    exponentNegative = false
+                    isFloat = false
                 )
             }
         }
@@ -746,69 +721,53 @@ open class MegaNumber(
      * Float addition using chunk-based arithmetic
      */
     open fun addFloat(other: MegaNumber): MegaNumber {
-        val expA = exponentValue()
-        val expB = other.exponentValue()
+        // Signed exponents as Int
+        val expA = this.exponent.expAsInt()
+        val expB = other.exponent.expAsInt()
 
-        // Compare exponents
-        val cmp = compare(expA, expB)
-        var adjustedMantA = this.mantissa.copyOf()
-        var adjustedMantB = other.mantissa.copyOf()
-        var finalExp = expA
+        // Align mantissas
+        var mantA = this.mantissa.copyOf()
+        var mantB = other.mantissa.copyOf()
+        val finalExp: MegaNumber
 
-        // Align exponents by shifting mantissas
-        if (cmp > 0) {
-            // expA > expB
-            val diffMN = expA.sub(expB)
-            val diff = expAsInt(diffMN)
-            adjustedMantB = shiftRight(adjustedMantB, diff)
-            finalExp = expA
-        } else if (cmp < 0) {
-            // expA < expB
-            val diffMN = expB.sub(expA)
-            val diff = expAsInt(diffMN)
-            adjustedMantA = shiftRight(adjustedMantA, diff)
-            finalExp = expB
+        if (expA > expB) {
+            mantB = shiftRight(mantB, expA - expB)
+            finalExp = this.exponent
+        } else if (expB > expA) {
+            mantA = shiftRight(mantA, expB - expA)
+            finalExp = other.exponent
+        } else {
+            finalExp = this.exponent          // equal exponents
         }
 
-        // Add or subtract mantissas
+        // Combine mantissas
         val sameSign = (this.negative == other.negative)
         val resultMant: IntArray
-        val resultSign: Boolean
+        val resultNeg: Boolean
 
         if (sameSign) {
-            // Same sign => add
-            resultMant = addChunks(adjustedMantA, adjustedMantB)
-            resultSign = this.negative
+            resultMant = addChunks(mantA, mantB)
+            resultNeg  = this.negative
         } else {
-            // Different sign => subtract
-            val cmp = compareAbs(adjustedMantA, adjustedMantB)
-            if (cmp == 0) {
-                // Zero
-                return MegaNumber(
-                    mantissa = intArrayOf(0),
-                    exponent = zeroIntArray(),
-                    negative = false,
-                    isFloat = false,
-                    exponentNegative = false
-                )
-            } else if (cmp > 0) {
-                resultMant = subChunks(adjustedMantA, adjustedMantB)
-                resultSign = this.negative
-            } else {
-                resultMant = subChunks(adjustedMantB, adjustedMantA)
-                resultSign = other.negative
+            val cmp = compareAbs(mantA, mantB)
+            when {
+                cmp == 0 -> return MegaNumber(intArrayOf(0))   // exact zero
+                cmp > 0  -> {
+                    resultMant = subChunks(mantA, mantB)
+                    resultNeg  = this.negative
+                }
+                else     -> {
+                    resultMant = subChunks(mantB, mantA)
+                    resultNeg  = other.negative
+                }
             }
         }
 
-        // Build a new MegaNumber (float) with that mantissa and `finalExp`.
-        val finalExpInt = expAsInt(finalExp)
-        val newExponent = intToIntArray(finalExpInt)
         val out = MegaNumber(
             mantissa = resultMant,
-            exponent = newExponent,
-            negative = resultSign,
-            isFloat = true,
-            exponentNegative = (finalExpInt < 0)
+            exponent = finalExp,
+            negative = resultNeg,
+            isFloat  = true
         )
         out.normalize()
         return out
@@ -820,10 +779,9 @@ open class MegaNumber(
     open fun sub(other: MegaNumber): MegaNumber {
         val negOther = MegaNumber(
             mantissa = other.mantissa.copyOf(),
-            exponent = other.exponent.copyOf(),
+            exponent = MegaNumber(other.exponent.mantissa.copyOf(), negative = other.exponent.negative),
             negative = !other.negative,
-            isFloat = other.isFloat,
-            exponentNegative = other.exponentNegative
+            isFloat  = other.isFloat
         )
         return this.add(negOther)
     }
@@ -841,10 +799,9 @@ open class MegaNumber(
         val product = mulChunks(this.mantissa, other.mantissa)
         return MegaNumber(
             mantissa = product,
-            exponent = zeroIntArray(),
+            exponent = MegaNumber(intArrayOf(0)),
             negative = sign,
-            isFloat = false,
-            exponentNegative = false
+            isFloat = false
         )
     }
 
@@ -854,20 +811,20 @@ open class MegaNumber(
     open fun mulFloat(other: MegaNumber): MegaNumber {
         // Multiply mantissas
         val productMant = mulChunks(this.mantissa, other.mantissa)
-        // Add exponents
-        val expA = expAsInt(exponentValue())
-        val expB = expAsInt(other.exponentValue())
-        val sumExp = expA + expB
-        val newExponent = intToIntArray(sumExp)
+
+        // Add exponents (signed)
+        val sumExp = this.exponent.expAsInt() + other.exponent.expAsInt()
+        val newExponent = MegaNumber(intArrayOf(kotlin.math.abs(sumExp)), negative = sumExp < 0)
+
         // Determine sign
         val newNegative = (this.negative != other.negative)
+
         // Create result
         val out = MegaNumber(
             mantissa = productMant,
             exponent = newExponent,
             negative = newNegative,
-            isFloat = true,
-            exponentNegative = (sumExp < 0)
+            isFloat = true
         )
         out.normalize()
         return out
@@ -878,15 +835,15 @@ open class MegaNumber(
         /* --- fast path for single‑chunk integers --------------------------- */
         if (!this.isFloat && !other.isFloat &&
             this.mantissa.size == 1 && other.mantissa.size == 1 &&
-            this.exponent.all { it == 0 } &&
-            other.exponent.all { it == 0 }
+            this.exponent.mantissa.size == 1 && this.exponent.mantissa[0] == 0 &&
+            other.exponent.mantissa.size == 1 && other.exponent.mantissa[0] == 0
         ) {
             val lhs = this.mantissa[0].toUInt()
             val rhs = other.mantissa[0].toUInt()
             require(rhs != 0u) { "Division by zero" }
             val neg = this.negative xor other.negative
             val q = (lhs / rhs).toInt()
-            return MegaNumber(intArrayOf(q), zeroIntArray(), neg, false, false)
+            return MegaNumber(intArrayOf(q), MegaNumber(intArrayOf(0)), neg, false)
         }
         /* --- long‑form integer division ------------------------------------ */
         if (other.mantissa.size == 1 && other.mantissa[0] == 0) {
@@ -896,10 +853,10 @@ open class MegaNumber(
         val cmp = compareAbs(this.mantissa, other.mantissa)
         return when {
             cmp < 0 -> MegaNumber(intArrayOf(0))
-            cmp == 0 -> MegaNumber(intArrayOf(1), zeroIntArray(), sign, false, false)
+            cmp == 0 -> MegaNumber(intArrayOf(1), MegaNumber(intArrayOf(0)), sign, false)
             else -> {
                 val (q, _) = chunkDivide(this.mantissa, other.mantissa)
-                MegaNumber(q, zeroIntArray(), sign, false, false)
+                MegaNumber(q, MegaNumber(intArrayOf(0)), sign, false)
             }
         }
     }
@@ -909,18 +866,15 @@ open class MegaNumber(
         // Divide mantissas
         val (quotientMant, _) = chunkDivide(this.mantissa, other.mantissa)
         // Subtract exponents
-        val expA = expAsInt(exponentValue())
-        val expB = expAsInt(other.exponentValue())
-        val diffExp = expA - expB
-        val newExponent = intToIntArray(diffExp)
+        val diffExp = this.exponent.expAsInt() - other.exponent.expAsInt()
+        val newExponent = MegaNumber(intArrayOf(kotlin.math.abs(diffExp)), negative = diffExp < 0)
         // Determine sign
         val newNegative = (this.negative != other.negative)
         val out = MegaNumber(
             mantissa = quotientMant,
             exponent = newExponent,
             negative = newNegative,
-            isFloat = true,
-            exponentNegative = diffExp < 0
+            isFloat = true
         )
         out.normalize()
         return out
@@ -957,10 +911,9 @@ open class MegaNumber(
         if (mantissa.size == 1 && mantissa[0] == 0) {
             return MegaNumber(
                 mantissa = intArrayOf(0),
-                exponent = zeroIntArray(),
+                exponent = MegaNumber(intArrayOf(0)),
                 negative = false,
-                isFloat = isFloat,
-                exponentNegative = false
+                isFloat = isFloat
             )
         }
 
@@ -980,7 +933,7 @@ open class MegaNumber(
                 val cLo = compareAbs(mid, low)
                 val cHi = compareAbs(mid, high)
                 if (cLo == 0 || cHi == 0) {
-                    return MegaNumber(mid, zeroIntArray(), false)
+                    return MegaNumber(mid, MegaNumber(intArrayOf(0)), false)
                 }
 
                 // mid^2
@@ -989,7 +942,7 @@ open class MegaNumber(
                 // Compare mid^2 with a
                 val cCmp = compareAbs(midSqr, a)
                 if (cCmp == 0) {
-                    return MegaNumber(mid, zeroIntArray(), false)
+                    return MegaNumber(mid, MegaNumber(intArrayOf(0)), false)
                 } else if (cCmp < 0) {
                     low = mid
                 } else {
@@ -997,19 +950,19 @@ open class MegaNumber(
                 }
             }
         } else {
-        // For float values, use floatSqrt
-        return floatSqrt()
+            // For float values, use floatSqrt
+            return floatSqrt()
         }
     }
 
     /**
      * Compute the square root for float values.
-     * 
+     *
      * @return The square root as a MegaNumber with float representation
      */
     private fun floatSqrt(): MegaNumber {
         // Get the exponent as an integer
-        val totalExp = expAsInt(exponentValue())
+        val totalExp = this.exponent.expAsInt()
 
         // Check if exponent is odd
         val remainder = totalExp and 1          // 1 = odd, 0 = even
@@ -1085,16 +1038,13 @@ open class MegaNumber(
         }
 
         // Create the result with half the exponent
-        val expNeg = halfExp < 0
-        val halfExpAbs = kotlin.math.abs(halfExp)
-        val newExponent = if (halfExpAbs != 0) intToIntArray(halfExpAbs) else intToIntArray(0)
+        val newExponent = MegaNumber(intArrayOf(kotlin.math.abs(halfExp)), negative = halfExp < 0)
 
         val out = MegaNumber(
             mantissa = sqrtMantissa,
             exponent = newExponent,
             negative = false,
-            isFloat = true,
-            exponentNegative = expNeg
+            isFloat = true
         )
         out.normalize()
         checkPrecisionLimit(out)
