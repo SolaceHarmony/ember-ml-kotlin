@@ -389,7 +389,7 @@ open class MegaNumber {
         /**
          * Combine chunk-limbs => a single Int. (May overflow if large.)
          */
-        private fun chunksToInt(limbs: IntArray): Int {
+        internal fun chunksToInt(limbs: IntArray): Int {
             /* Convert chunk-limbs to a single Int value.
              * This is a simple conversion, but may overflow if the value is too large.
              * This is needed for exponent calculations, where we assume the exponent fits in an Int.
