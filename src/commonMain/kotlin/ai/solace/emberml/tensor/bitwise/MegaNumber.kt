@@ -42,7 +42,7 @@ open class MegaNumber {
 
     constructor(
         mantissa: IntArray = intArrayOf(0),
-        exponent: MegaNumber = MegaNumber(intArrayOf(0)),
+        exponent: MegaNumber = ZERO_EXPONENT,
         negative: Boolean = false,
         isFloat: Boolean = false,
         keepLeadingZeros: Boolean = false
@@ -55,29 +55,62 @@ open class MegaNumber {
         normalize()
     }
 
+    /** Private no‑arg constructor used only to build the ZERO_EXPONENT sentinel. */
+    private constructor() {
+        mantissa = intArrayOf(0)
+        exponent = this     // self‑reference so no further construction
+        negative = false
+        isFloat = false
+        keepLeadingZeros = false
+    }
+
     companion object {
+        /**
+         * If the supplied limb‑array encodes an exact power‑of‑two, returns the
+         * number of **bit** positions to shift (i.e. log2(value)).
+         * Otherwise returns −1.
+         *
+         * Runs in O(n) over the limb count and uses bit‑twiddling to verify
+         * that exactly one bit is set across the entire array.
+         */
+        private fun powerOfTwoShift(chunks: IntArray): Int {
+            var shift = 0
+            var seenNonZero = false
+            for (i in 0 until chunks.size) {
+                val limb = chunks[i]
+                if (limb == 0) {
+                    shift += MegaNumberConstants.GLOBAL_CHUNK_SIZE
+                    continue
+                }
+                /* limb must itself be a power‑of‑two **and** this must be the
+                   only non‑zero limb encountered so far                       */
+                if ((limb and (limb - 1)) != 0 || seenNonZero) return -1
+                shift += limb.countTrailingZeroBits()
+                seenNonZero = true
+            }
+            return if (seenNonZero) shift else -1
+        }
+        /** Shared “0‑exponent” instance to break default‑parameter recursion. */
+        private val ZERO_EXPONENT = MegaNumber()
         /**
          * Right shift chunk-limbs by 1 bit => integer //2.
          */
         internal fun div2(limbs: IntArray): IntArray {
-            val out = IntArray(limbs.size)
-            var carry = 0
-            val csize = MegaNumberConstants.GLOBAL_CHUNK_SIZE
+            if (limbs.size == 1 && limbs[0] == 0) return intArrayOf(0)
+
+            val result = IntArray(limbs.size)
+            var carry = 0          // LSB carried from higher limb
 
             for (i in limbs.indices.reversed()) {
-                val value = (carry shl csize) + limbs[i]
-                val q = value shr 1
-                carry = value and 1
-                out[i] = q
+                val cur = limbs[i].toLong() and 0xFFFFFFFFL
+                result[i] = ((cur ushr 1) or ((carry.toLong() and 1) shl (MegaNumberConstants.GLOBAL_CHUNK_SIZE - 1))).toInt()
+                carry = (cur and 1L).toInt()   // next iteration uses this bit
             }
 
-            // Trim trailing zeros
-            var lastNonZero = out.size - 1
-            while (lastNonZero > 0 && out[lastNonZero] == 0) {
-                lastNonZero--
-            }
-
-            return out.copyOf(lastNonZero + 1)
+            // Trim trailing zero limbs
+            var last = result.size - 1
+            while (last > 0 && result[last] == 0) last--
+            return result.copyOf(last + 1)
         }
 
         /**
@@ -89,11 +122,11 @@ open class MegaNumber {
             var carry = 0L
 
             for (i in 0 until maxLen) {
-                val av = if (i < a.size) a[i].toLong() and 0xFFFFFFFFL else 0L
-                val bv = if (i < b.size) b[i].toLong() and 0xFFFFFFFFL else 0L
+                val av = if (i < a.size) a[i].toLong() and MegaNumberConstants.MASK else 0L
+                val bv = if (i < b.size) b[i].toLong() and MegaNumberConstants.MASK else 0L
                 val s = av + bv + carry
-                out[i] = (s and 0xFFFFFFFFL).toInt()
-                carry = s ushr 32
+                out[i] = (s and MegaNumberConstants.MASK).toInt()
+                carry = s ushr MegaNumberConstants.GLOBAL_CHUNK_SIZE
             }
 
             if (carry != 0L) {
@@ -119,18 +152,18 @@ open class MegaNumber {
             var borrow = 0L
 
             for (i in 0 until a.size) {
-                val av = a[i].toLong() and 0xFFFFFFFFL
-                val bv = if (i < b.size) b[i].toLong() and 0xFFFFFFFFL else 0L
+                val av = a[i].toLong() and MegaNumberConstants.MASK
+                val bv = if (i < b.size) b[i].toLong() and MegaNumberConstants.MASK else 0L
                 var diff = av - bv - borrow
 
                 if (diff < 0) {
-                    diff += 0x100000000L
+                    diff += MegaNumberConstants.MASK + 1
                     borrow = 1L
                 } else {
                     borrow = 0L
                 }
 
-                out[i] = (diff and 0xFFFFFFFFL).toInt()
+                out[i] = (diff and MegaNumberConstants.MASK).toInt()
             }
 
             if (preserveSize) {
@@ -165,7 +198,7 @@ open class MegaNumber {
         /**
          * Multiply two chunk-limb arrays => product-limb array using standard algorithm
          */
-        internal fun mulChunksStandard(a: IntArray, b: IntArray): IntArray {
+        private fun mulChunksStandard(a: IntArray, b: IntArray): IntArray {
             if (a.size == 1 && a[0] == 0) return intArrayOf(0)
             if (b.size == 1 && b[0] == 0) return intArrayOf(0)
 
@@ -174,15 +207,15 @@ open class MegaNumber {
             val out = IntArray(la + lb)
 
             for (i in 0 until la) {
-                val av = a[i].toLong() and 0xFFFFFFFFL
+                val av = a[i].toLong() and MegaNumberConstants.MASK
                 var carry = 0L
 
                 for (j in 0 until lb) {
-                    val bv = b[j].toLong() and 0xFFFFFFFFL
-                    val existing = out[i + j].toLong() and 0xFFFFFFFFL
+                    val bv = b[j].toLong() and MegaNumberConstants.MASK
+                    val existing = out[i + j].toLong() and MegaNumberConstants.MASK
                     val prod = av * bv + existing + carry
-                    out[i + j] = (prod and 0xFFFFFFFFL).toInt()
-                    carry = prod ushr 32
+                    out[i + j] = (prod and MegaNumberConstants.MASK).toInt()
+                    carry = prod ushr MegaNumberConstants.GLOBAL_CHUNK_SIZE
                 }
 
                 if (carry != 0L) {
@@ -200,8 +233,9 @@ open class MegaNumber {
         }
 
         /**
-         * Multiply two chunk-limb arrays => product-limb array
-         * Dispatches to naive, Karatsuba, or Toom-3 based on thresholds
+         * Adaptive dispatcher that chooses the best multiplication algorithm
+         * (naïve, Karatsuba, or Toom‑3) based on operand length.
+         * Callers should use *only this* function for chunk‑level multiplication.
          */
         internal fun mulChunks(a: IntArray, b: IntArray): IntArray {
             val n = maxOf(a.size, b.size)
@@ -210,16 +244,32 @@ open class MegaNumber {
             } else if (n < MegaNumberConstants.MUL_THRESHOLD_TOOM) {
                 karatsubaMulChunks(a, b)
             } else {
-                // For now, we'll use Karatsuba for Toom-3 threshold too
-                // TODO: Implement Toom-3 algorithm
-                karatsubaMulChunks(a, b)
+                toom3MulChunks(a, b)
             }
+        }
+
+        /** Multiply a chunk‑array by a small Int (0 ≤ k ≤ 8). */
+        private fun mulBySmall(a: IntArray, k: Int): IntArray {
+            if (k == 0) return intArrayOf(0)
+            if (k == 1) return a.copyOf()
+            val out = IntArray(a.size + 1)
+            var carry = 0L
+            for (i in 0 until a.size) {
+                val prod = (a[i].toLong() and MegaNumberConstants.MASK) * k + carry
+                out[i] = (prod and MegaNumberConstants.MASK).toInt()
+                carry = prod ushr MegaNumberConstants.GLOBAL_CHUNK_SIZE
+            }
+            if (carry != 0L) out[a.size] = carry.toInt()
+            // trim
+            var last = out.size - 1
+            while (last > 0 && out[last] == 0) last--
+            return out.copyOf(last + 1)
         }
 
         /**
          * Implements Karatsuba multiplication for large numbers.
          */
-        internal fun karatsubaMulChunks(a: IntArray, b: IntArray): IntArray {
+        private fun karatsubaMulChunks(a: IntArray, b: IntArray): IntArray {
             val n = maxOf(a.size, b.size)
             if (n <= 32) {
                 return mulChunksStandard(a, b) // Use standard multiplication for small sizes
@@ -252,21 +302,85 @@ open class MegaNumber {
         }
 
         /**
+         * Toom‑3 (aka Toom‑Cook 3‑way) multiplication for very large operands.
+         * Splits each number into three equal‑length parts of k limbs.
+         */
+        private fun toom3MulChunks(a: IntArray, b: IntArray): IntArray {
+            val n = maxOf(a.size, b.size)
+            val k = (n + 2) / 3                    // ceil(n/3)
+
+            // Split operands (low → high)
+            fun slice(src: IntArray, from: Int, to: Int): IntArray =
+                if (from >= src.size) intArrayOf(0)
+                else src.copyOfRange(from, minOf(to, src.size))
+
+            val a0 = slice(a, 0,           k)
+            val a1 = slice(a, k,           2 * k)
+            val a2 = slice(a, 2 * k,       3 * k)
+            val b0 = slice(b, 0,           k)
+            val b1 = slice(b, k,           2 * k)
+            val b2 = slice(b, 2 * k,       3 * k)
+
+            /* Evaluate at x = 0,  1, −1,  2,  ∞ */
+            val p0   = mulChunksStandard(a0, b0)                // x = 0
+            val pinf = mulChunksStandard(a2, b2)                // x = ∞
+
+            val ap1  = addChunks(addChunks(a0, a1), a2)         // a(1)
+            val bp1  = addChunks(addChunks(b0, b1), b2)
+            val p1   = mulChunksStandard(ap1, bp1)              // x = 1
+
+            val am1  = addChunks(subChunks(a0, a1, false), a2)  // a(−1) = a0 − a1 + a2
+            val bm1  = addChunks(subChunks(b0, b1, false), b2)
+            val pm1  = mulChunksStandard(am1, bm1)              // x = −1
+
+            // a(2) = a0 + 2a1 + 4a2
+            val a2x = addChunks(addChunks(a0, mulBySmall(a1, 2)), mulBySmall(a2, 4))
+            val b2x = addChunks(addChunks(b0, mulBySmall(b1, 2)), mulBySmall(b2, 4))
+            val p2   = mulChunksStandard(a2x, b2x)              // x = 2
+
+            /* -------- Interpolation (derivation from standard Toom‑3) ------ */
+            val c0 = p0
+            val c4 = pinf
+
+            // c1 = (p1 − pm1) / 2
+            val t1 = if (compareAbs(p1, pm1) >= 0)
+                        subChunks(p1, pm1, false) else subChunks(pm1, p1, false)
+            val c1 = div2(t1)
+
+            // c2 = pm1 − c0 − c4
+            val c2tmp = subChunks(pm1, addChunks(c0, c4), false)
+            val c2 = c2tmp
+
+            // c3 = (p2 − p1 − 4*c4) / 2
+            val p2MinusP1 = if (compareAbs(p2, p1) >= 0)
+                                subChunks(p2, p1, false) else subChunks(p1, p2, false)
+            val fourC4 = mulBySmall(c4, 4)
+            val t3 = if (compareAbs(p2MinusP1, fourC4) >= 0)
+                         subChunks(p2MinusP1, fourC4, false) else subChunks(fourC4, p2MinusP1, false)
+            val c3 = div2(t3)
+
+            /* -------- Recomposition:  result = Σ ci * BASE^{i*k} ---------- */
+            fun shlChunks(x: IntArray, m: Int) = shiftLeft(x, m * k)
+
+            var result = c0
+            result = addChunks(result, shlChunks(c1, 1))
+            result = addChunks(result, shlChunks(c2, 2))
+            result = addChunks(result, shlChunks(c3, 3))
+            result = addChunks(result, shlChunks(c4, 4))
+
+            return result
+        }
+
+        /**
          * Shifts the limbs left by `shift` chunks (equivalent to multiplying by BASE^shift).
          */
-        internal fun shiftLeft(limbs: IntArray, shift: Int): IntArray {
+        private fun shiftLeft(limbs: IntArray, shift: Int): IntArray {
             if (shift <= 0) return limbs.copyOf()
             val result = IntArray(limbs.size + shift)
             limbs.copyInto(result, shift)
             return result
         }
 
-        /**
-         * Convert an Int into chunk-limbs. A zero value => [0].
-         */
-        internal fun intToChunks(number: Int): IntArray {
-            return intArrayOf(number)
-        }
 
 
 
@@ -275,7 +389,7 @@ open class MegaNumber {
         /**
          * Combine chunk-limbs => a single Int. (May overflow if large.)
          */
-        internal fun chunksToInt(limbs: IntArray): Int {
+        private fun chunksToInt(limbs: IntArray): Int {
             /* Convert chunk-limbs to a single Int value.
              * This is a simple conversion, but may overflow if the value is too large.
              * This is needed for exponent calculations, where we assume the exponent fits in an Int.
@@ -294,7 +408,7 @@ open class MegaNumber {
         /**
          * Convert decimal string => chunk-limb array
          */
-        internal fun decimalStringToChunks(dec: String): IntArray {
+        private fun decimalStringToChunks(dec: String): IntArray {
             if (dec.isEmpty()) return intArrayOf(0)
             if (dec == "0") return intArrayOf(0)
 
@@ -404,7 +518,7 @@ open class MegaNumber {
             // If zero => unify sign
             if (mantissa.size == 1 && mantissa[0] == 0) {
                 negative = false
-                exponent = MegaNumber(intArrayOf(0))
+                exponent = ZERO_EXPONENT        // avoid recursive construction
             }
         } else {
             // keepLeadingZeros = true: do not trim mantissa/exponent, but unify sign if all zero
@@ -419,7 +533,7 @@ open class MegaNumber {
      *
      * @param shiftBits Number of bits to shift; must be >= 0.
      */
-    internal fun shiftRight(limbs: IntArray, shiftBits: Int): IntArray {
+    private fun shiftRight(limbs: IntArray, shiftBits: Int): IntArray {
         // Shift count must be non-negative.
         if (shiftBits < 0) {
             throw IllegalArgumentException("shiftBits must be non-negative")
@@ -429,8 +543,8 @@ open class MegaNumber {
             return limbs.copyOf()
         }
 
-        val chunkShift = shiftBits / 32
-        val bitShift   = shiftBits % 32
+        val chunkShift = shiftBits / MegaNumberConstants.GLOBAL_CHUNK_SIZE
+        val bitShift   = shiftBits % MegaNumberConstants.GLOBAL_CHUNK_SIZE
 
         if (chunkShift >= limbs.size) {
             return intArrayOf(0)
@@ -456,7 +570,7 @@ open class MegaNumber {
                 }
 
                 // Take upper bits from next chunk and lower bits from current
-                result[i] = (((nextChunk shl (32 - bitShift)) or
+                result[i] = (((nextChunk shl (MegaNumberConstants.GLOBAL_CHUNK_SIZE - bitShift)) or
                         (currentChunk ushr bitShift)) and 0xFFFFFFFFL).toInt()
             }
         }
@@ -802,7 +916,13 @@ open class MegaNumber {
         if (other.mantissa.size == 1 && other.mantissa[0] == 0) {
             throw ArithmeticException("Division by zero")
         }
+        // ---- fast path when divisor is an exact power‑of‑two --------------
         val sign = (this.negative != other.negative)
+        val powShift = powerOfTwoShift(other.mantissa)
+        if (powShift >= 0) {
+            val (qChunks, _) = divideBy2ToThePower(this.mantissa, powShift)
+            return MegaNumber(qChunks, MegaNumber(intArrayOf(0)), sign, false)
+        }
         val cmp = compareAbs(this.mantissa, other.mantissa)
         return when {
             cmp < 0 -> MegaNumber(intArrayOf(0))
@@ -1012,7 +1132,7 @@ open class MegaNumber {
      * @param bits The power of 2 to divide by
      * @return Pair of (quotient, remainder)
      */
-    protected fun divideBy2ToThePower(chunks: IntArray, bits: Int): Pair<IntArray, IntArray> {
+    private   fun divideBy2ToThePower(chunks: IntArray, bits: Int): Pair<IntArray, IntArray> {
         if (bits <= 0) {
             return Pair(chunks.copyOf(), intArrayOf(0))
         }
@@ -1069,7 +1189,7 @@ open class MegaNumber {
     /**
      * Multiply chunks by 2^bits using IntArray for proper 32-bit operations.
      */
-    protected fun multiplyBy2ToThePower(chunks: IntArray, bits: Int): IntArray {
+    private   fun multiplyBy2ToThePower(chunks: IntArray, bits: Int): IntArray {
         if (bits <= 0) {
             return chunks.copyOf()
         }

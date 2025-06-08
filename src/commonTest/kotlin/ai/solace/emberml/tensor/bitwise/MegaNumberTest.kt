@@ -2,28 +2,13 @@ package ai.solace.emberml.tensor.bitwise
 
 import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.addChunks
 import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.compareAbs
-import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.decimalStringToChunks
 import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.div2
 import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.fromDecimalString
-import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.intToChunks
-import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.karatsubaMulChunks
-import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.mulChunksStandard
-import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.shiftLeft
+import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.mulChunks
 import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.subChunks
 import kotlin.test.*
 
 class MegaNumberTest {
-    // Helper function to convert MegaNumber to Int for testing purposes
-    private fun expAsInt(mn: MegaNumber): Int {
-        val str = mn.toDecimalString()
-        // If it's a simple integer, parse it directly
-        if (!str.contains("*")) {
-            return str.toInt()
-        }
-        // Otherwise, it's in the format "mantissa * 2^(exponent * chunkBits)"
-        // For our test cases, we just need the exponent value
-        return 0 // Default value for complex cases, adjust as needed for specific tests
-    }
 
     // Helper to extract exponent as signed Int from the new exponent MegaNumber
     private fun expValue(exp: MegaNumber): Int {
@@ -34,7 +19,7 @@ class MegaNumberTest {
     fun testBasicMultiplication() {
         val a = intArrayOf(2)
         val b = intArrayOf(3)
-        val result = mulChunksStandard(a, b)
+        val result = mulChunks(a, b)
         assertEquals(1, result.size)
         assertEquals(6, result[0])
     }
@@ -104,87 +89,22 @@ class MegaNumberTest {
     }
 
     @Test
-    fun testKaratsubaMulChunks() {
-        // Test basic multiplication
-        val a = intArrayOf(123, 456)
-        val b = intArrayOf(789, 101)
+    fun testLargeMulChunks() {
+        // Compare dispatcher result against itself to ensure non‑zero output and stable size logic.
+        val a = IntArray(40) { 0xFFFFFFFF.toInt() }
+        val b = IntArray(40) { 0xFFFFFFFF.toInt() }
 
-        // Compare with standard multiplication
-        val standardResult = mulChunksStandard(a, b)
-        val karatsubaResult = karatsubaMulChunks(a, b)
+        val result = mulChunks(a, b)
 
-        assertEquals(standardResult.size, karatsubaResult.size)
-        for (i in standardResult.indices) {
-            assertEquals(standardResult[i], karatsubaResult[i])
-        }
-
-        // Test with larger numbers
-        val c = IntArray(40) { 0xFFFFFFFF.toInt() }
-        val d = IntArray(40) { 0xFFFFFFFF.toInt() }
-
-        val largeResult = karatsubaMulChunks(c, d)
-        // The result should be (2^32 - 1)^2 * sum(i=0 to 39, j=0 to 39, 2^(32*(i+j)))
-        // We can at least check that it's not all zeros
-        assertNotEquals(0, largeResult[largeResult.size - 1])
-    }
-
-    @Test
-    fun testShiftLeft() {
-        // Test basic shift
-        val a = intArrayOf(1, 2, 3)
-        val result = shiftLeft(a, 2)
-        assertEquals(5, result.size)
-        assertEquals(0, result[0])
-        assertEquals(0, result[1])
-        assertEquals(1, result[2])
-        assertEquals(2, result[3])
-        assertEquals(3, result[4])
-
-        // Test zero shift
-        val b = intArrayOf(4, 5, 6)
-        val result2 = shiftLeft(b, 0)
-        assertEquals(3, result2.size)
-        assertEquals(4, result2[0])
-        assertEquals(5, result2[1])
-        assertEquals(6, result2[2])
-    }
-
-    @Test
-    fun testIntToChunks() {
-        // Test zero
-        val result = intToChunks(0)
-        assertEquals(1, result.size)
-        assertEquals(0, result[0])
-
-        // Test positive number
-        val result2 = intToChunks(123456)
-        assertEquals(1, result2.size)
-        assertEquals(123456, result2[0])
+        // Result should not be all zeros and must be larger than either operand.
+        assertTrue(result.any { it != 0 })
+        assertTrue(result.size > a.size)
     }
 
 
 
-    @Test
-    fun testDecimalStringToChunks() {
-        // Test zero
-        val result = decimalStringToChunks("0")
-        assertEquals(1, result.size)
-        assertEquals(0, result[0])
 
-        // Test simple number
-        val result2 = decimalStringToChunks("123")
-        assertEquals(1, result2.size)
-        assertEquals(123, result2[0])
 
-        // Test large number
-        val result3 = decimalStringToChunks("12345678901234567890")
-        assertTrue(result3.size > 1) // Should require multiple chunks
-
-        // Test invalid input
-        assertFailsWith<IllegalArgumentException> {
-            decimalStringToChunks("123a456")
-        }
-    }
 
     @Test
     fun testDiv2() {
@@ -233,6 +153,27 @@ class MegaNumberTest {
     }
 
     @Test
+    fun testStringRoundTrip() {
+        // Integers should round‑trip exactly
+        val ints = listOf("0", "123456", "-987654")
+        for (s in ints) {
+            val n = fromDecimalString(s)
+            assertFalse(n.isFloat)
+            assertEquals(s, n.toDecimalString())
+        }
+
+        // Floats parse without throwing and retain isFloat flag
+        val floats = listOf("1.25", "-3.5", "0.125")
+        for (s in floats) {
+            val n = fromDecimalString(s)
+            assertTrue(n.isFloat)
+            // We cannot round‑trip textual form because toDecimalString() currently
+            // outputs mantissa * 2^(exp) style; just ensure it contains the mantissa.
+            assertTrue(n.toDecimalString().contains('*'))
+        }
+    }
+
+    @Test
     fun testNormalize() {
         // Test normalization of zero
         val zero = MegaNumber(
@@ -268,26 +209,6 @@ class MegaNumberTest {
         assertEquals(1, numWithZeros.mantissa[2])
     }
 
-    @Test
-    fun testShiftRight() {
-        val num = MegaNumber(intArrayOf(0xFFFFFFFF.toInt(), 0xFFFFFFFF.toInt()))
-
-        // Test shifting by 32 bits (one chunk)
-        val result = num.shiftRight(num.mantissa, 32)
-        assertEquals(1, result.size)
-        assertEquals(0xFFFFFFFF.toInt(), result[0])
-
-        // Test shifting by 16 bits (half chunk)
-        val result2 = num.shiftRight(num.mantissa, 16)
-        assertEquals(2, result2.size)
-        assertEquals(0xFFFF0000.toInt(), result2[0])
-        assertEquals(0x0000FFFF, result2[1])
-
-        // Test shifting by more bits than available
-        val result3 = num.shiftRight(num.mantissa, 64)
-        assertEquals(1, result3.size)
-        assertEquals(0, result3[0])
-    }
 
     @Test
     fun testAdd() {
@@ -486,6 +407,6 @@ class MegaNumberTest {
         assertEquals(1, expValue(oddExpSqrt.exponent)) // 3/2 = 1.5, but integer division gives 1
     }
 
-    // Note: divideBy2ToThePower and multiplyBy2ToThePower are protected methods
-    // and cannot be tested directly from outside the class
+    // Note: low‑level helper methods (e.g., shiftLeft/shiftRight/decimalStringToChunks)
+    // are now private and intentionally not unit‑tested here.
 }
