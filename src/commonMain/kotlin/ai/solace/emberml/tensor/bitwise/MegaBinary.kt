@@ -1,3 +1,4 @@
+
 /**
  * Kotlin Native implementation of MegaBinary, inheriting from MegaNumber.
  *
@@ -40,10 +41,9 @@ class MegaBinary : MegaNumber {
         keepLeadingZeros: Boolean = true
     ) : super(
         mantissa = intArrayOf(0),
-        exponent = intArrayOf(0),
+        exponent = MegaNumber(intArrayOf(0)), // Use MegaNumber constructor
         negative = false,
         isFloat = false,
-        exponentNegative = false,
         keepLeadingZeros = keepLeadingZeros
     ) {
         // Auto-detect and convert input
@@ -56,9 +56,7 @@ class MegaBinary : MegaNumber {
         }
 
         // Build byteData from binary string
-        // We'll chunk every 8 bits => int => byte
         byteData = ByteArray((binStr.length + 7) / 8)
-        // Pad with leading zeros if necessary to make length a multiple of 8
         val paddedBinStr = binStr.padStart((binStr.length + 7) / 8 * 8, '0')
         for (i in paddedBinStr.indices step 8) {
             val chunk = paddedBinStr.substring(i, minOf(i + 8, paddedBinStr.length))
@@ -68,7 +66,7 @@ class MegaBinary : MegaNumber {
         // Parse binary string into mantissa
         parseBinaryString(binStr)
 
-        // Normalize
+        // Normalize using inherited method
         normalize()
 
         // Store bit length
@@ -82,10 +80,9 @@ class MegaBinary : MegaNumber {
      */
     constructor(other: MegaBinary) : super(
         mantissa = other.mantissa.copyOf(),
-        exponent = other.exponent.copyOf(),
+        exponent = MegaNumber(other.exponent.mantissa.copyOf()),
         negative = other.negative,
         isFloat = other.isFloat,
-        exponentNegative = other.exponentNegative,
         keepLeadingZeros = other.keepLeadingZeros
     ) {
         this.byteData = other.byteData.copyOf()
@@ -103,10 +100,9 @@ class MegaBinary : MegaNumber {
         keepLeadingZeros: Boolean = true
     ) : super(
         mantissa = intArrayOf(0),
-        exponent = intArrayOf(0),
+        exponent = MegaNumber(intArrayOf(0)),
         negative = false,
         isFloat = false,
-        exponentNegative = false,
         keepLeadingZeros = keepLeadingZeros
     ) {
         // Store original bytes
@@ -117,14 +113,14 @@ class MegaBinary : MegaNumber {
             byte.toUByte().toString(2).padStart(8, '0')
         }
 
+        // Store bit length
+        bitLength = binStr.length
+
         // Parse binary string into mantissa
         parseBinaryString(binStr)
 
-        // Normalize
+        // Normalize using inherited method
         normalize()
-
-        // Store bit length
-        bitLength = binStr.length
     }
 
     /**
@@ -138,10 +134,9 @@ class MegaBinary : MegaNumber {
         keepLeadingZeros: Boolean = true
     ) : super(
         mantissa = mantissa,
-        exponent = intArrayOf(0),
+        exponent = MegaNumber(intArrayOf(0)),
         negative = false,
         isFloat = false,
-        exponentNegative = false,
         keepLeadingZeros = keepLeadingZeros
     ) {
         // Convert mantissa to binary string
@@ -155,8 +150,9 @@ class MegaBinary : MegaNumber {
             byteData[i / 8] = chunk.toInt(2).toByte()
         }
 
-        // Store bit length
+        // Store bit length and normalize
         bitLength = binStr.length
+        normalize()
     }
 
     /**
@@ -167,21 +163,62 @@ class MegaBinary : MegaNumber {
     private fun parseBinaryString(binStr: String) {
         if (binStr.isEmpty()) {
             mantissa = intArrayOf(0)
+            bitLength = 0
             return
         }
 
-        // Store bit length
-        bitLength = binStr.length
+        // Validate the binary string only contains 0s and 1s
+        if (!binStr.all { it == '0' || it == '1' }) {
+            throw IllegalArgumentException("Invalid binary string, contains non-binary characters: $binStr")
+        }
 
-        // Convert to integer
-        val value : Int = binStr.toIntOrNull(2) ?: throw IllegalArgumentException("Invalid binary string: $binStr")
+        // Convert to integer (already validated, so won't throw)
+        val value : Int = binStr.toInt(2)
 
-        // Convert to limbs
-        mantissa = intToChunks(value, MegaNumberConstants.GLOBAL_CHUNK_SIZE)
-        exponent = intArrayOf(0)
+        // Set mantissa directly (no need for chunksToInt conversion here)
+        mantissa = intArrayOf(value)
+        exponent = MegaNumber(intArrayOf(0))
         isFloat = false
         negative = false
-        exponentNegative = false
+    }
+
+    /**
+     * Helper function to pad arrays to the same length and apply a bitwise operation.
+     *
+     * @param other Another MegaBinary object
+     * @param operation Function to apply to each pair of elements
+     * @return Result of the bitwise operation
+     */
+    private fun applyBitwiseOperation(other: MegaBinary, operation: (Int, Int) -> Int): MegaBinary {
+        // Get maximum length
+        val maxLen = maxOf(mantissa.size, other.mantissa.size)
+
+        // Pad arrays to the same length
+        val selfArr = if (mantissa.size < maxLen) {
+            val padded = IntArray(maxLen)
+            mantissa.copyInto(padded)
+            padded
+        } else {
+            mantissa
+        }
+        val otherArr = if (other.mantissa.size < maxLen) {
+            val padded = IntArray(maxLen)
+            other.mantissa.copyInto(padded)
+            padded
+        } else {
+            other.mantissa
+        }
+
+        // Apply operation
+        val resultArr = IntArray(maxLen) { i ->
+            operation(selfArr[i], otherArr[i])
+        }
+
+        // Create result
+        val result = MegaBinary(mantissa = resultArr, keepLeadingZeros = keepLeadingZeros)
+        result.normalize()
+
+        return result
     }
 
     /**
@@ -191,35 +228,7 @@ class MegaBinary : MegaNumber {
      * @return Result of bitwise AND operation
      */
     fun bitwiseAnd(other: MegaBinary): MegaBinary {
-        // Get maximum length
-        val maxLen = maxOf(mantissa.size, other.mantissa.size)
-
-        // Pad arrays to the same length
-        val selfArr = if (mantissa.size < maxLen) {
-            val padded = IntArray(maxLen)
-            mantissa.copyInto(padded)
-            padded
-        } else {
-            mantissa
-        }
-        val otherArr = if (other.mantissa.size < maxLen) {
-            val padded = IntArray(maxLen)
-            other.mantissa.copyInto(padded)
-            padded
-        } else {
-            other.mantissa
-        }
-
-        // Perform bitwise AND
-        val resultArr = IntArray(maxLen) { i ->
-            selfArr[i] and otherArr[i]
-        }
-
-        // Create result
-        val result = MegaBinary(mantissa = resultArr, keepLeadingZeros = keepLeadingZeros)
-        result.normalize()
-
-        return result
+        return applyBitwiseOperation(other) { a, b -> a and b }
     }
 
     /**
@@ -229,35 +238,7 @@ class MegaBinary : MegaNumber {
      * @return Result of bitwise OR operation
      */
     fun bitwiseOr(other: MegaBinary): MegaBinary {
-        // Get maximum length
-        val maxLen = maxOf(mantissa.size, other.mantissa.size)
-
-        // Pad arrays to the same length
-        val selfArr = if (mantissa.size < maxLen) {
-            val padded = IntArray(maxLen)
-            mantissa.copyInto(padded)
-            padded
-        } else {
-            mantissa
-        }
-        val otherArr = if (other.mantissa.size < maxLen) {
-            val padded = IntArray(maxLen)
-            other.mantissa.copyInto(padded)
-            padded
-        } else {
-            other.mantissa
-        }
-
-        // Perform bitwise OR
-        val resultArr = IntArray(maxLen) { i ->
-            selfArr[i] or otherArr[i]
-        }
-
-        // Create result
-        val result = MegaBinary(mantissa = resultArr, keepLeadingZeros = keepLeadingZeros)
-        result.normalize()
-
-        return result
+        return applyBitwiseOperation(other) { a, b -> a or b }
     }
 
     /**
@@ -267,35 +248,7 @@ class MegaBinary : MegaNumber {
      * @return Result of bitwise XOR operation
      */
     fun bitwiseXor(other: MegaBinary): MegaBinary {
-        // Get maximum length
-        val maxLen = maxOf(mantissa.size, other.mantissa.size)
-
-        // Pad arrays to the same length
-        val selfArr = if (mantissa.size < maxLen) {
-            val padded = IntArray(maxLen)
-            mantissa.copyInto(padded)
-            padded
-        } else {
-            mantissa
-        }
-        val otherArr = if (other.mantissa.size < maxLen) {
-            val padded = IntArray(maxLen)
-            other.mantissa.copyInto(padded)
-            padded
-        } else {
-            other.mantissa
-        }
-
-        // Perform bitwise XOR
-        val resultArr = IntArray(maxLen) { i -> 
-            selfArr[i] xor otherArr[i] 
-        }
-
-        // Create result
-        val result = MegaBinary(mantissa = resultArr, keepLeadingZeros = keepLeadingZeros)
-        result.normalize()
-
-        return result
+        return applyBitwiseOperation(other) { a, b -> a xor b }
     }
 
     /**
@@ -304,91 +257,17 @@ class MegaBinary : MegaNumber {
      * @return Result of bitwise NOT operation
      */
     fun bitwiseNot(): MegaBinary {
-        // Perform bitwise NOT on existing limbs
-        val resultArr = IntArray(mantissa.size) { i -> 
-            mantissa[i].inv() and MegaNumberConstants.MASK
+        val resultArr = IntArray(mantissa.size) { i ->
+            mantissa[i].inv() and MegaNumberConstants.MASK.toInt()
         }
 
-        // Create result
         val result = MegaBinary(mantissa = resultArr, keepLeadingZeros = keepLeadingZeros)
         result.normalize()
 
         return result
     }
 
-    /**
-     * Add two MegaBinary objects (treating them as unsigned integers).
-     *
-     * @param other Another MegaBinary object
-     * @return Sum as MegaBinary
-     */
-    fun add(other: MegaBinary): MegaBinary {
-        // Use base class integer addition logic
-        val baseResult = super.add(other)
-
-        // Create new MegaBinary from the result mantissa
-        val resultBin = MegaBinary(mantissa = baseResult.mantissa, keepLeadingZeros = keepLeadingZeros)
-        resultBin.normalize()
-        return resultBin
-    }
-
-    /**
-     * Subtract other from self (treating them as unsigned integers).
-     * Result is undefined if other > self.
-     *
-     * @param other Another MegaBinary object
-     * @return Difference as MegaBinary
-     */
-    fun sub(other: MegaBinary): MegaBinary {
-        // Use base class integer subtraction logic
-        val baseResult = super.sub(other)
-
-        // Check for negative result which is invalid for binary representation
-        if (baseResult.negative) {
-            throw IllegalArgumentException("Subtraction resulted in a negative value, invalid for MegaBinary")
-        }
-
-        // Create new MegaBinary from the result mantissa
-        val resultBin = MegaBinary(mantissa = baseResult.mantissa, keepLeadingZeros = keepLeadingZeros)
-        resultBin.normalize()
-        return resultBin
-    }
-
-    /**
-     * Multiply two MegaBinary objects (treating them as unsigned integers).
-     *
-     * @param other Another MegaBinary object
-     * @return Product as MegaBinary
-     */
-    fun mul(other: MegaBinary): MegaBinary {
-        // Use base class integer multiplication logic
-        val baseResult = super.mul(other)
-
-        // Create new MegaBinary from the result mantissa
-        val resultBin = MegaBinary(mantissa = baseResult.mantissa, keepLeadingZeros = keepLeadingZeros)
-        resultBin.normalize()
-        return resultBin
-    }
-
-    /**
-     * Divide self by other (integer division).
-     *
-     * @param other Another MegaBinary object
-     * @return Quotient as MegaBinary
-     */
-    fun div(other: MegaBinary): MegaBinary {
-        if (other.isZero()) {
-            throw ArithmeticException("Division by zero")
-        }
-
-        // Use base class integer division logic
-        val baseResult = super.divide(other)
-
-        // Create new MegaBinary from the result mantissa
-        val resultBin = MegaBinary(mantissa = baseResult.mantissa, keepLeadingZeros = keepLeadingZeros)
-        resultBin.normalize()
-        return resultBin
-    }
+    // Note: Arithmetic operations (add, sub, mul, divide, sqrt) are inherited from MegaNumber
 
     /**
      * Shift left by bits.
@@ -397,19 +276,10 @@ class MegaBinary : MegaNumber {
      * @return Shifted MegaBinary
      */
     fun shiftLeft(bits: MegaBinary): MegaBinary {
-        // Convert bits to integer
-        val shiftVal : Int = chunklistToInt(bits.mantissa)
-
-        // Convert self to integer
-        val selfVal : Int = chunklistToInt(mantissa)
-
-        // Perform left shift
+        val shiftVal = chunksToInt(bits.mantissa)
+        val selfVal = chunksToInt(mantissa)
         val shiftedVal: Int = (selfVal shl shiftVal)
-
-        // Convert back to limbs
-        val resultLimbs = intToChunks(shiftedVal, MegaNumberConstants.GLOBAL_CHUNK_SIZE)
-
-        // Create result
+        val resultLimbs = intArrayOf(shiftedVal)
         val result = MegaBinary(mantissa = resultLimbs, keepLeadingZeros = keepLeadingZeros)
         result.normalize()
         return result
@@ -422,19 +292,10 @@ class MegaBinary : MegaNumber {
      * @return Shifted MegaBinary
      */
     fun shiftRight(bits: MegaBinary): MegaBinary {
-        // Convert bits to integer
-        val shiftVal = chunklistToInt(bits.mantissa)
-
-        // Convert self to integer
-        val selfVal = chunklistToInt(mantissa)
-
-        // Perform right shift
+        val shiftVal = chunksToInt(bits.mantissa)
+        val selfVal = chunksToInt(mantissa)
         val shiftedVal: Int = (selfVal shr shiftVal)
-
-        // Convert back to limbs
-        val resultLimbs = intToChunks(shiftedVal, MegaNumberConstants.GLOBAL_CHUNK_SIZE)
-
-        // Create result
+        val resultLimbs = intArrayOf(shiftedVal)
         val result = MegaBinary(mantissa = resultLimbs, keepLeadingZeros = keepLeadingZeros)
         result.normalize()
         return result
@@ -447,16 +308,9 @@ class MegaBinary : MegaNumber {
      * @return Bit value (true or false)
      */
     fun getBit(position: MegaBinary): Boolean {
-        // Convert position to integer
-        val posVal = chunklistToInt(position.mantissa)
-
-        // Convert self to integer
-        val selfVal = chunklistToInt(mantissa)
-
-        // Create mask
+        val posVal = chunksToInt(position.mantissa)
+        val selfVal = chunksToInt(mantissa)
         val mask = 1 shl posVal
-
-        // Check the bit
         return (selfVal and mask) != 0
     }
 
@@ -467,25 +321,17 @@ class MegaBinary : MegaNumber {
      * @param value Bit value (true or false)
      */
     fun setBit(position: MegaBinary, value: Boolean) {
-        // Convert position to integer
-        val posVal = chunklistToInt(position.mantissa)
-
-        // Convert self to integer
-        val selfVal = chunklistToInt(mantissa)
-
-        // Create mask
+        val posVal = chunksToInt(position.mantissa)
+        val selfVal = chunksToInt(mantissa)
         val mask = 1 shl posVal
 
         val newVal = if (value) {
-            // Set bit using OR
             selfVal or mask
         } else {
-            // Clear bit using AND with NOT mask
             selfVal and mask.inv()
         }
 
-        // Convert back to limbs and update mantissa
-        mantissa = intToChunks(newVal, MegaNumberConstants.GLOBAL_CHUNK_SIZE)
+        mantissa = intArrayOf(newVal)
         normalize()
     }
 
@@ -496,7 +342,6 @@ class MegaBinary : MegaNumber {
      * @return Propagated wave
      */
     fun propagate(shift: MegaBinary): MegaBinary {
-        // Propagation is typically a left shift in wave contexts
         return shiftLeft(shift)
     }
 
@@ -507,7 +352,6 @@ class MegaBinary : MegaNumber {
      */
     fun toBits(): List<Int> {
         val binStr = toBinaryString()
-        // Pad with leading zeros if keepLeadingZeros is true and bitLength is set
         val paddedBinStr = if (keepLeadingZeros && bitLength > 0) {
             binStr.padStart(bitLength, '0')
         } else {
@@ -541,13 +385,9 @@ class MegaBinary : MegaNumber {
             return "0"
         }
 
-        // Convert limbs to integer
-        val value = chunklistToInt(mantissa)
-
-        // Convert to binary string, remove "0b" prefix
+        val value = chunksToInt(mantissa)
         val binStr = value.toString(2)
 
-        // Handle potential padding if keepLeadingZeros is true
         return if (keepLeadingZeros && bitLength > 0) {
             binStr.padStart(bitLength, '0')
         } else {
@@ -560,6 +400,7 @@ class MegaBinary : MegaNumber {
      *
      * @return Binary string representation (MSB first)
      */
+    @Suppress("unused")
     fun toStringBigEndian(): String {
         return toBinaryString()
     }
@@ -570,7 +411,6 @@ class MegaBinary : MegaNumber {
      * @return True if the value is zero, False otherwise
      */
     fun isZero(): Boolean {
-        // Check if mantissa represents zero after normalization
         normalize()
         return mantissa.size == 1 && mantissa[0] == 0
     }
@@ -582,7 +422,6 @@ class MegaBinary : MegaNumber {
      */
     fun toBytes(): ByteArray {
         val binStr = toBinaryString()
-        // Pad with leading zeros to make length a multiple of 8
         val paddedBinStr = binStr.padStart((binStr.length + 7) / 8 * 8, '0')
         val byteArr = ByteArray(paddedBinStr.length / 8)
         for (i in paddedBinStr.indices step 8) {
@@ -623,42 +462,26 @@ class MegaBinary : MegaNumber {
                 throw IllegalArgumentException("Need at least one wave for interference")
             }
 
-            // Find max length among all wave mantissas
-            var maxLen = 0
-            for (wave in waves) {
-                maxLen = maxOf(maxLen, wave.mantissa.size)
+            // For a single wave, return a copy of it
+            if (waves.size == 1) {
+                return waves[0].copy()
             }
 
-            // Pad all mantissas to maxLen and perform operation
-            var resultArr = if (waves[0].mantissa.size < maxLen) {
-                val padded = IntArray(maxLen)
-                waves[0].mantissa.copyInto(padded)
-                padded
-            } else {
-                waves[0].mantissa.copyOf()
+            // Get operation function based on mode
+            val operation: (Int, Int) -> Int = when (mode) {
+                InterferenceMode.XOR -> { a, b -> a xor b }
+                InterferenceMode.AND -> { a, b -> a and b }
+                InterferenceMode.OR -> { a, b -> a or b }
             }
 
+            // Start with the first wave
+            var result = waves[0]
+
+            // Apply operation with each subsequent wave
             for (wave in waves.subList(1, waves.size)) {
-                val paddedWaveArr = if (wave.mantissa.size < maxLen) {
-                    val padded = IntArray(maxLen)
-                    wave.mantissa.copyInto(padded)
-                    padded
-                } else {
-                    wave.mantissa.copyOf()
-                }
-
-                resultArr = when (mode) {
-                    InterferenceMode.XOR -> IntArray(maxLen) { i -> resultArr[i] xor paddedWaveArr[i] }
-                    InterferenceMode.AND -> IntArray(maxLen) { i -> resultArr[i] and paddedWaveArr[i] }
-                    InterferenceMode.OR -> IntArray(maxLen) { i -> resultArr[i] or paddedWaveArr[i] }
-                }
+                result = result.applyBitwiseOperation(wave, operation)
             }
 
-            // Create result
-            // Determine keepLeadingZeros based on the first wave
-            val keepZeros = waves[0].keepLeadingZeros
-            val result = MegaBinary(mantissa = resultArr, keepLeadingZeros = keepZeros)
-            result.normalize()
             return result
         }
 
@@ -670,9 +493,8 @@ class MegaBinary : MegaNumber {
          * @return Blocky sine wave pattern
          */
         fun generateBlockySin(length: MegaBinary, halfPeriod: MegaBinary): MegaBinary {
-            // Convert inputs to integers
-            val lenInt = length.chunklistToInt(length.mantissa)
-            val hpInt = halfPeriod.chunklistToInt(halfPeriod.mantissa)
+            val lenInt = chunksToInt(length.mantissa)
+            val hpInt = chunksToInt(halfPeriod.mantissa)
 
             if (hpInt <= 0) {
                 throw IllegalArgumentException("Half period must be positive")
@@ -681,7 +503,6 @@ class MegaBinary : MegaNumber {
                 return MegaBinary("0")
             }
 
-            // Generate pattern
             val binStr = buildString {
                 for (i in 0 until lenInt) {
                     if ((i / hpInt) % 2 == 0) {
@@ -703,8 +524,8 @@ class MegaBinary : MegaNumber {
          * @return Binary pattern with the specified duty cycle
          */
         fun createDutyCycle(length: MegaBinary, dutyCycleVal: MegaBinary): MegaBinary {
-            val lenInt = length.chunklistToInt(length.mantissa)
-            val numOnes = dutyCycleVal.chunklistToInt(dutyCycleVal.mantissa)
+            val lenInt = chunksToInt(length.mantissa)
+            val numOnes = chunksToInt(dutyCycleVal.mantissa)
 
             if (numOnes < 0 || numOnes > lenInt) {
                 throw IllegalArgumentException("Number of ones must be between 0 and length")
@@ -713,7 +534,6 @@ class MegaBinary : MegaNumber {
                 return MegaBinary("0")
             }
 
-            // Create pattern string
             val binStr = "1".repeat(numOnes) + "0".repeat(lenInt - numOnes)
 
             return MegaBinary(binStr, keepLeadingZeros = length.keepLeadingZeros)

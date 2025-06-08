@@ -40,7 +40,6 @@ kotlin {
             kotlin.srcDir("src/commonMain/kotlin")
             resources.srcDir("src/commonMain/resources")
             kotlin.exclude(
-                "ai/solace/emberml/tensor/bitwise/MegaBinary.kt",
                 "ai/solace/emberml/tensor/bitwise/MegaFloat.kt",
                 "ai/solace/emberml/tensor/bitwise/MegaInteger.kt"
             )
@@ -53,10 +52,10 @@ kotlin {
             kotlin.srcDir("src/commonTest/kotlin")
             resources.srcDir("src/commonTest/resources")
             kotlin.exclude(
-                "ai/solace/emberml/tensor/bitwise/MegaBinaryTest.kt",
                 "ai/solace/emberml/tensor/bitwise/MegaFloatTest.kt",
                 "ai/solace/emberml/tensor/bitwise/MegaIntegerTest.kt",
                 "ai/solace/emberml/tensor/bitwise/DebugTest.kt"
+                // MegaBinaryStubTest.kt is intentionally not excluded
             )
         }
         // Native source sets
