@@ -1,9 +1,10 @@
 plugins {
-    kotlin("multiplatform") version "2.0.20"
-    kotlin("plugin.serialization") version "2.0.20"
+    kotlin("multiplatform") version "2.1.21"
+    kotlin("plugin.serialization") version "2.1.21"
     id("com.github.ben-manes.versions") version "0.51.0"
     id("maven-publish")
 }
+
 
 group = "ai.solace.emberml"
 version = "0.1.0"
@@ -16,7 +17,7 @@ kotlin {
     // Add minimal JVM target for IDE support
     jvm()
 
-    // Native targets
+    // Native targets for Kotlin Native build
     linuxX64()
     macosX64()
     macosArm64()

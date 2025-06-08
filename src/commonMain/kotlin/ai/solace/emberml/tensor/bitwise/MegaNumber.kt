@@ -4,18 +4,15 @@
  * This class provides a chunk-based big integer (or float) with arbitrary precision arithmetic,
  * using Int arrays with 32-bit values.
  */
-@file:OptIn(ExperimentalUnsignedTypes::class)
-
 package ai.solace.emberml.tensor.bitwise
 
 /**
  * Constants used by MegaNumber implementation
  */
-@OptIn(ExperimentalUnsignedTypes::class)
 object MegaNumberConstants {
     const val GLOBAL_CHUNK_SIZE: Int = 32 // Optimum size for O(n) complexity drop in certain operations
-    val base: Int = 1 shl GLOBAL_CHUNK_SIZE // 2^32
-    val mask: Int = (1 shl GLOBAL_CHUNK_SIZE) - 1 // 2^32 - 1, all bits set in a 32-bit chunk
+    const val base: Int = 1 shl GLOBAL_CHUNK_SIZE // 2^32, used for carry/borrow
+    const val mask: Long = 0xFFFFFFFFL // Use Long for proper unsigned handling
 
     // Thresholds for picking naive vs. Karatsuba vs. Toom-3
     const val MUL_THRESHOLD_KARATSUBA = 64 // Increased to use standard multiplication for smaller numbers
@@ -74,51 +71,63 @@ open class MegaNumber(
         internal fun addChunks(a: IntArray, b: IntArray): IntArray {
             val maxLen = maxOf(a.size, b.size)
             val out = IntArray(maxLen + 1)
-            var carry = 0
+            var carry = 0L
 
             for (i in 0 until maxLen) {
-                val av = if (i < a.size) a[i] else 0
-                val bv = if (i < b.size) b[i] else 0
+                val av = if (i < a.size) a[i].toLong() and 0xFFFFFFFFL else 0L
+                val bv = if (i < b.size) b[i].toLong() and 0xFFFFFFFFL else 0L
                 val s = av + bv + carry
-                carry = s shr MegaNumberConstants.GLOBAL_CHUNK_SIZE
-                out[i] = (s and MegaNumberConstants.mask)
+                out[i] = (s and 0xFFFFFFFFL).toInt()
+                carry = s ushr 32
             }
-            if (carry != 0) out[maxLen] = carry
+
+            if (carry != 0L) {
+                out[maxLen] = carry.toInt()
+                return out
+            }
 
             // Trim trailing zeros
             var lastNonZero = out.size - 1
             while (lastNonZero > 0 && out[lastNonZero] == 0) {
                 lastNonZero--
             }
-            return out.copyOf(lastNonZero + 1)
+
+            return if (lastNonZero == out.size - 1) out else out.copyOf(lastNonZero + 1)
         }
 
         /**
          * Subtract B from A (assuming A >= B), returning chunk-limb array
          */
-        internal fun subChunks(a: IntArray, b: IntArray): IntArray {
-            // A>=B must hold externally; we do a standard chunk-based subtraction with borrow
+        internal fun subChunks(a: IntArray, b: IntArray, preserveSize: Boolean = true): IntArray {
+            // Same implementation as above until the trimming part
             val out = IntArray(a.size)
-            var carry = 0
+            var borrow = 0L
 
             for (i in 0 until a.size) {
-                val av = a[i]
-                val bv = if (i < b.size) b[i] else 0
-                var diff = av - bv - carry
+                val av = a[i].toLong() and 0xFFFFFFFFL
+                val bv = if (i < b.size) b[i].toLong() and 0xFFFFFFFFL else 0L
+                var diff = av - bv - borrow
+
                 if (diff < 0) {
-                    diff += MegaNumberConstants.base
-                    carry = 1
+                    diff += 0x100000000L
+                    borrow = 1L
                 } else {
-                    carry = 0
+                    borrow = 0L
                 }
-                out[i] = diff and MegaNumberConstants.mask
+
+                out[i] = (diff and 0xFFFFFFFFL).toInt()
             }
 
-            // Trim trailing zeros
+            if (preserveSize) {
+                return out
+            }
+
+            // Find last non-zero element
             var lastNonZero = out.size - 1
             while (lastNonZero > 0 && out[lastNonZero] == 0) {
                 lastNonZero--
             }
+
             return out.copyOf(lastNonZero + 1)
         }
 
@@ -148,16 +157,19 @@ open class MegaNumber(
             val out = IntArray(la + lb)
 
             for (i in 0 until la) {
-                var carry = 0
-                val av = a[i]
+                val av = a[i].toLong() and 0xFFFFFFFFL
+                var carry = 0L
+
                 for (j in 0 until lb) {
-                    val prod = av * b[j] + out[i + j] + carry
-                    val lo: Int = (prod and MegaNumberConstants.mask)
-                    carry = prod shr MegaNumberConstants.GLOBAL_CHUNK_SIZE
-                    out[i + j] = lo
+                    val bv = b[j].toLong() and 0xFFFFFFFFL
+                    val existing = out[i + j].toLong() and 0xFFFFFFFFL
+                    val prod = av * bv + existing + carry
+                    out[i + j] = (prod and 0xFFFFFFFFL).toInt()
+                    carry = prod ushr 32
                 }
-                if (carry != 0) {
-                    out[i + lb] = (out[i + lb] + carry)
+
+                if (carry != 0L) {
+                    out[i + lb] = carry.toInt()
                 }
             }
 
@@ -166,6 +178,7 @@ open class MegaNumber(
             while (lastNonZero > 0 && out[lastNonZero] == 0) {
                 lastNonZero--
             }
+
             return out.copyOf(lastNonZero + 1)
         }
 
@@ -235,14 +248,23 @@ open class MegaNumber(
          * Convert an Int into chunk-limbs. A zero value => [0].
          */
         internal fun intToChunks(val_: Int): IntArray {
-            if (val_ == 0) return intArrayOf(0)
-            var x = val_.toInt()
-            val out = mutableListOf<Int>()
-            while (x != 0) {
-                out.add(x and MegaNumberConstants.mask)
-                x = x shr MegaNumberConstants.GLOBAL_CHUNK_SIZE
-            }
-            return out.toIntArray()
+        if (val_ == 0) return intArrayOf(0)
+
+        // If the chunk size is the full 32 bits we can store the value in a single limb
+        if (MegaNumberConstants.GLOBAL_CHUNK_SIZE >= 32) {
+            return intArrayOf(val_)
+        }
+
+        var x = val_
+        val chunkMask = (1 shl MegaNumberConstants.GLOBAL_CHUNK_SIZE) - 1
+        val out = mutableListOf<Int>()
+
+        while (x != 0) {
+            out.add(x and chunkMask)
+            // Use **unsigned** right‑shift so the loop terminates even for negative numbers
+            x = x ushr MegaNumberConstants.GLOBAL_CHUNK_SIZE
+        }
+        return out.toIntArray()
         }
 
         /**
@@ -250,14 +272,22 @@ open class MegaNumber(
          * This overload is provided for compatibility with MegaBinary.
          */
         internal fun intToChunks(val_: Int, chunkSize: Int): IntArray {
-            if (val_ == 0) return intArrayOf(0)
-            var x = val_.toInt()
-            val out = mutableListOf<Int>()
-            while (x != 0) {
-                out.add(x and ((1 shl chunkSize) - 1))
-                x = x shr chunkSize
-            }
-            return out.toIntArray()
+        if (val_ == 0) return intArrayOf(0)
+
+        // If the requested chunk size is >= 32 bits we only need one limb
+        if (chunkSize >= 32) {
+            return intArrayOf(val_)
+        }
+
+        var x = val_
+        val chunkMask = (1 shl chunkSize) - 1
+        val out = mutableListOf<Int>()
+
+        while (x != 0) {
+            out.add(x and chunkMask)
+            x = x ushr chunkSize   // unsigned shift to avoid sign extension loops
+        }
+        return out.toIntArray()
         }
 
         /**
@@ -286,7 +316,7 @@ open class MegaNumber(
             var shift = 0
             for (limb in limbs) {
                 val part = limb shl shift
-                val_ += part.toInt()  // May overflow
+                val_ += part  // May overflow
                 shift += MegaNumberConstants.GLOBAL_CHUNK_SIZE
             }
             return val_ // Convert to Int, may overflow
@@ -305,7 +335,7 @@ open class MegaNumber(
                 if (ch < '0' || ch > '9') {
                     throw IllegalArgumentException("Invalid decimal digit in $dec")
                 }
-                val digit : Int = (ch - '0').toInt()
+                val digit : Int = (ch - '0')
                 // Multiply limbs by 10, then add digit
                 limbs = addChunks(mulChunks(limbs, intArrayOf(10)), intArrayOf(digit))
             }
@@ -399,79 +429,111 @@ open class MegaNumber(
      * Remove trailing zeros, handle zero sign, etc.
      */
     open fun normalize() {
-        // Trim mantissa
-        var lastNonZero = mantissa.size - 1
-        while (lastNonZero > 0 && mantissa[lastNonZero] == 0) {
-            lastNonZero--
-        }
-        if (lastNonZero < mantissa.size - 1) {
-            mantissa = mantissa.copyOf(lastNonZero + 1)
-        }
-
-        // Trim exponent if float
-        if (isFloat) {
-            lastNonZero = exponent.size - 1
-            while (lastNonZero > 0 && exponent[lastNonZero] == 0) {
+        if (!keepLeadingZeros) {
+            // Trim mantissa
+            var lastNonZero = mantissa.size - 1
+            while (lastNonZero > 0 && mantissa[lastNonZero] == 0) {
                 lastNonZero--
             }
-            if (lastNonZero < exponent.size - 1) {
-                exponent = exponent.copyOf(lastNonZero + 1)
+            if (lastNonZero < mantissa.size - 1) {
+                mantissa = mantissa.copyOf(lastNonZero + 1)
             }
-        }
 
-        // If zero => unify sign
-        if (mantissa.size == 1 && mantissa[0] == 0) {
-            negative = false
-            exponent = zeroIntArray()
-            exponentNegative = false
+            // Trim exponent if float
+            if (isFloat) {
+                lastNonZero = exponent.size - 1
+                while (lastNonZero > 0 && exponent[lastNonZero] == 0) {
+                    lastNonZero--
+                }
+                if (lastNonZero < exponent.size - 1) {
+                    exponent = exponent.copyOf(lastNonZero + 1)
+                }
+            }
+
+            // If zero => unify sign
+            if (mantissa.size == 1 && mantissa[0] == 0) {
+                negative = false
+                exponent = zeroIntArray()
+                exponentNegative = false
+            }
+        } else {
+            // keepLeadingZeros = true: do not trim mantissa/exponent, but unify sign if all zero
+            if (mantissa.all { it == 0 }) {
+                negative = false
+                exponentNegative = false
+            }
         }
     }
 
     /**
-     * Implement chunk-based right shift
+     * Implement chunk-based right shift.
+     *
+     * @param shiftBits Number of bits to shift; must be >= 0.
+     */
+    /**
+     * Implement chunk-based right shift.
+     *
+     * @param shiftBits Number of bits to shift; must be >= 0.
      */
     internal fun shiftRight(limbs: IntArray, shiftBits: Int): IntArray {
-        // If shift <= 0, do nothing.
-        if (shiftBits <= 0) return limbs.copyOf()
+        // Shift count must be non-negative.
+        if (shiftBits < 0) {
+            throw IllegalArgumentException("shiftBits must be non-negative")
+        }
+        if (shiftBits == 0) {
+            // No shift – return a copy so callers can freely mutate the result
+            return limbs.copyOf()
+        }
 
-        // Number of whole chunks to drop.
-        val chunkShift = shiftBits / MegaNumberConstants.GLOBAL_CHUNK_SIZE
-        // Bits within one chunk to shift.
-        val bitShift = shiftBits % MegaNumberConstants.GLOBAL_CHUNK_SIZE
+        val chunkShift = shiftBits / 32
+        val bitShift   = shiftBits % 32
 
-        // If chunkShift >= limbs.count => result is 0.
         if (chunkShift >= limbs.size) {
             return intArrayOf(0)
         }
 
-        // Remove the lowest 'chunkShift' limbs (since each is 2^GLOBAL_CHUNK_SIZE).
-        val shifted = limbs.copyOfRange(chunkShift, limbs.size)
+        // Create result array
+        val resultSize = limbs.size - chunkShift
+        val result     = IntArray(resultSize)
 
-        // If there's no partial bit shift, we're done.
         if (bitShift == 0) {
-            return shifted
+            // Just copy the chunks
+            for (i in 0 until resultSize) {
+                result[i] = limbs[i + chunkShift]
+            }
+        } else {
+            // Shift with carry
+            for (i in 0 until resultSize) {
+                val currentChunk = limbs[i + chunkShift].toLong() and 0xFFFFFFFFL
+                val nextChunk    = if (i + chunkShift + 1 < limbs.size) {
+                    limbs[i + chunkShift + 1].toLong() and 0xFFFFFFFFL
+                } else {
+                    0L
+                }
+
+                // Take upper bits from next chunk and lower bits from current
+                result[i] = (((nextChunk shl (32 - bitShift)) or
+                        (currentChunk ushr bitShift)) and 0xFFFFFFFFL).toInt()
+            }
         }
 
-        // Otherwise, shift each limb to the right by bitShift bits,
-        // carrying bits from the next limb.
-        val result = IntArray(shifted.size)
-        var carry = 0
-        for (i in shifted.indices.reversed()) {
-            val val_ = shifted[i]
-            // Right-shift this limb
-            val newVal = (val_ shr bitShift) or (carry shl (MegaNumberConstants.GLOBAL_CHUNK_SIZE - bitShift))
-            // The "carry" (i.e. bits that fall off) comes from the lower part of val
-            carry = val_ and ((1 shl bitShift) - 1)
-
-            result[i] = newVal and MegaNumberConstants.mask  // ensure we stay within chunk size
+        // Zero-fill: discard the least-significant `bitShift` bits that were shifted out.
+        if (bitShift != 0) {
+            val mask = -1 shl bitShift      // e.g. bitShift=16 → 0xFFFF0000
+            result[0] = result[0] and mask  // clear those lower bits
         }
 
-        // Trim trailing zeroes
+        // Trim trailing zeros
         var lastNonZero = result.size - 1
         while (lastNonZero > 0 && result[lastNonZero] == 0) {
             lastNonZero--
         }
-        return result.copyOf(lastNonZero + 1)
+
+        return if (lastNonZero < result.size - 1) {
+            result.copyOf(lastNonZero + 1)
+        } else {
+            result
+        }
     }
 
     /**
@@ -544,7 +606,7 @@ open class MegaNumber(
             remainder = cur % smallVal
 
             // Assign the quotient digit to the output array, ensuring it fits within the chunk mask
-            out[i] = qd and MegaNumberConstants.mask
+            out[i] = qd and MegaNumberConstants.mask.toInt()
         }
 
         // Trim any unnecessary trailing zeros from the output array
@@ -569,7 +631,7 @@ open class MegaNumber(
         while (!(temp.size == 1 && temp[0] == 0)) {
             val (q, r) = divmodSmall(temp, 10)
             temp = q
-            digits.add('0' + r.toInt())
+            digits.add('0' + r)
         }
         return digits.reversed().joinToString("")
     }
@@ -855,7 +917,6 @@ open class MegaNumber(
             exponentNegative = (diffExp < 0)
         )
         out.normalize()
-        checkPrecisionLimit(out)
         return out
     }
 
@@ -945,7 +1006,7 @@ open class MegaNumber(
                 val result = IntArray(workMantissa.size + 1)
                 for (i in workMantissa.indices) {
                     val doubled = (workMantissa[i] shl 1) + carry
-                    result[i] = doubled and MegaNumberConstants.mask
+                    result[i] = doubled and MegaNumberConstants.mask.toInt()
                     carry = doubled shr MegaNumberConstants.GLOBAL_CHUNK_SIZE
                 }
                 if (carry != 0) {
@@ -1034,19 +1095,19 @@ open class MegaNumber(
         }
 
         // Use the chunks directly since they are already IntArray
-        val uIntChunks = chunks.copyOf()
+        val intChunks = chunks.copyOf()
 
         // Calculate whole chunk shifts and bit shifts within chunks
         val chunkShift = bits / MegaNumberConstants.GLOBAL_CHUNK_SIZE
         val bitShift = bits % MegaNumberConstants.GLOBAL_CHUNK_SIZE
 
         // Handle chunk-level right shift
-        val quotientInt = if (chunkShift >= uIntChunks.size) {
+        val quotientInt = if (chunkShift >= intChunks.size) {
             IntArray(1) { 0 }
         } else {
-            IntArray(uIntChunks.size - chunkShift) { i ->
-                if (i + chunkShift < uIntChunks.size) {
-                    uIntChunks[i + chunkShift]
+            IntArray(intChunks.size - chunkShift) { i ->
+                if (i + chunkShift < intChunks.size) {
+                    intChunks[i + chunkShift]
                 } else {
                     0
                 }
@@ -1058,7 +1119,7 @@ open class MegaNumber(
             IntArray(quotientInt.size) { i ->
                 val current = quotientInt[i]
                 val carry = if (i + 1 < quotientInt.size) {
-                    (quotientInt[i + 1] shl (MegaNumberConstants.GLOBAL_CHUNK_SIZE - bitShift)) and MegaNumberConstants.mask
+                    (quotientInt[i + 1] shl (MegaNumberConstants.GLOBAL_CHUNK_SIZE - bitShift)) and MegaNumberConstants.mask.toInt()
                 } else {
                     0
                 }
@@ -1091,19 +1152,19 @@ open class MegaNumber(
         }
 
         // Use the chunks directly since they are already IntArray
-        val uIntChunks = chunks.copyOf()
+        val intChunks = chunks.copyOf()
 
         // Calculate whole chunk shifts and bit shifts within chunks
         val chunkShift = bits / MegaNumberConstants.GLOBAL_CHUNK_SIZE
         val bitShift = bits % MegaNumberConstants.GLOBAL_CHUNK_SIZE
 
         // Handle chunk-level left shift (add zero chunks at the beginning)
-        val expandedSize = uIntChunks.size + chunkShift + if (bitShift > 0) 1 else 0
+        val expandedSize = intChunks.size + chunkShift + if (bitShift > 0) 1 else 0
         val shiftedInt = IntArray(expandedSize) { i ->
             if (i < chunkShift) {
                 0
-            } else if (i - chunkShift < uIntChunks.size) {
-                uIntChunks[i - chunkShift]
+            } else if (i - chunkShift < intChunks.size) {
+                intChunks[i - chunkShift]
             } else {
                 0
             }
@@ -1115,8 +1176,8 @@ open class MegaNumber(
             IntArray(shiftedInt.size) { i ->
                 val current = shiftedInt[i]
                 val shifted = (current shl bitShift) or carry
-                carry = (shifted shr MegaNumberConstants.GLOBAL_CHUNK_SIZE) and MegaNumberConstants.mask
-                (shifted and MegaNumberConstants.mask)
+                carry = (shifted shr MegaNumberConstants.GLOBAL_CHUNK_SIZE) and MegaNumberConstants.mask.toInt()
+                (shifted and MegaNumberConstants.mask.toInt())
             }
         } else {
             shiftedInt
