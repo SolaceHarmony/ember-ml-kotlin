@@ -283,6 +283,8 @@ class MegaBinary : MegaNumber {
 
     // Note: Arithmetic operations (add, sub, mul, divide, sqrt) are inherited from MegaNumber
 
+// In MegaBinary class:
+
     /**
      * Shift left by bits.
      *
@@ -291,11 +293,43 @@ class MegaBinary : MegaNumber {
      */
     fun shiftLeft(bits: MegaBinary): MegaBinary {
         val shiftVal = chunksToInt(bits.mantissa)
-        val selfVal = chunksToInt(mantissa)
-        val shiftedVal: Int = (selfVal shl shiftVal)
-        val resultLimbs = intArrayOf(shiftedVal)
-        val result = MegaBinary(mantissa = resultLimbs, keepLeadingZeros = keepLeadingZeros)
+
+        // Handle zero shift
+        if (shiftVal == 0) {
+            return MegaBinary(this)
+        }
+
+        // Calculate chunk shifts and bit shifts
+        val chunkShift = shiftVal / MegaNumberConstants.GLOBAL_CHUNK_SIZE
+        val bitShift = shiftVal % MegaNumberConstants.GLOBAL_CHUNK_SIZE
+
+        // Create new array with chunk shifts (insert zeros at the beginning)
+        val newSize = mantissa.size + chunkShift + if (bitShift > 0) 1 else 0
+        val newArr = IntArray(newSize)
+
+        // Copy existing mantissa after the chunk shift
+        mantissa.copyInto(newArr, chunkShift)
+
+        // Handle bit-level shifts if needed
+        if (bitShift > 0) {
+            var carry = 0
+            for (i in newArr.indices) {
+                val current = newArr[i].toLong() and MegaNumberConstants.MASK
+                val shifted = (current shl bitShift) or carry.toLong()
+                newArr[i] = (shifted and MegaNumberConstants.MASK).toInt()
+                carry = (shifted ushr MegaNumberConstants.GLOBAL_CHUNK_SIZE).toInt()
+            }
+        }
+
+        // Create result MegaBinary
+        val result = MegaBinary(mantissa = newArr, keepLeadingZeros = keepLeadingZeros)
+
+        // Update bit length - add the shift amount
+        result.bitLength = this.bitLength + shiftVal
+
+        // Normalize to clean up
         result.normalize()
+
         return result
     }
 
@@ -307,11 +341,50 @@ class MegaBinary : MegaNumber {
      */
     fun shiftRight(bits: MegaBinary): MegaBinary {
         val shiftVal = chunksToInt(bits.mantissa)
-        val selfVal = chunksToInt(mantissa)
-        val shiftedVal: Int = (selfVal shr shiftVal)
-        val resultLimbs = intArrayOf(shiftedVal)
-        val result = MegaBinary(mantissa = resultLimbs, keepLeadingZeros = keepLeadingZeros)
+
+        // Handle zero shift
+        if (shiftVal == 0) {
+            return MegaBinary(this)
+        }
+
+        // Calculate chunk shifts and bit shifts
+        val chunkShift = shiftVal / MegaNumberConstants.GLOBAL_CHUNK_SIZE
+        val bitShift = shiftVal % MegaNumberConstants.GLOBAL_CHUNK_SIZE
+
+        // If shifting more chunks than we have, return zero
+        if (chunkShift >= mantissa.size) {
+            val result = MegaBinary("0", keepLeadingZeros)
+            result.bitLength = 1
+            return result
+        }
+
+        // Create new array without the shifted chunks
+        val newSize = mantissa.size - chunkShift
+        val newArr = IntArray(newSize)
+
+        // Copy from the shifted position
+        mantissa.copyInto(newArr, 0, chunkShift)
+
+        // Handle bit-level shifts if needed
+        if (bitShift > 0) {
+            var carry : Long = 0
+            for (i in newArr.indices.reversed()) {
+                val current = newArr[i].toLong() and MegaNumberConstants.MASK
+                val nextCarry = (current and ((1L shl bitShift) - 1)) shl (MegaNumberConstants.GLOBAL_CHUNK_SIZE - bitShift)
+                newArr[i] = ((current ushr bitShift) or carry).toInt()
+                carry = nextCarry
+            }
+        }
+
+        // Create result MegaBinary
+        val result = MegaBinary(mantissa = newArr, keepLeadingZeros = keepLeadingZeros)
+
+        // Update bit length - subtract the shift amount but keep at least 1
+        result.bitLength = maxOf(1, this.bitLength - shiftVal)
+
+        // Normalize to clean up
         result.normalize()
+
         return result
     }
 
