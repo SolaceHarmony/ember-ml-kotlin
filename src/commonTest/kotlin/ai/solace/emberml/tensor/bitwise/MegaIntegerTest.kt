@@ -39,7 +39,7 @@ class MegaIntegerTest {
 
         // Verify that exponent is always zero
         assertEquals(1, integer.exponent.size)
-        assertEquals(0L, integer.exponent[0])
+        assertEquals(0, integer.exponent[0].toLong())
 
         // Verify that isFloat is always false
         assertFalse(integer.isFloat)
@@ -99,7 +99,7 @@ class MegaIntegerTest {
 
         // Verify that exponent is zero
         assertEquals(1, float.exponent.size)
-        assertEquals(0L, float.exponent[0])
+        assertEquals(0, float.exponent[0].toLong())
 
         // Verify that exponentNegative is false
         assertFalse(float.exponentNegative)

@@ -41,8 +41,8 @@ class MegaFloatTest {
     fun testExponentIsUsed() {
         // Create a MegaFloat with non-zero exponent
         val float = MegaFloat(
-            mantissa = longArrayOf(123),
-            exponent = longArrayOf(456),
+            mantissa = intArrayOf(123),
+            exponent = intArrayOf(456),
             negative = false,
             isFloat = true,
             exponentNegative = true
@@ -50,7 +50,7 @@ class MegaFloatTest {
 
         // Verify that exponent is preserved
         assertEquals(1, float.exponent.size)
-        assertEquals(456L, float.exponent[0])
+        assertEquals(456, float.exponent[0])
 
         // Verify that isFloat is always true
         assertTrue(float.isFloat)
@@ -145,7 +145,7 @@ class MegaFloatTest {
 
         // Verify that exponent is zero
         assertEquals(1, float.exponent.size)
-        assertEquals(0L, float.exponent[0])
+        assertEquals(0, float.exponent[0].toLong())
 
         // Verify that exponentNegative is false
         assertFalse(float.exponentNegative)
