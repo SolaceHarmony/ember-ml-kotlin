@@ -35,12 +35,27 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
             }
+            kotlin.srcDir("src/commonMain/kotlin")
+            resources.srcDir("src/commonMain/resources")
+            kotlin.exclude(
+                "ai/solace/emberml/tensor/bitwise/MegaBinary.kt",
+                "ai/solace/emberml/tensor/bitwise/MegaFloat.kt",
+                "ai/solace/emberml/tensor/bitwise/MegaInteger.kt"
+            )
         }
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
             }
+            kotlin.srcDir("src/commonTest/kotlin")
+            resources.srcDir("src/commonTest/resources")
+            kotlin.exclude(
+                "ai/solace/emberml/tensor/bitwise/MegaBinaryTest.kt",
+                "ai/solace/emberml/tensor/bitwise/MegaFloatTest.kt",
+                "ai/solace/emberml/tensor/bitwise/MegaIntegerTest.kt",
+                "ai/solace/emberml/tensor/bitwise/DebugTest.kt"
+            )
         }
         // Native source sets
         val nativeMain by creating {

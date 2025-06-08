@@ -39,8 +39,8 @@ class MegaBinary : MegaNumber {
         value: String = "0",
         keepLeadingZeros: Boolean = true
     ) : super(
-        mantissa = longArrayOf(0),
-        exponent = longArrayOf(0),
+        mantissa = uintArrayOf(0u),
+        exponent = intArrayOf(0),
         negative = false,
         isFloat = false,
         exponentNegative = false,
@@ -102,8 +102,8 @@ class MegaBinary : MegaNumber {
         bytes: ByteArray,
         keepLeadingZeros: Boolean = true
     ) : super(
-        mantissa = longArrayOf(0),
-        exponent = longArrayOf(0),
+        mantissa = uintArrayOf(0u),
+        exponent = intArrayOf(0),
         negative = false,
         isFloat = false,
         exponentNegative = false,
@@ -134,11 +134,11 @@ class MegaBinary : MegaNumber {
      * @param keepLeadingZeros Whether to keep leading zeros (default: true)
      */
     constructor(
-        mantissa: LongArray,
+        mantissa: UIntArray,
         keepLeadingZeros: Boolean = true
     ) : super(
         mantissa = mantissa,
-        exponent = longArrayOf(0),
+        exponent = intArrayOf(0),
         negative = false,
         isFloat = false,
         exponentNegative = false,
@@ -164,9 +164,10 @@ class MegaBinary : MegaNumber {
      *
      * @param binStr Binary string (e.g., "1010")
      */
+    @OptIn(ExperimentalUnsignedTypes::class)
     private fun parseBinaryString(binStr: String) {
         if (binStr.isEmpty()) {
-            mantissa = longArrayOf(0)
+            mantissa = uintArrayOf(0u)
             return
         }
 
@@ -174,11 +175,11 @@ class MegaBinary : MegaNumber {
         bitLength = binStr.length
 
         // Convert to integer
-        val value = binStr.toLongOrNull(2) ?: throw IllegalArgumentException("Invalid binary string: $binStr")
+        val value : Int = binStr.toIntOrNull(2) ?: throw IllegalArgumentException("Invalid binary string: $binStr")
 
         // Convert to limbs
-        mantissa = intToChunklist(value.toInt(), MegaNumberConstants.globalChunkSize)
-        exponent = longArrayOf(0)
+        mantissa = intToChunks(value, MegaNumberConstants.GLOBAL_CHUNK_SIZE)
+        exponent = intArrayOf(0)
         isFloat = false
         negative = false
         exponentNegative = false
@@ -190,20 +191,21 @@ class MegaBinary : MegaNumber {
      * @param other Another MegaBinary object
      * @return Result of bitwise AND operation
      */
+    @OptIn(ExperimentalUnsignedTypes::class)
     fun bitwiseAnd(other: MegaBinary): MegaBinary {
         // Get maximum length
         val maxLen = maxOf(mantissa.size, other.mantissa.size)
 
         // Pad arrays to the same length
         val selfArr = if (mantissa.size < maxLen) {
-            val padded = LongArray(maxLen)
+            val padded = UIntArray(maxLen)
             mantissa.copyInto(padded)
             padded
         } else {
             mantissa
         }
         val otherArr = if (other.mantissa.size < maxLen) {
-            val padded = LongArray(maxLen)
+            val padded: UIntArray = UIntArray(maxLen)
             other.mantissa.copyInto(padded)
             padded
         } else {
@@ -211,7 +213,9 @@ class MegaBinary : MegaNumber {
         }
 
         // Perform bitwise AND
-        val resultArr = LongArray(maxLen) { i -> selfArr[i] and otherArr[i] }
+        val resultArr: UIntArray = UIntArray(maxLen) { i ->
+            (selfArr[i] and otherArr[i])
+        }
 
         // Create result
         val result = MegaBinary(mantissa = resultArr, keepLeadingZeros = keepLeadingZeros)
@@ -226,20 +230,21 @@ class MegaBinary : MegaNumber {
      * @param other Another MegaBinary object
      * @return Result of bitwise OR operation
      */
+    @OptIn(ExperimentalUnsignedTypes::class)
     fun bitwiseOr(other: MegaBinary): MegaBinary {
         // Get maximum length
         val maxLen = maxOf(mantissa.size, other.mantissa.size)
 
         // Pad arrays to the same length
         val selfArr = if (mantissa.size < maxLen) {
-            val padded = LongArray(maxLen)
+            val padded: UIntArray = UIntArray(maxLen)
             mantissa.copyInto(padded)
             padded
         } else {
             mantissa
         }
         val otherArr = if (other.mantissa.size < maxLen) {
-            val padded = LongArray(maxLen)
+            val padded: UIntArray = UIntArray(maxLen)
             other.mantissa.copyInto(padded)
             padded
         } else {
@@ -247,7 +252,9 @@ class MegaBinary : MegaNumber {
         }
 
         // Perform bitwise OR
-        val resultArr = LongArray(maxLen) { i -> selfArr[i] or otherArr[i] }
+        val resultArr = UIntArray(maxLen) { i ->
+            selfArr[i] or otherArr[i]
+        }
 
         // Create result
         val result = MegaBinary(mantissa = resultArr, keepLeadingZeros = keepLeadingZeros)
@@ -268,14 +275,14 @@ class MegaBinary : MegaNumber {
 
         // Pad arrays to the same length
         val selfArr = if (mantissa.size < maxLen) {
-            val padded = LongArray(maxLen)
+            val padded: UIntArray = UIntArray(maxLen)
             mantissa.copyInto(padded)
             padded
         } else {
             mantissa
         }
         val otherArr = if (other.mantissa.size < maxLen) {
-            val padded = LongArray(maxLen)
+            val padded: UIntArray = UIntArray(maxLen)
             other.mantissa.copyInto(padded)
             padded
         } else {
@@ -283,7 +290,7 @@ class MegaBinary : MegaNumber {
         }
 
         // Perform bitwise XOR
-        val resultArr = LongArray(maxLen) { i -> selfArr[i] xor otherArr[i] }
+        val resultArr = UIntArray(maxLen) { i -> selfArr[i] xor otherArr[i] }
 
         // Create result
         val result = MegaBinary(mantissa = resultArr, keepLeadingZeros = keepLeadingZeros)
@@ -299,7 +306,7 @@ class MegaBinary : MegaNumber {
      */
     fun bitwiseNot(): MegaBinary {
         // Perform bitwise NOT on existing limbs
-        val resultArr = LongArray(mantissa.size) { i -> mantissa[i].inv() and MegaNumberConstants.mask }
+        val resultArr = UIntArray(mantissa.size) { i -> mantissa[i].inv() and MegaNumberConstants.mask }
 
         // Create result
         val result = MegaBinary(mantissa = resultArr, keepLeadingZeros = keepLeadingZeros)
@@ -388,18 +395,19 @@ class MegaBinary : MegaNumber {
      * @param bits Number of bits to shift (as MegaBinary)
      * @return Shifted MegaBinary
      */
+    @OptIn(ExperimentalUnsignedTypes::class)
     fun shiftLeft(bits: MegaBinary): MegaBinary {
         // Convert bits to integer
-        val shiftVal = chunklistToInt(bits.mantissa)
+        val shiftVal : Int = chunklistToInt(bits.mantissa)
 
         // Convert self to integer
-        val selfVal = chunklistToInt(mantissa)
+        val selfVal : Int = chunklistToInt(mantissa)
 
         // Perform left shift
-        val shiftedVal = selfVal shl shiftVal
+        val shiftedVal: Int = (selfVal shl shiftVal)
 
         // Convert back to limbs
-        val resultLimbs = intToChunklist(shiftedVal, MegaNumberConstants.globalChunkSize)
+        val resultLimbs = intToChunks(shiftedVal, MegaNumberConstants.GLOBAL_CHUNK_SIZE)
 
         // Create result
         val result = MegaBinary(mantissa = resultLimbs, keepLeadingZeros = keepLeadingZeros)
@@ -421,10 +429,10 @@ class MegaBinary : MegaNumber {
         val selfVal = chunklistToInt(mantissa)
 
         // Perform right shift
-        val shiftedVal = selfVal ushr shiftVal
+        val shiftedVal: UInt = (selfVal shr shiftVal).toUInt()
 
         // Convert back to limbs
-        val resultLimbs = intToChunklist(shiftedVal, MegaNumberConstants.globalChunkSize)
+        val resultLimbs = intToChunks(shiftedVal, MegaNumberConstants.GLOBAL_CHUNK_SIZE)
 
         // Create result
         val result = MegaBinary(mantissa = resultLimbs, keepLeadingZeros = keepLeadingZeros)
@@ -458,6 +466,7 @@ class MegaBinary : MegaNumber {
      * @param position Bit position (0-based, from least significant bit)
      * @param value Bit value (true or false)
      */
+    @OptIn(ExperimentalUnsignedTypes::class)
     fun setBit(position: MegaBinary, value: Boolean) {
         // Convert position to integer
         val posVal = chunklistToInt(position.mantissa)
@@ -477,7 +486,7 @@ class MegaBinary : MegaNumber {
         }
 
         // Convert back to limbs and update mantissa
-        mantissa = intToChunklist(newVal, MegaNumberConstants.globalChunkSize)
+        mantissa = intToChunks(newVal, MegaNumberConstants.GLOBAL_CHUNK_SIZE)
         normalize()
     }
 

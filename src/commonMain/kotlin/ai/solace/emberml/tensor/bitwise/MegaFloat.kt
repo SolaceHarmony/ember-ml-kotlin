@@ -180,8 +180,8 @@ class MegaFloat : MegaNumber {
     }
 
     /**
-     * Override toDecimalString to format floating-point numbers with a decimal point.
-     * Inserts a decimal point 3 places from the right in the mantissa string.
+     * Override toDecimalString to properly convert floating-point numbers using mantissa * 2^exponent.
+     * This implements the correct floating-point to decimal conversion.
      *
      * @return A human-readable decimal string representation
      */
@@ -194,37 +194,65 @@ class MegaFloat : MegaNumber {
         // Get the sign prefix
         val signStr = if (negative) "-" else ""
 
-        // Convert mantissa to decimal string
-        val numStr = chunkToDecimal(mantissa)
-
-        // If not float, just return integer form (though we forced isFloat = True)
+        // If not float, convert as integer
         if (!isFloat) {
-            return signStr + numStr
+            return signStr + chunkToDecimal(mantissa)
         }
 
-        // Insert decimal point 3 places from the right
-        // If the string is shorter than 3 characters, pad with leading zeros
-        val paddedStr = if (numStr.length <= 3) {
-            "0".repeat(4 - numStr.length) + numStr
+        // For float: need to compute mantissa * 2^exponent or mantissa / 2^exponent
+        val expInt = exponentValue() // Use existing method that properly interprets exponent chunks
+
+        if (exponentNegative) {
+            // mantissa / 2^exponent - split into integer and fractional parts
+            val (integerPart, remainder) = divideBy2ToThePower(mantissa, expInt)
+            val integerStr = if (integerPart.size == 1 && integerPart[0] == 0L) "0" else chunkToDecimal(integerPart)
+
+            // If no remainder, just return integer part with .0
+            if (remainder.size == 1 && remainder[0] == 0L) {
+                return signStr + integerStr + ".0"
+            }
+
+            // Build fractional digits by repeatedly multiplying remainder by 10 and dividing by 2^exponent
+            val fracDigits = mutableListOf<String>()
+            var currentRemainder = remainder.copyOf()
+            val ten = longArrayOf(10)
+            val maxFracDigits = 50 // Limit fractional precision
+
+            for (i in 0 until maxFracDigits) {
+                // Multiply remainder by 10
+                currentRemainder = mulChunks(currentRemainder, ten)
+
+                // Divide by 2^exponent to get next digit
+                val (quotient, newRemainder) = divideBy2ToThePower(currentRemainder, expInt)
+                val digitValue = chunksToInt(quotient)
+                fracDigits.add(digitValue.toString())
+
+                currentRemainder = newRemainder
+                if (currentRemainder.size == 1 && currentRemainder[0] == 0L) {
+                    break
+                }
+            }
+
+            var result = integerStr + "." + fracDigits.joinToString("")
+            
+            // Remove trailing zeros but keep at least one decimal place
+            while (result.endsWith("0") && result.length > result.indexOf('.') + 2) {
+                result = result.substring(0, result.length - 1)
+            }
+
+            return signStr + result
         } else {
-            numStr
+            // mantissa * 2^exponent - multiply mantissa by 2^exponent
+            val shifted = multiplyBy2ToThePower(mantissa, expInt)
+            return signStr + chunkToDecimal(shifted) + ".0"
         }
-
-        val decimalPos = paddedStr.length - 3
-        var result = paddedStr.substring(0, decimalPos) + "." + paddedStr.substring(decimalPos)
-
-        // Remove trailing zeros
-        while (result.endsWith("0")) {
-            result = result.substring(0, result.length - 1)
-        }
-
-        // Ensure at least one decimal place
-        if (result.endsWith(".")) {
-            result += "0"
-        }
-
-        return signStr + result
     }
+
+
+
+
+
+
 
     /**
      * Provides a textual representation of the MegaFloat.

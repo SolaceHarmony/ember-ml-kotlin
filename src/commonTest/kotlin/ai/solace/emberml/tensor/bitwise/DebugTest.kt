@@ -10,9 +10,24 @@ class DebugTest {
         val integer = MegaInteger("100")
         println("[DEBUG_LOG] MegaInteger(100).toDecimalString(): ${integer.toDecimalString()}")
         
-        // Test MegaFloat
+        // Test MegaFloat with detailed debugging
         val float = MegaFloat("123.45")
-        println("[DEBUG_LOG] MegaFloat(123.45).toDecimalString(): ${float.toDecimalString()}")
+        println("[DEBUG_LOG] MegaFloat(123.45):")
+        println("  mantissa: ${float.mantissa.contentToString()}")
+        println("  exponent: ${float.exponent.contentToString()}")
+        println("  exponentNegative: ${float.exponentNegative}")
+        println("  chunkToDecimal(mantissa): ${float.chunkToDecimal(float.mantissa)}")
+        println("  toDecimalString(): ${float.toDecimalString()}")
+        
+        // Test what base MegaNumber would show
+        val baseFloat = MegaNumber(
+            mantissa = float.mantissa,
+            exponent = float.exponent,
+            negative = float.negative,
+            isFloat = true,
+            exponentNegative = float.exponentNegative
+        )
+        println("  base MegaNumber.toDecimalString(): ${baseFloat.toDecimalString()}")
         
         // Test arithmetic operations
         val a = MegaInteger("100")
@@ -23,11 +38,20 @@ class DebugTest {
         val product = a.mul(b) as MegaInteger
         println("[DEBUG_LOG] MegaInteger(100).mul(MegaInteger(50)).toDecimalString(): ${product.toDecimalString()}")
         
-        // Test MegaFloat arithmetic
+        // Test MegaFloat arithmetic with debugging
         val c = MegaFloat("10.0")
         val d = MegaFloat("2.0")
+        println("[DEBUG_LOG] MegaFloat(10.0) details:")
+        println("  mantissa: ${c.mantissa.contentToString()}")
+        println("  exponent: ${c.exponent.contentToString()}")
+        println("  exponentNegative: ${c.exponentNegative}")
+        
         val floatSum = c.add(d) as MegaFloat
-        println("[DEBUG_LOG] MegaFloat(10.0).add(MegaFloat(2.0)).toDecimalString(): ${floatSum.toDecimalString()}")
+        println("[DEBUG_LOG] MegaFloat(10.0).add(MegaFloat(2.0)):")
+        println("  result mantissa: ${floatSum.mantissa.contentToString()}")
+        println("  result exponent: ${floatSum.exponent.contentToString()}")
+        println("  result exponentNegative: ${floatSum.exponentNegative}")
+        println("  toDecimalString(): ${floatSum.toDecimalString()}")
         
         val floatProduct = c.mul(d) as MegaFloat
         println("[DEBUG_LOG] MegaFloat(10.0).mul(MegaFloat(2.0)).toDecimalString(): ${floatProduct.toDecimalString()}")

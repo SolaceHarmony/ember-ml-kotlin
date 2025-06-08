@@ -80,7 +80,7 @@ class MegaInteger : MegaNumber {
          * @return A new MegaInteger instance
          */
         fun fromInt(val_: Int): MegaInteger {
-            val limbs = intToChunks(val_)
+            val limbs = intToChunks(value, val_)
             val negative = val_ < 0
             return MegaInteger(
                 mantissa = limbs,
