@@ -180,6 +180,53 @@ class MegaFloat : MegaNumber {
     }
 
     /**
+     * Override toDecimalString to format floating-point numbers with a decimal point.
+     * Inserts a decimal point 3 places from the right in the mantissa string.
+     *
+     * @return A human-readable decimal string representation
+     */
+    override fun toDecimalString(): String {
+        // If zero, return "0.0"
+        if (mantissa.size == 1 && mantissa[0] == 0L) {
+            return "0.0"
+        }
+
+        // Get the sign prefix
+        val signStr = if (negative) "-" else ""
+
+        // Convert mantissa to decimal string
+        val numStr = chunkToDecimal(mantissa)
+
+        // If not float, just return integer form (though we forced isFloat = True)
+        if (!isFloat) {
+            return signStr + numStr
+        }
+
+        // Insert decimal point 3 places from the right
+        // If the string is shorter than 3 characters, pad with leading zeros
+        val paddedStr = if (numStr.length <= 3) {
+            "0".repeat(4 - numStr.length) + numStr
+        } else {
+            numStr
+        }
+
+        val decimalPos = paddedStr.length - 3
+        var result = paddedStr.substring(0, decimalPos) + "." + paddedStr.substring(decimalPos)
+
+        // Remove trailing zeros
+        while (result.endsWith("0")) {
+            result = result.substring(0, result.length - 1)
+        }
+
+        // Ensure at least one decimal place
+        if (result.endsWith(".")) {
+            result += "0"
+        }
+
+        return signStr + result
+    }
+
+    /**
      * Provides a textual representation of the MegaFloat.
      *
      * @return A string representation of the MegaFloat

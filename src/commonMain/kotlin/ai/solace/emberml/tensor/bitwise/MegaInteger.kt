@@ -179,7 +179,7 @@ class MegaInteger : MegaNumber {
         if (other !is MegaInteger) {
             throw IllegalArgumentException("MegaInteger can only multiply with another MegaInteger.")
         }
-        val productMant = mulChunksStandard(this.mantissa, other.mantissa)
+        val productMant = mulChunks(this.mantissa, other.mantissa)
         val sign = (this.negative != other.negative)
         val result = MegaInteger(
             mantissa = productMant,

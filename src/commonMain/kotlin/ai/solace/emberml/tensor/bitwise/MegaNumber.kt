@@ -15,8 +15,8 @@ object MegaNumberConstants {
     val mask: Long = (1L shl globalChunkSize) - 1L // 2^16 - 1, all bits set in a 16-bit chunk
 
     // Thresholds for picking naive vs. Karatsuba vs. Toom-3
-    const val MUL_THRESHOLD_KARATSUBA = 16 // Reduced to avoid excessive memory usage
-    const val MUL_THRESHOLD_TOOM = 64 // Reduced to avoid excessive memory usage
+    const val MUL_THRESHOLD_KARATSUBA = 64 // Increased to use standard multiplication for smaller numbers
+    const val MUL_THRESHOLD_TOOM = 128 // Increased to use Karatsuba for medium-sized numbers
 
     // Maximum precision in bits (limited to avoid excessive memory usage)
     var maxPrecisionBits: Int? = 1024 // 1024 bits should be enough for most use cases
