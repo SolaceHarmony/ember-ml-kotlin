@@ -387,21 +387,31 @@ open class MegaNumber {
 
 
         /**
-         * Combine chunk-limbs => a single Int. (May overflow if large.)
+         * Interpret a chunk-array as a *small* non‑negative integer and return
+         * it as a Kotlin `Int`.  We only support up to 31 bits because many
+         * call‑sites (shift counts, loop indices, etc.) expect a value safely
+         * representable in an `Int`.​
+         *
+         * Legacy code attempted to accumulate all limbs with `shl` operations
+         * on an `Int`, which wrapped once the shift reached ≥ 32 bits and
+         * produced wildly incorrect results (e.g. `0b11` became
+         * `0b110000…000`).  By restricting the conversion to the least‑
+         * significant limb and explicitly checking that all higher limbs are
+         * zero we avoid silent overflow while still supporting every place
+         * where `chunksToInt` is legitimately used.
          */
         internal fun chunksToInt(limbs: IntArray): Int {
-            /* Convert chunk-limbs to a single Int value.
-             * This is a simple conversion, but may overflow if the value is too large.
-             * This is needed for exponent calculations, where we assume the exponent fits in an Int.
-             */
-            var accumulatedValue = 0
-            var shift = 0
-            for (limb in limbs) {
-                val part = limb shl shift
-                accumulatedValue += part  // May overflow
-                shift += MegaNumberConstants.GLOBAL_CHUNK_SIZE
+            if (limbs.isEmpty()) return 0
+
+            // Reject values that require more than 31 bits.
+            if (limbs.size > 1 && limbs.drop(1).any { it != 0 }) {
+                throw IllegalArgumentException(
+                    "Value ${limbs.joinToString()} exceeds 31‑bit range and cannot be converted to Int"
+                )
             }
-            return accumulatedValue // Convert to Int, may overflow
+
+            // Mask to 31 bits to avoid sign‑extension if bit 31 is set.
+            return limbs[0] and 0x7FFFFFFF
         }
 
 

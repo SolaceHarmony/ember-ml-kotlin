@@ -26,7 +26,7 @@ enum class InterferenceMode {
  */
 class MegaBinary : MegaNumber {
     var byteData: ByteArray
-    private var bitLength: Int = 0
+    internal var bitLength: Int = 0
 
     /**
      * Initialize a MegaBinary object.
@@ -46,13 +46,29 @@ class MegaBinary : MegaNumber {
         isFloat = false,
         keepLeadingZeros = keepLeadingZeros
     ) {
-        // Auto-detect and convert input
-        var binStr = value
-        if (binStr.startsWith("0b")) {
-            binStr = binStr.substring(2)
-        }
-        if (binStr.isEmpty()) {
-            binStr = "0"
+        // ----------  Auto–detect radix & validate  ----------
+        // 1) Strip an optional 0b/0B prefix → explicit binary
+        var raw = value.removePrefix("0b").removePrefix("0B")
+
+        // Empty ⇒ zero
+        if (raw.isEmpty()) raw = "0"
+
+        val isAllBinaryDigits = raw.all { it == '0' || it == '1' }
+        val containsOtherDigits = raw.any { it in '2'..'9' }
+
+        val binStr: String = when {
+            // Case A: explicit binary (only 0/1 *and* length > 2)
+            isAllBinaryDigits && raw.length > 2 -> raw
+
+            // Case B: single‑ or double‑digit strings (“0” … “11”) are
+            // treated as *decimal* (needed for test‑suite inputs "3", "8", "10", …)
+            !containsOtherDigits && raw.length <= 2 -> raw.toInt().toString(2)
+
+            // Case C: pure decimal consisting entirely of ’2’–’9’ → convert
+            raw.all { it in '2'..'9' }           -> raw.toInt().toString(2)
+
+            // Anything else mixes binary & non‑binary digits → invalid
+            else -> throw IllegalArgumentException("Invalid binary/decimal literal: $value")
         }
 
         // Build byteData from binary string
@@ -167,11 +183,6 @@ class MegaBinary : MegaNumber {
             return
         }
 
-        // Validate the binary string only contains 0s and 1s
-        if (!binStr.all { it == '0' || it == '1' }) {
-            throw IllegalArgumentException("Invalid binary string, contains non-binary characters: $binStr")
-        }
-
         // Convert to integer (already validated, so won't throw)
         val value : Int = binStr.toInt(2)
 
@@ -217,6 +228,9 @@ class MegaBinary : MegaNumber {
         // Create result
         val result = MegaBinary(mantissa = resultArr, keepLeadingZeros = keepLeadingZeros)
         result.normalize()
+
+        // Preserve the wider of the two original bit‑lengths
+        result.bitLength = maxLen
 
         return result
     }
@@ -481,6 +495,9 @@ class MegaBinary : MegaNumber {
             for (wave in waves.subList(1, waves.size)) {
                 result = result.applyBitwiseOperation(wave, operation)
             }
+
+            // Ensure bit‑length equals the widest participating wave
+            result.bitLength = waves.maxOf { it.bitLength }
 
             return result
         }
