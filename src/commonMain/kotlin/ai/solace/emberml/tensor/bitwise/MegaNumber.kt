@@ -35,7 +35,6 @@ object MegaNumberConstants {
  * @property exponentNegative Exponent sign flag
  * @property keepLeadingZeros Whether to keep leading zeros
  */
-@OptIn(ExperimentalUnsignedTypes::class)
 open class MegaNumber(
     open var mantissa: IntArray = IntArray(1) { 0 },
     open var exponent: IntArray = IntArray(1) { 0 },
@@ -48,7 +47,6 @@ open class MegaNumber(
         /**
          * Right shift chunk-limbs by 1 bit => integer //2.
          */
-        @OptIn(ExperimentalUnsignedTypes::class)
         internal fun div2(limbs: IntArray): IntArray {
             val out = IntArray(limbs.size)
             var carry = 0
@@ -73,7 +71,6 @@ open class MegaNumber(
         /**
          * Add two chunk-limb arrays => sum-limb array
          */
-        @OptIn(ExperimentalUnsignedTypes::class)
         internal fun addChunks(a: IntArray, b: IntArray): IntArray {
             val maxLen = maxOf(a.size, b.size)
             val out = IntArray(maxLen + 1)
@@ -244,6 +241,21 @@ open class MegaNumber(
             while (x != 0) {
                 out.add(x and MegaNumberConstants.mask)
                 x = x shr MegaNumberConstants.GLOBAL_CHUNK_SIZE
+            }
+            return out.toIntArray()
+        }
+
+        /**
+         * Convert an Int into chunk-limbs with specified chunk size. A zero value => [0].
+         * This overload is provided for compatibility with MegaBinary.
+         */
+        internal fun intToChunks(val_: Int, chunkSize: Int): IntArray {
+            if (val_ == 0) return intArrayOf(0)
+            var x = val_.toInt()
+            val out = mutableListOf<Int>()
+            while (x != 0) {
+                out.add(x and ((1 shl chunkSize) - 1))
+                x = x shr chunkSize
             }
             return out.toIntArray()
         }
@@ -1016,7 +1028,6 @@ open class MegaNumber(
      * @param bits The power of 2 to divide by
      * @return Pair of (quotient, remainder)
      */
-    @OptIn(ExperimentalUnsignedTypes::class)
     protected fun divideBy2ToThePower(chunks: IntArray, bits: Int): Pair<IntArray, IntArray> {
         if (bits <= 0) {
             return Pair(chunks.copyOf(), intArrayOf(0))
@@ -1074,7 +1085,6 @@ open class MegaNumber(
     /**
      * Multiply chunks by 2^bits using IntArray for proper 32-bit operations.
      */
-    @OptIn(ExperimentalUnsignedTypes::class)
     protected fun multiplyBy2ToThePower(chunks: IntArray, bits: Int): IntArray {
         if (bits <= 0) {
             return chunks.copyOf()

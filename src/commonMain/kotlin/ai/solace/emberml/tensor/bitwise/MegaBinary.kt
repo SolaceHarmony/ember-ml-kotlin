@@ -16,7 +16,7 @@ enum class InterferenceMode {
 }
 
 /**
- * Binary data class, storing bits in LongArray with 64-bit values.
+ * Binary data class, storing bits in IntArray with 32-bit values.
  * Includes wave generation, duty-cycle patterns, interference, and
  * optional leading-zero preservation. Inherits from MegaNumber.
  *
@@ -32,14 +32,14 @@ class MegaBinary : MegaNumber {
      *
      * @param value Initial value, can be:
      *              - String of binary digits (e.g., "1010" or "0b1010")
-     *              - Default "0" => LongArray of just [0]
+     *              - Default "0" => IntArray of just [0]
      * @param keepLeadingZeros Whether to keep leading zeros (default: true)
      */
     constructor(
         value: String = "0",
         keepLeadingZeros: Boolean = true
     ) : super(
-        mantissa = uintArrayOf(0u),
+        mantissa = intArrayOf(0),
         exponent = intArrayOf(0),
         negative = false,
         isFloat = false,
@@ -102,7 +102,7 @@ class MegaBinary : MegaNumber {
         bytes: ByteArray,
         keepLeadingZeros: Boolean = true
     ) : super(
-        mantissa = uintArrayOf(0u),
+        mantissa = intArrayOf(0),
         exponent = intArrayOf(0),
         negative = false,
         isFloat = false,
@@ -130,11 +130,11 @@ class MegaBinary : MegaNumber {
     /**
      * Initialize a MegaBinary object with a specific mantissa.
      *
-     * @param mantissa LongArray of limbs
+     * @param mantissa IntArray of limbs
      * @param keepLeadingZeros Whether to keep leading zeros (default: true)
      */
     constructor(
-        mantissa: UIntArray,
+        mantissa: IntArray,
         keepLeadingZeros: Boolean = true
     ) : super(
         mantissa = mantissa,
@@ -164,10 +164,9 @@ class MegaBinary : MegaNumber {
      *
      * @param binStr Binary string (e.g., "1010")
      */
-    @OptIn(ExperimentalUnsignedTypes::class)
     private fun parseBinaryString(binStr: String) {
         if (binStr.isEmpty()) {
-            mantissa = uintArrayOf(0u)
+            mantissa = intArrayOf(0)
             return
         }
 
@@ -191,21 +190,20 @@ class MegaBinary : MegaNumber {
      * @param other Another MegaBinary object
      * @return Result of bitwise AND operation
      */
-    @OptIn(ExperimentalUnsignedTypes::class)
     fun bitwiseAnd(other: MegaBinary): MegaBinary {
         // Get maximum length
         val maxLen = maxOf(mantissa.size, other.mantissa.size)
 
         // Pad arrays to the same length
         val selfArr = if (mantissa.size < maxLen) {
-            val padded = UIntArray(maxLen)
+            val padded = IntArray(maxLen)
             mantissa.copyInto(padded)
             padded
         } else {
             mantissa
         }
         val otherArr = if (other.mantissa.size < maxLen) {
-            val padded: UIntArray = UIntArray(maxLen)
+            val padded = IntArray(maxLen)
             other.mantissa.copyInto(padded)
             padded
         } else {
@@ -213,8 +211,8 @@ class MegaBinary : MegaNumber {
         }
 
         // Perform bitwise AND
-        val resultArr: UIntArray = UIntArray(maxLen) { i ->
-            (selfArr[i] and otherArr[i])
+        val resultArr = IntArray(maxLen) { i ->
+            selfArr[i] and otherArr[i]
         }
 
         // Create result
@@ -230,21 +228,20 @@ class MegaBinary : MegaNumber {
      * @param other Another MegaBinary object
      * @return Result of bitwise OR operation
      */
-    @OptIn(ExperimentalUnsignedTypes::class)
     fun bitwiseOr(other: MegaBinary): MegaBinary {
         // Get maximum length
         val maxLen = maxOf(mantissa.size, other.mantissa.size)
 
         // Pad arrays to the same length
         val selfArr = if (mantissa.size < maxLen) {
-            val padded: UIntArray = UIntArray(maxLen)
+            val padded = IntArray(maxLen)
             mantissa.copyInto(padded)
             padded
         } else {
             mantissa
         }
         val otherArr = if (other.mantissa.size < maxLen) {
-            val padded: UIntArray = UIntArray(maxLen)
+            val padded = IntArray(maxLen)
             other.mantissa.copyInto(padded)
             padded
         } else {
@@ -252,7 +249,7 @@ class MegaBinary : MegaNumber {
         }
 
         // Perform bitwise OR
-        val resultArr = UIntArray(maxLen) { i ->
+        val resultArr = IntArray(maxLen) { i ->
             selfArr[i] or otherArr[i]
         }
 
@@ -275,14 +272,14 @@ class MegaBinary : MegaNumber {
 
         // Pad arrays to the same length
         val selfArr = if (mantissa.size < maxLen) {
-            val padded: UIntArray = UIntArray(maxLen)
+            val padded = IntArray(maxLen)
             mantissa.copyInto(padded)
             padded
         } else {
             mantissa
         }
         val otherArr = if (other.mantissa.size < maxLen) {
-            val padded: UIntArray = UIntArray(maxLen)
+            val padded = IntArray(maxLen)
             other.mantissa.copyInto(padded)
             padded
         } else {
@@ -290,7 +287,9 @@ class MegaBinary : MegaNumber {
         }
 
         // Perform bitwise XOR
-        val resultArr = UIntArray(maxLen) { i -> selfArr[i] xor otherArr[i] }
+        val resultArr = IntArray(maxLen) { i -> 
+            selfArr[i] xor otherArr[i] 
+        }
 
         // Create result
         val result = MegaBinary(mantissa = resultArr, keepLeadingZeros = keepLeadingZeros)
@@ -306,7 +305,9 @@ class MegaBinary : MegaNumber {
      */
     fun bitwiseNot(): MegaBinary {
         // Perform bitwise NOT on existing limbs
-        val resultArr = UIntArray(mantissa.size) { i -> mantissa[i].inv() and MegaNumberConstants.mask }
+        val resultArr = IntArray(mantissa.size) { i -> 
+            mantissa[i].inv() and MegaNumberConstants.mask 
+        }
 
         // Create result
         val result = MegaBinary(mantissa = resultArr, keepLeadingZeros = keepLeadingZeros)
@@ -395,7 +396,6 @@ class MegaBinary : MegaNumber {
      * @param bits Number of bits to shift (as MegaBinary)
      * @return Shifted MegaBinary
      */
-    @OptIn(ExperimentalUnsignedTypes::class)
     fun shiftLeft(bits: MegaBinary): MegaBinary {
         // Convert bits to integer
         val shiftVal : Int = chunklistToInt(bits.mantissa)
@@ -429,7 +429,7 @@ class MegaBinary : MegaNumber {
         val selfVal = chunklistToInt(mantissa)
 
         // Perform right shift
-        val shiftedVal: UInt = (selfVal shr shiftVal).toUInt()
+        val shiftedVal: Int = (selfVal shr shiftVal)
 
         // Convert back to limbs
         val resultLimbs = intToChunks(shiftedVal, MegaNumberConstants.GLOBAL_CHUNK_SIZE)
@@ -466,7 +466,6 @@ class MegaBinary : MegaNumber {
      * @param position Bit position (0-based, from least significant bit)
      * @param value Bit value (true or false)
      */
-    @OptIn(ExperimentalUnsignedTypes::class)
     fun setBit(position: MegaBinary, value: Boolean) {
         // Convert position to integer
         val posVal = chunklistToInt(position.mantissa)
@@ -538,7 +537,7 @@ class MegaBinary : MegaNumber {
      * @return Binary string representation
      */
     fun toBinaryString(): String {
-        if (mantissa.size == 1 && mantissa[0] == 0L) {
+        if (mantissa.size == 1 && mantissa[0] == 0) {
             return "0"
         }
 
@@ -573,7 +572,7 @@ class MegaBinary : MegaNumber {
     fun isZero(): Boolean {
         // Check if mantissa represents zero after normalization
         normalize()
-        return mantissa.size == 1 && mantissa[0] == 0L
+        return mantissa.size == 1 && mantissa[0] == 0
     }
 
     /**
@@ -598,7 +597,7 @@ class MegaBinary : MegaNumber {
      *
      * @return Copy of this MegaBinary
      */
-    override fun copy(): MegaBinary {
+    fun copy(): MegaBinary {
         return MegaBinary(this)
     }
 
@@ -632,7 +631,7 @@ class MegaBinary : MegaNumber {
 
             // Pad all mantissas to maxLen and perform operation
             var resultArr = if (waves[0].mantissa.size < maxLen) {
-                val padded = LongArray(maxLen)
+                val padded = IntArray(maxLen)
                 waves[0].mantissa.copyInto(padded)
                 padded
             } else {
@@ -641,7 +640,7 @@ class MegaBinary : MegaNumber {
 
             for (wave in waves.subList(1, waves.size)) {
                 val paddedWaveArr = if (wave.mantissa.size < maxLen) {
-                    val padded = LongArray(maxLen)
+                    val padded = IntArray(maxLen)
                     wave.mantissa.copyInto(padded)
                     padded
                 } else {
@@ -649,9 +648,9 @@ class MegaBinary : MegaNumber {
                 }
 
                 resultArr = when (mode) {
-                    InterferenceMode.XOR -> LongArray(maxLen) { i -> resultArr[i] xor paddedWaveArr[i] }
-                    InterferenceMode.AND -> LongArray(maxLen) { i -> resultArr[i] and paddedWaveArr[i] }
-                    InterferenceMode.OR -> LongArray(maxLen) { i -> resultArr[i] or paddedWaveArr[i] }
+                    InterferenceMode.XOR -> IntArray(maxLen) { i -> resultArr[i] xor paddedWaveArr[i] }
+                    InterferenceMode.AND -> IntArray(maxLen) { i -> resultArr[i] and paddedWaveArr[i] }
+                    InterferenceMode.OR -> IntArray(maxLen) { i -> resultArr[i] or paddedWaveArr[i] }
                 }
             }
 
