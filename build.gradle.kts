@@ -1,6 +1,6 @@
 plugins {
-    kotlin("multiplatform") version "2.0.21"
-    kotlin("plugin.serialization") version "2.0.21"
+    kotlin("multiplatform") version "2.0.20"
+    kotlin("plugin.serialization") version "2.0.20"
     id("com.github.ben-manes.versions") version "0.51.0"
     id("maven-publish")
 }
@@ -13,7 +13,8 @@ repositories {
 }
 
 kotlin {
-    // No JVM target - Pure native/common code only
+    // Add minimal JVM target for IDE support
+    jvm()
 
     // Native targets
     linuxX64()

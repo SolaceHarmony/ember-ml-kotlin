@@ -22,15 +22,15 @@ class MegaInteger : MegaNumber {
      * @param keepLeadingZeros Whether to keep leading zeros
      */
     constructor(
-        mantissa: LongArray = longArrayOf(0),
-        exponent: LongArray = longArrayOf(0),
+        mantissa: IntArray = IntArray(1) { 0 },
+        exponent: IntArray = IntArray(1) { 0 },
         negative: Boolean = false,
         isFloat: Boolean = false, // Always integer
         exponentNegative: Boolean = false,
         keepLeadingZeros: Boolean = false
     ) : super(
         mantissa = mantissa,
-        exponent = longArrayOf(0), // Exponent is zero for integers
+        exponent = IntArray(1) { 0 }, // Exponent is zero for integers
         negative = negative,
         isFloat = false,  // Always integer
         exponentNegative = false,

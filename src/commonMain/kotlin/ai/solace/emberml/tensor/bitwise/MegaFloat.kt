@@ -21,8 +21,8 @@ class MegaFloat : MegaNumber {
      * @param keepLeadingZeros Whether to keep leading zeros
      */
     constructor(
-        mantissa: LongArray = longArrayOf(0),
-        exponent: LongArray = longArrayOf(0),
+        mantissa: IntArray = IntArray(1) { 0 },
+        exponent: IntArray = IntArray(1) { 0 },
         negative: Boolean = false,
         isFloat: Boolean = true,
         exponentNegative: Boolean = false,
@@ -50,8 +50,8 @@ class MegaFloat : MegaNumber {
             this.exponentNegative = tmp.exponentNegative
         } catch (e: Exception) {
             // If parsing fails, default to zero
-            this.mantissa = longArrayOf(0)
-            this.exponent = longArrayOf(0)
+            this.mantissa = IntArray(1) { 0 }
+            this.exponent = IntArray(1) { 0 }
             this.negative = false
             this.exponentNegative = false
         }
@@ -168,7 +168,7 @@ class MegaFloat : MegaNumber {
      *
      * @return A new MegaFloat instance with the same properties
      */
-    override fun copy(): MegaNumber {
+    fun copy(): MegaNumber {
         return MegaFloat(
             mantissa = this.mantissa.copyOf(),
             exponent = this.exponent.copyOf(),
@@ -187,7 +187,7 @@ class MegaFloat : MegaNumber {
      */
     override fun toDecimalString(): String {
         // If zero, return "0.0"
-        if (mantissa.size == 1 && mantissa[0] == 0L) {
+        if (mantissa.size == 1 && mantissa[0] == 0) {
             return "0.0"
         }
 
@@ -205,17 +205,17 @@ class MegaFloat : MegaNumber {
         if (exponentNegative) {
             // mantissa / 2^exponent - split into integer and fractional parts
             val (integerPart, remainder) = divideBy2ToThePower(mantissa, expInt)
-            val integerStr = if (integerPart.size == 1 && integerPart[0] == 0L) "0" else chunkToDecimal(integerPart)
+            val integerStr = if (integerPart.size == 1 && integerPart[0] == 0) "0" else chunkToDecimal(integerPart)
 
             // If no remainder, just return integer part with .0
-            if (remainder.size == 1 && remainder[0] == 0L) {
+            if (remainder.size == 1 && remainder[0] == 0) {
                 return signStr + integerStr + ".0"
             }
 
             // Build fractional digits by repeatedly multiplying remainder by 10 and dividing by 2^exponent
             val fracDigits = mutableListOf<String>()
             var currentRemainder = remainder.copyOf()
-            val ten = longArrayOf(10)
+            val ten = intArrayOf(10)
             val maxFracDigits = 50 // Limit fractional precision
 
             for (i in 0 until maxFracDigits) {
@@ -228,13 +228,13 @@ class MegaFloat : MegaNumber {
                 fracDigits.add(digitValue.toString())
 
                 currentRemainder = newRemainder
-                if (currentRemainder.size == 1 && currentRemainder[0] == 0L) {
+                if (currentRemainder.size == 1 && currentRemainder[0] == 0) {
                     break
                 }
             }
 
             var result = integerStr + "." + fracDigits.joinToString("")
-            
+
             // Remove trailing zeros but keep at least one decimal place
             while (result.endsWith("0") && result.length > result.indexOf('.') + 2) {
                 result = result.substring(0, result.length - 1)

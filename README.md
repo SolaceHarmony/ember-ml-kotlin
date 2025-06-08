@@ -83,7 +83,7 @@ ember-ml-kotlin/
 
 ### Prerequisites
 
-- Kotlin 2.0.21 or higher
+- Kotlin 2.0.20 or higher
 - Gradle 8.0 or higher
 
 ### Building the Project
@@ -129,4 +129,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-
