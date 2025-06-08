@@ -6,7 +6,6 @@ import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.decimalStringToChun
 import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.div2
 import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.fromDecimalString
 import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.intToChunks
-import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.intToIntArray
 import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.karatsubaMulChunks
 import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.mulChunksStandard
 import ai.solace.emberml.tensor.bitwise.MegaNumber.Companion.shiftLeft
@@ -161,25 +160,8 @@ class MegaNumberTest {
         val result2 = intToChunks(123456)
         assertEquals(1, result2.size)
         assertEquals(123456, result2[0])
-
-        // Test with chunk size
-        val result3 = intToChunks(15, 4) // 15 in binary is 1111, with chunk size 4 it's just one chunk
-        assertEquals(1, result3.size)
-        assertEquals(15, result3[0])
-
-        // Test with chunk size that splits the number
-        val result4 = intToChunks(0b10101010, 4) // 10101010 in binary, with chunk size 4 it's 1010 and 1010
-        assertEquals(2, result4.size)
-        assertEquals(10, result4[0]) // 1010 in binary is 10
-        assertEquals(10, result4[1]) // 1010 in binary is 10
     }
 
-    @Test
-    fun testIntToIntArray() {
-        val result = intToIntArray(42)
-        assertEquals(1, result.size)
-        assertEquals(42, result[0])
-    }
 
 
     @Test

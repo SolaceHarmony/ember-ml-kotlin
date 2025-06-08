@@ -391,7 +391,7 @@ class MegaInteger : MegaNumber {
     fun bitwiseNot(): MegaInteger {
         val resultMantissa = LongArray(mantissa.size)
         for (i in mantissa.indices) {
-            resultMantissa[i] = mantissa[i].inv() and MegaNumberConstants.mask
+            resultMantissa[i] = mantissa[i].inv() and MegaNumberConstants.MASK
         }
         return MegaInteger(
             mantissa = resultMantissa,
@@ -429,7 +429,7 @@ class MegaInteger : MegaNumber {
             for (i in shifted.indices.reversed()) {
                 val newVal = (shifted[i] ushr bitShift) or (carry shl (MegaNumberConstants.globalChunkSize - bitShift))
                 carry = shifted[i] and ((1L shl bitShift) - 1L)
-                result[i] = newVal and MegaNumberConstants.mask
+                result[i] = newVal and MegaNumberConstants.MASK
             }
 
             // Trim trailing zeros

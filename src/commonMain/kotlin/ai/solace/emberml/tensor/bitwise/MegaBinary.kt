@@ -306,7 +306,7 @@ class MegaBinary : MegaNumber {
     fun bitwiseNot(): MegaBinary {
         // Perform bitwise NOT on existing limbs
         val resultArr = IntArray(mantissa.size) { i -> 
-            mantissa[i].inv() and MegaNumberConstants.mask 
+            mantissa[i].inv() and MegaNumberConstants.MASK
         }
 
         // Create result
