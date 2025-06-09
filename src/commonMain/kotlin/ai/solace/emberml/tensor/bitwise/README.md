@@ -1,56 +1,82 @@
-# MegaNumber, MegaInteger, and MegaFloat
+# MegaNumber Refactoring Plan
 
-This package provides arbitrary-precision arithmetic for both integers and floating-point numbers.
+## Current State
 
-## Class Structure
+The MegaNumber class and its subclasses (MegaFloat, MegaInteger) have been refactored to implement a set of interfaces that define their functionality:
 
-- `MegaNumber`: Base class that provides common functionality for arbitrary-precision arithmetic.
-- `MegaInteger`: Subclass of MegaNumber that represents arbitrary-precision integers.
-- `MegaFloat`: Subclass of MegaNumber that represents arbitrary-precision floating-point numbers.
+1. **BasicArithmeticOperations**: Basic arithmetic operations (add, subtract, multiply, divide)
+2. **FloatSpecificOperations**: Operations specific to floating-point numbers
+3. **AdvancedMathOperations**: Advanced mathematical operations (sqrt, etc.)
+4. **BitManipulationOperations**: Bit manipulation operations
+5. **ChunkOperations**: Operations on chunks (the internal representation of numbers)
+6. **ConversionOperations**: Conversion operations (to/from decimal string)
+7. **PowerOperations**: Power/exponentiation operations (implemented by MegaFloat and MegaInteger)
 
-## Exponents in MegaNumber
+This interface-based structure provides better organization and documentation of the functionality, making the code more maintainable and easier to understand.
 
-The `MegaNumber` class uses exponents to represent floating-point numbers. The exponent is stored as a `LongArray` and can be negative, indicated by the `exponentNegative` flag.
+## Future Refactoring Plan
 
-### Exponents in MegaInteger
+The current refactoring is the first step in a larger plan to make the MegaNumber implementation more modular and maintainable. The next steps in the refactoring process would be:
 
-In `MegaInteger`, exponents are always zero because integers don't have fractional parts. The constructor parameters `exponent` and `exponentNegative` are accepted for compatibility with the base class, but they are ignored and always set to `longArrayOf(0)` and `false` respectively.
+### 1. Expose Internal Methods
 
-This is by design, as integers don't need exponents. The `isFloat` parameter is also ignored and always set to `false`.
+Many of the internal methods in MegaNumber are currently private, which makes it difficult to move the implementation out of the class. The first step would be to expose these methods (either as protected or public) to allow for more flexibility in refactoring.
 
-### Exponents in MegaFloat
+Key methods to expose:
+- `expAsInt()`: Convert exponent to integer
+- `chunkDivide()`: Divide chunk arrays
+- Various bit manipulation methods
 
-In `MegaFloat`, exponents are used to represent the fractional part of floating-point numbers. The constructor parameters `exponent` and `exponentNegative` are used to set the exponent value and sign.
+### 2. Create Implementation Classes
 
-## String Constructors
+Once the internal methods are exposed, create implementation classes for each interface:
 
-Both `MegaInteger` and `MegaFloat` provide constructors that take a decimal string:
+- **DefaultArithmeticCalculator**: Implements BasicArithmeticOperations
+- **DefaultFloatOperations**: Implements FloatSpecificOperations
+- **DefaultAdvancedMathOperations**: Implements AdvancedMathOperations
+- **DefaultBitManipulationOperations**: Implements BitManipulationOperations
+- **DefaultChunkOperations**: Implements ChunkOperations
+- **DefaultConversionOperations**: Implements ConversionOperations
+- **DefaultPowerOperations**: Implements PowerOperations
 
-```kotlin
-val integer = MegaInteger("12345")
-val float = MegaFloat("123.45")
-```
+### 3. Update MegaNumber to Use Delegation
 
-These constructors are useful for creating numbers from string representations, especially when the numbers are too large to be represented by built-in types.
-
-## Arithmetic Operations
-
-Arithmetic operations (`add`, `sub`, `mul`, `divide`) are implemented in the base class and overridden in the subclasses to ensure type safety and proper handling of exponents.
-
-- In `MegaInteger`, these operations only work with other `MegaInteger` instances and always return `MegaInteger` results.
-- In `MegaFloat`, these operations work with both `MegaFloat` and `MegaInteger` instances and always return `MegaFloat` results.
-
-## Float Operations
-
-The base class provides special methods for floating-point operations (`addFloat`, `mulFloat`, `divFloat`). These methods are overridden in `MegaInteger` to throw exceptions, as integers don't support floating-point operations.
-
-## Conversion Between Types
-
-You can convert between `MegaInteger` and `MegaFloat` using the appropriate constructors:
+Modify MegaNumber to use delegation with the implementation classes:
 
 ```kotlin
-val integer = MegaInteger("12345")
-val float = MegaFloat(integer)  // Convert to MegaFloat
+class MegaNumber(
+    // Properties
+    var mantissa: IntArray,
+    var exponent: MegaNumber,
+    var negative: Boolean,
+    var isFloat: Boolean,
+    val keepLeadingZeros: Boolean,
+    
+    // Implementation classes
+    private val arithmeticCalculator: BasicArithmeticOperations = DefaultArithmeticCalculator(),
+    private val floatOperations: FloatSpecificOperations = DefaultFloatOperations(),
+    // Other implementations...
+) : BasicArithmeticOperations by arithmeticCalculator,
+    FloatSpecificOperations by floatOperations,
+    // Other interfaces...
 ```
 
-This preserves the mantissa and sign, but sets `isFloat` to `true` and allows the use of exponents.
+### 4. Refactor MegaFloat and MegaInteger
+
+Update MegaFloat and MegaInteger to use the same delegation pattern, ensuring they maintain their specific behavior while leveraging the common implementation classes.
+
+## Challenges and Considerations
+
+1. **Private Methods**: Many of the internal methods in MegaNumber are private, which makes it difficult to move the implementation out of the class without significant changes.
+
+2. **Interdependencies**: The operations in MegaNumber are highly interdependent, making it challenging to separate them cleanly.
+
+3. **State Management**: The implementation classes would need access to the state of MegaNumber (mantissa, exponent, etc.), which could lead to complex parameter passing or require a different design pattern.
+
+4. **Backward Compatibility**: Any refactoring should maintain backward compatibility to avoid breaking existing code.
+
+5. **Performance**: The refactoring should not significantly impact performance, which is critical for mathematical operations.
+
+## Conclusion
+
+The current interface-based structure is a good first step in making the MegaNumber implementation more modular and maintainable. The future refactoring steps outlined above would further improve the code structure, but would require careful planning and implementation to address the challenges and considerations.
