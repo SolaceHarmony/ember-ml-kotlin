@@ -18,6 +18,9 @@ interface ConversionOperations {
          * @param s The decimal string
          * @return The resulting number
          */
-        fun fromDecimalString(s: String): MegaNumber = throw NotImplementedError("Implemented by concrete classes")
+        fun fromDecimalString(s: String): MegaNumber {
+            // This will be implemented by DefaultConversionOperations
+            return DefaultConversionOperations.Companion.fromDecimalString(s)
+        }
     }
 }

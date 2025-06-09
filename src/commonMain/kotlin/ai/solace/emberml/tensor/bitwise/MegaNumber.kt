@@ -716,29 +716,7 @@ open class MegaNumber : BasicArithmeticOperations, FloatSpecificOperations,
      * Return a decimal-string representation. (Integer-only if exponent=0.)
      */
     override open fun toDecimalString(): String {
-        // If zero
-        if (mantissa.size == 1 && mantissa[0] == 0) {
-            return "0"
-        }
-
-        // If exponent is zero or we are integer => treat as integer
-        val expNonZero = !(exponent.mantissa.size == 1 && exponent.mantissa[0] == 0)
-        if (!expNonZero) {
-            // purely integer
-            val s = chunkToDecimal(mantissa)
-            return (if (negative) "-" else "") + s
-        } else {
-            // float => represent as "mantissa * 2^(exponent * chunkBits)" for simplicity
-            val eVal = if (exponent.negative) {
-                -chunksToInt(exponent.mantissa)
-            } else {
-                chunksToInt(exponent.mantissa)
-            }
-            val mantString = chunkToDecimal(mantissa)
-            val signStr = if (negative) "-" else ""
-            // This is a simplistic representation.
-            return "$signStr$mantString * 2^($eVal * ${MegaNumberConstants.GLOBAL_CHUNK_SIZE})"
-        }
+        return DefaultConversionOperations.Companion.toDecimalString(this)
     }
 
     /**
@@ -988,56 +966,7 @@ open class MegaNumber : BasicArithmeticOperations, FloatSpecificOperations,
      * @throws IllegalArgumentException if this MegaNumber is negative
      */
     override open fun sqrt(): MegaNumber {
-        if (negative) {
-            throw IllegalArgumentException("Cannot compute square root of a negative number")
-        }
-
-        // If zero, return zero
-        if (mantissa.size == 1 && mantissa[0] == 0) {
-            return MegaNumber(
-                mantissa = intArrayOf(0),
-                exponent = MegaNumber(intArrayOf(0)),
-                negative = false,
-                isFloat = isFloat
-            )
-        }
-
-        // For integer values
-        if (!isFloat) {
-            // Use binary search to find the integer square root
-            val a = mantissa.copyOf()
-            var low = intArrayOf(0)
-            var high = a.copyOf()
-
-            while (true) {
-                // mid = (low + high) / 2
-                val sumLH = addChunks(low, high)
-                val mid = div2(sumLH)
-
-                // Check if we've converged
-                val cLo = compareAbs(mid, low)
-                val cHi = compareAbs(mid, high)
-                if (cLo == 0 || cHi == 0) {
-                    return MegaNumber(mid, MegaNumber(intArrayOf(0)), false)
-                }
-
-                // mid^2
-                val midSqr = mulChunks(mid, mid)
-
-                // Compare mid^2 with a
-                val cCmp = compareAbs(midSqr, a)
-                if (cCmp == 0) {
-                    return MegaNumber(mid, MegaNumber(intArrayOf(0)), false)
-                } else if (cCmp < 0) {
-                    low = mid
-                } else {
-                    high = mid
-                }
-            }
-        } else {
-            // For float values, use floatSqrt
-            return floatSqrt()
-        }
+        return DefaultAdvancedMathOperations.Companion.sqrt(this)
     }
 
     /**
