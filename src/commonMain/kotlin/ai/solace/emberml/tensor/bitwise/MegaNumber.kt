@@ -33,7 +33,9 @@ object MegaNumberConstants {
  * @property isFloat      Float flag
  * @property keepLeadingZeros Whether to keep leading zeros
  */
-open class MegaNumber {
+open class MegaNumber : BasicArithmeticOperations, FloatSpecificOperations, 
+                   AdvancedMathOperations, BitManipulationOperations,
+                   ChunkOperations, ConversionOperations {
     var mantissa: IntArray
     var exponent: MegaNumber
     var negative: Boolean
@@ -713,7 +715,7 @@ open class MegaNumber {
     /**
      * Return a decimal-string representation. (Integer-only if exponent=0.)
      */
-    open fun toDecimalString(): String {
+    override open fun toDecimalString(): String {
         // If zero
         if (mantissa.size == 1 && mantissa[0] == 0) {
             return "0"
@@ -742,7 +744,7 @@ open class MegaNumber {
     /**
      * Add two MegaNumbers. If either is float, handle float addition
      */
-    open fun add(other: MegaNumber): MegaNumber {
+    override open fun add(other: MegaNumber): MegaNumber {
         // If either is float, handle float addition
         if (this.isFloat || other.isFloat) {
             return addFloat(other)
@@ -797,7 +799,7 @@ open class MegaNumber {
     /**
      * Float addition using chunk-based arithmetic
      */
-    open fun addFloat(other: MegaNumber): MegaNumber {
+    override open fun addFloat(other: MegaNumber): MegaNumber {
         // Signed exponents as Int
         val expA = this.exponent.expAsInt()
         val expB = other.exponent.expAsInt()
@@ -853,7 +855,7 @@ open class MegaNumber {
     /**
      * Subtract two MegaNumbers. a - b = a + (-b)
      */
-    open fun sub(other: MegaNumber): MegaNumber {
+    override open fun sub(other: MegaNumber): MegaNumber {
         val negOther = MegaNumber(
             mantissa = other.mantissa.copyOf(),
             exponent = MegaNumber(other.exponent.mantissa.copyOf(), negative = other.exponent.negative),
@@ -866,7 +868,7 @@ open class MegaNumber {
     /**
      * Multiply two MegaNumbers. If either is float, delegate to float multiply
      */
-    open fun mul(other: MegaNumber): MegaNumber {
+    override open fun mul(other: MegaNumber): MegaNumber {
         if (this.isFloat || other.isFloat) {
             return mulFloat(other)
         }
@@ -885,7 +887,7 @@ open class MegaNumber {
     /**
      * Float multiplication using chunk-based arithmetic
      */
-    open fun mulFloat(other: MegaNumber): MegaNumber {
+    override open fun mulFloat(other: MegaNumber): MegaNumber {
         // Multiply mantissas
         val productMant = mulChunks(this.mantissa, other.mantissa)
 
@@ -966,7 +968,7 @@ open class MegaNumber {
     /**
      * Divide two MegaNumbers. If either is float, delegate to float division
      */
-    open fun divide(other: MegaNumber): MegaNumber {
+    override open fun divide(other: MegaNumber): MegaNumber {
         // Unified public entry‑point – dispatches to integer or float path
         return if (this.isFloat || other.isFloat) {
             divideFloat(other)
@@ -985,7 +987,7 @@ open class MegaNumber {
      * @return The square root as a MegaNumber
      * @throws IllegalArgumentException if this MegaNumber is negative
      */
-    open fun sqrt(): MegaNumber {
+    override open fun sqrt(): MegaNumber {
         if (negative) {
             throw IllegalArgumentException("Cannot compute square root of a negative number")
         }

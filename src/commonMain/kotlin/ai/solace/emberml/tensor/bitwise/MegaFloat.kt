@@ -4,7 +4,7 @@ package ai.solace.emberml.tensor.bitwise
  * MegaFloat class for float-specific math operations.
  * Inherits from MegaNumber but forces is_float=true.
  */
-class MegaFloat : MegaNumber {
+class MegaFloat : MegaNumber, PowerOperations {
     /**
      * Initialize a MegaFloat object.
      *
@@ -128,6 +128,16 @@ class MegaFloat : MegaNumber {
     }
 
     /**
+     * Raise this MegaFloat to the power of another MegaNumber.
+     *
+     * @param exponent The exponent as a MegaNumber
+     * @return The result as a MegaNumber
+     */
+    override fun pow(exponent: MegaNumber): MegaNumber {
+        return pow(MegaFloat(exponent))
+    }
+
+    /**
      * Raise this MegaFloat to the power of another MegaFloat.
      *
      * @param exponent The exponent as a MegaFloat
@@ -137,19 +147,19 @@ class MegaFloat : MegaNumber {
         if (exponent.negative) {
             throw IllegalArgumentException("Negative exponents not supported yet")
         }
-        
+
         // Convert exponent to integer for simplicity
         val expInt = chunksToInt(exponent.mantissa)
-        
+
         // Base cases
         if (expInt == 0) return MegaFloat(intArrayOf(1))
         if (expInt == 1) return MegaFloat(this)
-        
+
         // Use repeated squaring algorithm
         var result = MegaFloat(intArrayOf(1))
         var base = MegaFloat(this)
         var exp = expInt
-        
+
         while (exp > 0) {
             if (exp and 1 == 1) {
                 result = result.mul(base)
@@ -157,7 +167,7 @@ class MegaFloat : MegaNumber {
             base = base.mul(base)
             exp = exp shr 1
         }
-        
+
         return result
     }
 

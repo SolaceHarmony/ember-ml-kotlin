@@ -4,7 +4,7 @@ package ai.solace.emberml.tensor.bitwise
  * MegaInteger class for integer-specific math operations.
  * Inherits from MegaNumber but forces is_float=false.
  */
-class MegaInteger : MegaNumber {
+class MegaInteger : MegaNumber, PowerOperations {
     /**
      * Initialize a MegaInteger object.
      *
@@ -116,6 +116,16 @@ class MegaInteger : MegaNumber {
     override fun sqrt(): MegaNumber {
         val result = super.sqrt()
         return MegaInteger(result)
+    }
+
+    /**
+     * Raise this MegaInteger to the power of another MegaNumber.
+     *
+     * @param exponent The exponent as a MegaNumber
+     * @return The result as a MegaNumber
+     */
+    override fun pow(exponent: MegaNumber): MegaNumber {
+        return pow(MegaInteger(exponent))
     }
 
     /**
