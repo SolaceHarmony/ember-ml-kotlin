@@ -138,12 +138,22 @@ class MegaFloat : MegaNumber, PowerOperations {
     }
 
     /**
+     * Raise this MegaFloat to the power of a MegaInteger.
+     *
+     * @param exponent The exponent as a MegaInteger
+     * @return The result as a MegaFloat
+     */
+    override fun pow(exponent: MegaInteger): MegaFloat {
+        return pow(MegaFloat(exponent))
+    }
+
+    /**
      * Raise this MegaFloat to the power of another MegaFloat.
      *
      * @param exponent The exponent as a MegaFloat
      * @return The result as a MegaFloat
      */
-    fun pow(exponent: MegaFloat): MegaFloat {
+    override fun pow(exponent: MegaFloat): MegaFloat {
         if (exponent.negative) {
             throw IllegalArgumentException("Negative exponents not supported yet")
         }

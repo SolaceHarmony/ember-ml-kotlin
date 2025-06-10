@@ -21,6 +21,9 @@ Since the initial refactoring, we've made significant progress:
 1. **Implementation Classes Created**:
    - **DefaultChunkOperations**: Implements the ChunkOperations interface, providing concrete implementations for chunk manipulation methods like addChunks, subChunks, mulChunks, and compareAbs.
    - **DefaultBitManipulationOperations**: Implements the BitManipulationOperations interface, providing concrete implementations for bit manipulation methods like shiftLeft, shiftRight, multiplyBy2ToThePower, and divideBy2ToThePower.
+   - **DefaultConversionOperations**: Implements the ConversionOperations interface, providing concrete implementations for conversion methods like toDecimalString and fromDecimalString.
+   - **DefaultAdvancedMathOperations**: Implements the AdvancedMathOperations interface, providing concrete implementations for advanced math operations like sqrt.
+   - **DefaultPowerOperations**: Implements the PowerOperations interface, providing concrete implementations for power operations like pow.
 
 2. **ArithmeticUtils Class**:
    - Created a utility class that provides static methods for arithmetic operations.
@@ -28,42 +31,69 @@ Since the initial refactoring, we've made significant progress:
    - Provides implementations for add, subtract, multiply, divide, and other operations.
    - Serves as a stepping stone toward the full delegation pattern, allowing us to move code out of MegaNumber while maintaining functionality.
 
-3. **Tests Passing**:
+3. **MegaNumber Delegation**:
+   - Updated MegaNumber to delegate to the implementation classes for key operations:
+     - `toDecimalString()` now delegates to DefaultConversionOperations
+     - `sqrt()` now delegates to DefaultAdvancedMathOperations
+   - MegaFloat and MegaInteger now implement the PowerOperations interface
+
+4. **Tests Passing**:
    - All tests for MegaFloat and MegaInteger are passing, confirming that our refactoring hasn't broken any functionality.
 
-These changes represent significant progress toward our goal of making the MegaNumber implementation more modular and maintainable. The next steps will build on this foundation.
+These changes represent significant progress toward our goal of making the MegaNumber implementation more modular and maintainable. We've successfully moved several key operations out of the MegaNumber class into separate implementation classes, making the code more maintainable and easier to understand.
 
 ## Future Refactoring Plan
 
 The current refactoring is the first step in a larger plan to make the MegaNumber implementation more modular and maintainable. The next steps in the refactoring process would be:
 
-### 1. Expose Internal Methods
+### 1. Expose Internal Methods ✓
 
-Many of the internal methods in MegaNumber are currently private, which makes it difficult to move the implementation out of the class. The first step would be to expose these methods (either as protected or public) to allow for more flexibility in refactoring.
+Many of the internal methods in MegaNumber were previously private, which made it difficult to move the implementation out of the class. This step has been completed by exposing these methods as internal to allow for more flexibility in refactoring.
 
-Key methods to expose:
-- `expAsInt()`: Convert exponent to integer
-- `chunkDivide()`: Divide chunk arrays
-- Various bit manipulation methods
+Key methods that have been exposed:
+- `expAsInt()`: Convert exponent to integer ✓
+- `chunkDivide()`: Divide chunk arrays ✓
+- Various bit manipulation methods:
+  - `shiftRight()` ✓
+  - `divideBy2ToThePower()` ✓
+  - `multiplyBy2ToThePower()` ✓
+- Other utility methods:
+  - `divMod10()` ✓
+  - `floatSqrt()` ✓
+  - `divideFloat()` ✓
+  - `divideInteger()` ✓
+  - `checkPrecisionLimit()` ✓
 
-### 2. Create Implementation Classes
+### 2. Complete Implementation Classes
 
-Once the internal methods are exposed, create implementation classes for each interface:
+We've already created several implementation classes:
+
+- **DefaultChunkOperations**: Implements ChunkOperations ✓
+- **DefaultBitManipulationOperations**: Implements BitManipulationOperations ✓
+- **DefaultConversionOperations**: Implements ConversionOperations ✓
+- **DefaultAdvancedMathOperations**: Implements AdvancedMathOperations ✓
+- **DefaultPowerOperations**: Implements PowerOperations ✓
+
+We still need to create:
 
 - **DefaultArithmeticCalculator**: Implements BasicArithmeticOperations
 - **DefaultFloatOperations**: Implements FloatSpecificOperations
-- **DefaultAdvancedMathOperations**: Implements AdvancedMathOperations
-- **DefaultBitManipulationOperations**: Implements BitManipulationOperations
-- **DefaultChunkOperations**: Implements ChunkOperations
-- **DefaultConversionOperations**: Implements ConversionOperations
-- **DefaultPowerOperations**: Implements PowerOperations
 
-### 3. Update MegaNumber to Use Delegation
+### 3. Complete MegaNumber Delegation
 
-Modify MegaNumber to use delegation with the implementation classes:
+We've already started using delegation for some operations:
+
+- `toDecimalString()` now delegates to DefaultConversionOperations ✓
+- `sqrt()` now delegates to DefaultAdvancedMathOperations ✓
+
+We need to complete the delegation for the remaining operations:
+
+- Arithmetic operations (add, sub, mul, divide)
+- Float-specific operations (addFloat, mulFloat)
+
+The final MegaNumber class would use delegation for all operations:
 
 ```
-// Example of how MegaNumber could use delegation in the future
 class MegaNumber(
     // Properties
     var mantissa: IntArray,
@@ -74,11 +104,15 @@ class MegaNumber(
 
     // Implementation classes
     private val arithmeticCalculator: BasicArithmeticOperations = DefaultArithmeticCalculator(),
-    private val floatOperations: FloatSpecificOperations = DefaultFloatOperations()
-    // Other implementations...
+    private val floatOperations: FloatSpecificOperations = DefaultFloatOperations(),
+    private val advancedMathOperations: AdvancedMathOperations = DefaultAdvancedMathOperations(this),
+    private val conversionOperations: ConversionOperations = DefaultConversionOperations(this),
+    private val powerOperations: PowerOperations = DefaultPowerOperations(this)
 ) : BasicArithmeticOperations by arithmeticCalculator,
-    FloatSpecificOperations by floatOperations
-    // Other interfaces...
+    FloatSpecificOperations by floatOperations,
+    AdvancedMathOperations by advancedMathOperations,
+    ConversionOperations by conversionOperations,
+    PowerOperations by powerOperations
 ```
 
 ### 4. Refactor MegaFloat and MegaInteger

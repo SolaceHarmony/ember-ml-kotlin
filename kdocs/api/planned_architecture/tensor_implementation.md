@@ -37,34 +37,97 @@ The foundation of our tensor implementation is a set of low-level bitwise operat
 - `createDutyCycle`: Create a binary pattern with a specified duty cycle
 - `propagate`: Propagate a wave by shifting it
 
-### 2. MegaBinary and MegaNumber
+### 2. MegaNumber System as Scalar Mathematical Foundation
 
-Building on these bitwise operations, we implement two key classes:
+Building on these bitwise operations, we implement a comprehensive system of classes that serve as the scalar mathematical foundation for tensor operations:
 
 #### MegaNumber
 
-`MegaNumber` is a base class that provides arbitrary-precision numeric operations:
+`MegaNumber` is a base class that provides arbitrary-precision numeric operations for both integers and floats:
 
-```kotlin
-class MegaNumber(val chunks: IntArray, val isNegative: Boolean = false) {
+```
+open class MegaNumber(
+    var mantissa: IntArray = intArrayOf(0),
+    var exponent: MegaNumber = ZERO_EXPONENT,
+    var negative: Boolean = false,
+    var isFloat: Boolean = false,
+    val keepLeadingZeros: Boolean = false
+) : BasicArithmeticOperations, FloatSpecificOperations, 
+    AdvancedMathOperations, BitManipulationOperations,
+    ChunkOperations, ConversionOperations {
+
     // Arithmetic operations
     fun add(other: MegaNumber): MegaNumber
-    fun subtract(other: MegaNumber): MegaNumber
-    fun multiply(other: MegaNumber): MegaNumber
+    fun sub(other: MegaNumber): MegaNumber
+    fun mul(other: MegaNumber): MegaNumber
     fun divide(other: MegaNumber): MegaNumber
 
-    // Comparison operations
-    fun compareTo(other: MegaNumber): Int
-    fun equals(other: MegaNumber): Boolean
+    // Float-specific operations
+    fun addFloat(other: MegaNumber): MegaNumber
+    fun mulFloat(other: MegaNumber): MegaNumber
+
+    // Advanced operations
+    fun sqrt(): MegaNumber
 
     // Conversion operations
-    fun toDouble(): Double
-    fun toFloat(): Float
-    fun toInt(): Int
-    fun toLong(): Long
+    fun toDecimalString(): String
 
-    // String representation
-    override fun toString(): String
+    // Normalization
+    fun normalize()
+}
+```
+
+#### MegaFloat
+
+`MegaFloat` extends `MegaNumber` to provide specialized floating-point operations:
+
+```kotlin
+class MegaFloat : MegaNumber, PowerOperations {
+    // Constructors
+    constructor(mantissa: IntArray, exponent: MegaNumber, negative: Boolean, exponentNegative: Boolean, keepLeadingZeros: Boolean)
+    constructor(value: String)
+    constructor(other: MegaNumber)
+
+    // Floating-point operations
+    fun add(other: MegaFloat): MegaFloat
+    fun sub(other: MegaFloat): MegaFloat
+    fun mul(other: MegaFloat): MegaFloat
+    fun div(other: MegaFloat): MegaFloat
+
+    // Power operation
+    fun pow(exponent: MegaFloat): MegaFloat
+
+    // Static factory methods
+    companion object {
+        fun fromValue(value: Any): MegaFloat
+    }
+}
+```
+
+#### MegaInteger
+
+`MegaInteger` extends `MegaNumber` to provide specialized integer operations:
+
+```kotlin
+class MegaInteger : MegaNumber, PowerOperations {
+    // Constructors
+    constructor(mantissa: IntArray, negative: Boolean, keepLeadingZeros: Boolean)
+    constructor(other: MegaNumber)
+
+    // Integer operations
+    fun add(other: MegaInteger): MegaInteger
+    fun sub(other: MegaInteger): MegaInteger
+    fun mul(other: MegaInteger): MegaInteger
+    fun div(other: MegaInteger): MegaInteger
+    fun mod(other: MegaInteger): MegaInteger
+
+    // Power operation
+    fun pow(exponent: MegaInteger): MegaInteger
+
+    // Static factory methods
+    companion object {
+        fun fromValue(value: Any): MegaInteger
+    }
 }
 ```
 
@@ -72,7 +135,7 @@ class MegaNumber(val chunks: IntArray, val isNegative: Boolean = false) {
 
 `MegaBinary` extends `MegaNumber` to provide binary-specific operations:
 
-```kotlin
+```
 class MegaBinary(val bits: IntArray, val preserveLeadingZeros: Boolean = false) : MegaNumber(bits) {
     // Bitwise operations
     fun bitwiseAnd(other: MegaBinary): MegaBinary
@@ -153,15 +216,19 @@ class EmberTensor(
 
 The key innovation in our tensor implementation is the workaround for Float64 limitations on platforms like Apple MLX and Metal. Here's how it works:
 
-1. **Representation**: Float64 values are represented using the `MegaBinary` class, which stores the bits of the floating-point number in a chunked format.
+1. **Scalar Mathematical Foundation**: The MegaNumber system (MegaNumber, MegaFloat, MegaInteger, and MegaBinary) serves as the scalar mathematical foundation for tensor operations, providing arbitrary precision arithmetic capabilities.
 
-2. **Operations**: Floating-point operations are implemented using bitwise operations on the `MegaBinary` representation:
-   - Addition: Implemented using bitwise operations that follow the IEEE 754 standard
-   - Multiplication: Implemented using bitwise operations that simulate the floating-point multiplication algorithm
-   - Division: Implemented using bitwise operations that simulate the floating-point division algorithm
-   - Other operations: Implemented using similar bitwise approaches
+2. **Representation**: Float64 values are represented using the `MegaFloat` class, which stores the mantissa and exponent in a chunked format, allowing for arbitrary precision.
 
-3. **Conversion**: When interacting with the backend, Float64 values are converted to and from the `MegaBinary` representation as needed.
+3. **Operations**: Floating-point operations are implemented using the MegaNumber system:
+   - Addition: Implemented using chunk-based arithmetic that follows the IEEE 754 standard
+   - Multiplication: Implemented using multiple algorithms (Standard, Karatsuba, Toom-3) based on operand size
+   - Division: Implemented using chunk-based short division with binary search
+   - Square Root: Implemented using binary search with special handling for the exponent
+   - Power: Implemented using the repeated squaring algorithm
+   - Other operations: Implemented using similar approaches
+
+4. **Conversion**: When interacting with the backend, Float64 values are converted to and from the `MegaFloat` representation as needed.
 
 ### Example: Float64 Addition
 
