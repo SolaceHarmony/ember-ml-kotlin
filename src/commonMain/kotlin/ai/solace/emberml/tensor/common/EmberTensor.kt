@@ -1,6 +1,7 @@
 package ai.solace.emberml.tensor.common
 
 import ai.solace.emberml.tensor.interfaces.TensorInterface
+import ai.solace.emberml.backend.BackendRegistry
 
 /**
  * The main tensor class that users interact with.
@@ -148,14 +149,16 @@ class EmberTensor(
      * @return A new tensor with the same data but different data type.
      */
     override fun cast(dtype: EmberDType): TensorInterface {
-        // This would delegate to the backend implementation
-        // For now, we'll just return a copy of this tensor with the new dtype
+        // Delegate to the backend implementation
+        val backend = BackendRegistry.getCurrentBackend()
+        val newBackendTensor = backend.cast(this.backendTensor, dtype)
+
         return EmberTensor(
             shape = this.shape,
             dtype = dtype,
             device = this.device,
             requiresGrad = this.requiresGrad,
-            backendTensor = this.backendTensor
+            backendTensor = newBackendTensor
         )
     }
 
@@ -166,14 +169,16 @@ class EmberTensor(
      * @return A new tensor with the same data but different shape.
      */
     override fun reshape(newShape: EmberShape): TensorInterface {
-        // This would delegate to the backend implementation
-        // For now, we'll just return a copy of this tensor with the new shape
+        // Delegate to the backend implementation
+        val backend = BackendRegistry.getCurrentBackend()
+        val newBackendTensor = backend.reshape(this.backendTensor, newShape.dimensions)
+
         return EmberTensor(
             shape = newShape,
             dtype = this.dtype,
             device = this.device,
             requiresGrad = this.requiresGrad,
-            backendTensor = this.backendTensor
+            backendTensor = newBackendTensor
         )
     }
 
@@ -184,14 +189,20 @@ class EmberTensor(
      * @return A new tensor with the dimensions permuted.
      */
     override fun transpose(axes: IntArray?): TensorInterface {
-        // This would delegate to the backend implementation
-        // For now, we'll just return a copy of this tensor
+        // Delegate to the backend implementation
+        val backend = BackendRegistry.getCurrentBackend()
+        val newBackendTensor = backend.transpose(this.backendTensor, axes)
+
+        // Get the new shape from the backend
+        val newShapeDimensions = backend.getTensorShape(newBackendTensor)
+        val newShape = EmberShape(newShapeDimensions)
+
         return EmberTensor(
-            shape = this.shape,
+            shape = newShape,
             dtype = this.dtype,
             device = this.device,
             requiresGrad = this.requiresGrad,
-            backendTensor = this.backendTensor
+            backendTensor = newBackendTensor
         )
     }
 
@@ -202,6 +213,116 @@ class EmberTensor(
      */
     override fun toString(): String {
         return "EmberTensor(shape=$shape, dtype=$dtype, device=$device, requiresGrad=$requiresGrad)"
+    }
+
+    /**
+     * Adds another tensor to this tensor.
+     *
+     * @param other The tensor to add.
+     * @return The result of the addition.
+     */
+    operator fun plus(other: EmberTensor): EmberTensor {
+        val backend = BackendRegistry.getCurrentBackend()
+        val resultTensor = backend.add(this.backendTensor, other.backendTensor)
+        val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+        val resultDType = backend.getTensorDType(resultTensor)
+        val resultDevice = backend.getTensorDevice(resultTensor)
+
+        return EmberTensor(
+            shape = resultShape,
+            dtype = resultDType,
+            device = resultDevice,
+            requiresGrad = this.requiresGrad || other.requiresGrad,
+            backendTensor = resultTensor
+        )
+    }
+
+    /**
+     * Subtracts another tensor from this tensor.
+     *
+     * @param other The tensor to subtract.
+     * @return The result of the subtraction.
+     */
+    operator fun minus(other: EmberTensor): EmberTensor {
+        val backend = BackendRegistry.getCurrentBackend()
+        val resultTensor = backend.subtract(this.backendTensor, other.backendTensor)
+        val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+        val resultDType = backend.getTensorDType(resultTensor)
+        val resultDevice = backend.getTensorDevice(resultTensor)
+
+        return EmberTensor(
+            shape = resultShape,
+            dtype = resultDType,
+            device = resultDevice,
+            requiresGrad = this.requiresGrad || other.requiresGrad,
+            backendTensor = resultTensor
+        )
+    }
+
+    /**
+     * Multiplies this tensor by another tensor.
+     *
+     * @param other The tensor to multiply by.
+     * @return The result of the multiplication.
+     */
+    operator fun times(other: EmberTensor): EmberTensor {
+        val backend = BackendRegistry.getCurrentBackend()
+        val resultTensor = backend.multiply(this.backendTensor, other.backendTensor)
+        val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+        val resultDType = backend.getTensorDType(resultTensor)
+        val resultDevice = backend.getTensorDevice(resultTensor)
+
+        return EmberTensor(
+            shape = resultShape,
+            dtype = resultDType,
+            device = resultDevice,
+            requiresGrad = this.requiresGrad || other.requiresGrad,
+            backendTensor = resultTensor
+        )
+    }
+
+    /**
+     * Divides this tensor by another tensor.
+     *
+     * @param other The tensor to divide by.
+     * @return The result of the division.
+     */
+    operator fun div(other: EmberTensor): EmberTensor {
+        val backend = BackendRegistry.getCurrentBackend()
+        val resultTensor = backend.divide(this.backendTensor, other.backendTensor)
+        val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+        val resultDType = backend.getTensorDType(resultTensor)
+        val resultDevice = backend.getTensorDevice(resultTensor)
+
+        return EmberTensor(
+            shape = resultShape,
+            dtype = resultDType,
+            device = resultDevice,
+            requiresGrad = this.requiresGrad || other.requiresGrad,
+            backendTensor = resultTensor
+        )
+    }
+
+    /**
+     * Performs matrix multiplication of this tensor with another tensor.
+     *
+     * @param other The tensor to multiply with.
+     * @return The result of the matrix multiplication.
+     */
+    fun matmul(other: EmberTensor): EmberTensor {
+        val backend = BackendRegistry.getCurrentBackend()
+        val resultTensor = backend.matmul(this.backendTensor, other.backendTensor)
+        val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+        val resultDType = backend.getTensorDType(resultTensor)
+        val resultDevice = backend.getTensorDevice(resultTensor)
+
+        return EmberTensor(
+            shape = resultShape,
+            dtype = resultDType,
+            device = resultDevice,
+            requiresGrad = this.requiresGrad || other.requiresGrad,
+            backendTensor = resultTensor
+        )
     }
 
     companion object {
@@ -238,9 +359,10 @@ class EmberTensor(
             device: String,
             requiresGrad: Boolean
         ): Any {
-            // This would delegate to the current backend's tensor creation function
-            // For now, we'll just return the data as is
-            return data
+            // Delegate to the current backend's tensor creation function
+            val backend = BackendRegistry.getCurrentBackend()
+            val shape = inferShape(data).dimensions
+            return backend.createTensor(data, shape, dtype)
         }
     }
 }
