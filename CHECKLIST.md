@@ -8,11 +8,13 @@ Track the 5 main implementation milestones for Ember ML Kotlin:
   - All core bitwise operations and MegaNumber/MegaBinary classes ported and working
   - Foundation for tensor operations established
 
-- [x] **Milestone 2: Build tensor abstraction layer** ✅ COMPLETE  
-  - Tensor interfaces and high-level API implemented
-  - Non-blocking actor integration completed
-  - Bitwise tensor operations fully implemented and tested
-  - Broadcasting and shape handling integrated
+- [ ] **Milestone 2: Build tensor abstraction layer** 🔄 75% COMPLETE (NEEDS OPTIMIZATION)
+  - ✅ Tensor interfaces and high-level API implemented
+  - ✅ Non-blocking actor integration completed
+  - ✅ Bitwise tensor operations fully implemented and tested
+  - ❌ **CRITICAL**: 32-bit limb storage inefficient for small dtypes (256x memory waste for booleans)
+  - ❌ **CRITICAL**: Missing core operations (indexing, slicing, broadcasting, aggregations)
+  - ❌ **CRITICAL**: Only ~10% NumPy operation parity achieved
 
 - [x] **Milestone 3: Implement actor system** ✅ COMPLETE
   - Actor architecture implemented with Kotlin coroutines and channels
@@ -30,16 +32,21 @@ Track the 5 main implementation milestones for Ember ML Kotlin:
   - Neural network layers, activations, optimizers needed
   - Training utilities to be implemented
 
-**Overall Progress: 60% Complete (3/5 milestones)**
+**Overall Progress: 50% Complete (2.75/5 milestones) - TENSOR OPTIMIZATION CRITICAL**
 
 ## 🚀 Next Priority Actions
 
-**Immediate Priority (Milestone 4):**
+**UPDATED PRIORITY: Tensor Storage & NumPy Parity (Critical)**
+1. **Fix 32-bit limb inefficiency**: Implement hybrid storage system for massive memory savings
+2. **Add missing core operations**: Indexing, slicing, broadcasting, aggregations
+3. **Achieve NumPy operation parity**: Complete tensor operation coverage
+
+**Previous Priority (Milestone 4):**
 1. Implement Metal kernel integration for Apple platforms
 2. Port SVD and other algorithms from Python implementation
 3. Create abstractions for Metal kernel execution
 
-**Next Priority (Milestone 5):**
+**Future Priority (Milestone 5):**
 1. Build neural network components (layers, activations, optimizers)
 2. Implement training utilities and optimization algorithms
 3. Create neural network abstraction layer
