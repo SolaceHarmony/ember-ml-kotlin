@@ -257,6 +257,300 @@ class OptimizedMegaTensorBackend : Backend {
         return OptimizedMegaTensor(resultStorage, t1.shape, t1.device)
     }
 
+    // ===== ADDITIONAL TENSOR OPERATIONS =====
+    
+    /**
+     * Sums all elements in the tensor, returning a scalar tensor.
+     */
+    fun sum(tensor: Any): Any {
+        val t = tensor as OptimizedMegaTensor
+        
+        when (t.storage) {
+            is TensorStorage.PackedBooleanStorage -> {
+                var count = 0
+                for (i in 0 until t.size) {
+                    if (t.storage.get(i)) count++
+                }
+                val resultStorage = TensorStorage.createOptimalStorage(EmberDType.INT32, 1)
+                (resultStorage as TensorStorage.NativeIntStorage).set(0, count)
+                return OptimizedMegaTensor(resultStorage, intArrayOf(1), t.device)
+            }
+            is TensorStorage.NativeUByteStorage -> {
+                var sum = 0
+                for (i in 0 until t.size) {
+                    sum += t.storage.get(i).toInt()
+                }
+                val resultStorage = TensorStorage.createOptimalStorage(EmberDType.INT32, 1)
+                (resultStorage as TensorStorage.NativeIntStorage).set(0, sum)
+                return OptimizedMegaTensor(resultStorage, intArrayOf(1), t.device)
+            }
+            is TensorStorage.NativeIntStorage -> {
+                var sum = 0L
+                for (i in 0 until t.size) {
+                    sum += t.storage.get(i)
+                }
+                val resultStorage = TensorStorage.createOptimalStorage(EmberDType.INT64, 1)
+                (resultStorage as TensorStorage.NativeLongStorage).set(0, sum)
+                return OptimizedMegaTensor(resultStorage, intArrayOf(1), t.device)
+            }
+            is TensorStorage.NativeLongStorage -> {
+                var sum = 0L
+                for (i in 0 until t.size) {
+                    sum += t.storage.get(i)
+                }
+                val resultStorage = TensorStorage.createOptimalStorage(EmberDType.INT64, 1)
+                (resultStorage as TensorStorage.NativeLongStorage).set(0, sum)
+                return OptimizedMegaTensor(resultStorage, intArrayOf(1), t.device)
+            }
+            is TensorStorage.NativeFloatStorage -> {
+                var sum = 0.0
+                for (i in 0 until t.size) {
+                    sum += t.storage.get(i)
+                }
+                val resultStorage = TensorStorage.createOptimalStorage(EmberDType.FLOAT64, 1)
+                (resultStorage as TensorStorage.NativeDoubleStorage).set(0, sum)
+                return OptimizedMegaTensor(resultStorage, intArrayOf(1), t.device)
+            }
+            is TensorStorage.NativeDoubleStorage -> {
+                var sum = 0.0
+                for (i in 0 until t.size) {
+                    sum += t.storage.get(i)
+                }
+                val resultStorage = TensorStorage.createOptimalStorage(EmberDType.FLOAT64, 1)
+                (resultStorage as TensorStorage.NativeDoubleStorage).set(0, sum)
+                return OptimizedMegaTensor(resultStorage, intArrayOf(1), t.device)
+            }
+            else -> throw IllegalArgumentException("Unsupported storage type for sum operation")
+        }
+    }
+    
+    /**
+     * Computes the mean of all elements in the tensor.
+     */
+    fun mean(tensor: Any): Any {
+        val t = tensor as OptimizedMegaTensor
+        val sumTensor = sum(tensor) as OptimizedMegaTensor
+        
+        // Create a tensor with the size value to divide by
+        val sizeStorage = TensorStorage.createOptimalStorage(sumTensor.dtype, 1)
+        when (sizeStorage) {
+            is TensorStorage.NativeIntStorage -> sizeStorage.set(0, t.size)
+            is TensorStorage.NativeLongStorage -> sizeStorage.set(0, t.size.toLong())
+            is TensorStorage.NativeDoubleStorage -> sizeStorage.set(0, t.size.toDouble())
+            else -> throw IllegalArgumentException("Unsupported storage type for mean operation")
+        }
+        val sizeTensor = OptimizedMegaTensor(sizeStorage, intArrayOf(1), t.device)
+        
+        return divide(sumTensor, sizeTensor)
+    }
+    
+    /**
+     * Finds the minimum value in the tensor.
+     */
+    fun min(tensor: Any): Any {
+        val t = tensor as OptimizedMegaTensor
+        
+        when (t.storage) {
+            is TensorStorage.PackedBooleanStorage -> {
+                var min = true
+                for (i in 0 until t.size) {
+                    val value = t.storage.get(i)
+                    if (!value) {
+                        min = false
+                        break
+                    }
+                }
+                val resultStorage = TensorStorage.createOptimalStorage(EmberDType.BOOL, 1)
+                (resultStorage as TensorStorage.PackedBooleanStorage).set(0, min)
+                return OptimizedMegaTensor(resultStorage, intArrayOf(1), t.device)
+            }
+            is TensorStorage.NativeUByteStorage -> {
+                var min = t.storage.get(0)
+                for (i in 1 until t.size) {
+                    val value = t.storage.get(i)
+                    if (value < min) min = value
+                }
+                val resultStorage = TensorStorage.createOptimalStorage(EmberDType.UINT8, 1)
+                (resultStorage as TensorStorage.NativeUByteStorage).set(0, min)
+                return OptimizedMegaTensor(resultStorage, intArrayOf(1), t.device)
+            }
+            is TensorStorage.NativeIntStorage -> {
+                var min = t.storage.get(0)
+                for (i in 1 until t.size) {
+                    val value = t.storage.get(i)
+                    if (value < min) min = value
+                }
+                val resultStorage = TensorStorage.createOptimalStorage(EmberDType.INT32, 1)
+                (resultStorage as TensorStorage.NativeIntStorage).set(0, min)
+                return OptimizedMegaTensor(resultStorage, intArrayOf(1), t.device)
+            }
+            is TensorStorage.NativeLongStorage -> {
+                var min = t.storage.get(0)
+                for (i in 1 until t.size) {
+                    val value = t.storage.get(i)
+                    if (value < min) min = value
+                }
+                val resultStorage = TensorStorage.createOptimalStorage(EmberDType.INT64, 1)
+                (resultStorage as TensorStorage.NativeLongStorage).set(0, min)
+                return OptimizedMegaTensor(resultStorage, intArrayOf(1), t.device)
+            }
+            is TensorStorage.NativeFloatStorage -> {
+                var min = t.storage.get(0)
+                for (i in 1 until t.size) {
+                    val value = t.storage.get(i)
+                    if (value < min) min = value
+                }
+                val resultStorage = TensorStorage.createOptimalStorage(EmberDType.FLOAT32, 1)
+                (resultStorage as TensorStorage.NativeFloatStorage).set(0, min)
+                return OptimizedMegaTensor(resultStorage, intArrayOf(1), t.device)
+            }
+            is TensorStorage.NativeDoubleStorage -> {
+                var min = t.storage.get(0)
+                for (i in 1 until t.size) {
+                    val value = t.storage.get(i)
+                    if (value < min) min = value
+                }
+                val resultStorage = TensorStorage.createOptimalStorage(EmberDType.FLOAT64, 1)
+                (resultStorage as TensorStorage.NativeDoubleStorage).set(0, min)
+                return OptimizedMegaTensor(resultStorage, intArrayOf(1), t.device)
+            }
+            else -> throw IllegalArgumentException("Unsupported storage type for min operation")
+        }
+    }
+    
+    /**
+     * Finds the maximum value in the tensor.
+     */
+    fun max(tensor: Any): Any {
+        val t = tensor as OptimizedMegaTensor
+        
+        when (t.storage) {
+            is TensorStorage.PackedBooleanStorage -> {
+                var max = false
+                for (i in 0 until t.size) {
+                    val value = t.storage.get(i)
+                    if (value) {
+                        max = true
+                        break
+                    }
+                }
+                val resultStorage = TensorStorage.createOptimalStorage(EmberDType.BOOL, 1)
+                (resultStorage as TensorStorage.PackedBooleanStorage).set(0, max)
+                return OptimizedMegaTensor(resultStorage, intArrayOf(1), t.device)
+            }
+            is TensorStorage.NativeUByteStorage -> {
+                var max = t.storage.get(0)
+                for (i in 1 until t.size) {
+                    val value = t.storage.get(i)
+                    if (value > max) max = value
+                }
+                val resultStorage = TensorStorage.createOptimalStorage(EmberDType.UINT8, 1)
+                (resultStorage as TensorStorage.NativeUByteStorage).set(0, max)
+                return OptimizedMegaTensor(resultStorage, intArrayOf(1), t.device)
+            }
+            is TensorStorage.NativeIntStorage -> {
+                var max = t.storage.get(0)
+                for (i in 1 until t.size) {
+                    val value = t.storage.get(i)
+                    if (value > max) max = value
+                }
+                val resultStorage = TensorStorage.createOptimalStorage(EmberDType.INT32, 1)
+                (resultStorage as TensorStorage.NativeIntStorage).set(0, max)
+                return OptimizedMegaTensor(resultStorage, intArrayOf(1), t.device)
+            }
+            is TensorStorage.NativeLongStorage -> {
+                var max = t.storage.get(0)
+                for (i in 1 until t.size) {
+                    val value = t.storage.get(i)
+                    if (value > max) max = value
+                }
+                val resultStorage = TensorStorage.createOptimalStorage(EmberDType.INT64, 1)
+                (resultStorage as TensorStorage.NativeLongStorage).set(0, max)
+                return OptimizedMegaTensor(resultStorage, intArrayOf(1), t.device)
+            }
+            is TensorStorage.NativeFloatStorage -> {
+                var max = t.storage.get(0)
+                for (i in 1 until t.size) {
+                    val value = t.storage.get(i)
+                    if (value > max) max = value
+                }
+                val resultStorage = TensorStorage.createOptimalStorage(EmberDType.FLOAT32, 1)
+                (resultStorage as TensorStorage.NativeFloatStorage).set(0, max)
+                return OptimizedMegaTensor(resultStorage, intArrayOf(1), t.device)
+            }
+            is TensorStorage.NativeDoubleStorage -> {
+                var max = t.storage.get(0)
+                for (i in 1 until t.size) {
+                    val value = t.storage.get(i)
+                    if (value > max) max = value
+                }
+                val resultStorage = TensorStorage.createOptimalStorage(EmberDType.FLOAT64, 1)
+                (resultStorage as TensorStorage.NativeDoubleStorage).set(0, max)
+                return OptimizedMegaTensor(resultStorage, intArrayOf(1), t.device)
+            }
+            else -> throw IllegalArgumentException("Unsupported storage type for max operation")
+        }
+    }
+    
+    /**
+     * Gets a specific element from the tensor at the given flat index.
+     */
+    fun getElement(tensor: Any, index: Int): Any {
+        val t = tensor as OptimizedMegaTensor
+        
+        if (index < 0 || index >= t.size) {
+            throw IndexOutOfBoundsException("Index $index out of bounds for tensor of size ${t.size}")
+        }
+        
+        return getStorageValue(t.storage, index)
+    }
+    
+    /**
+     * Sets a specific element in the tensor at the given flat index.
+     */
+    fun setElement(tensor: Any, index: Int, value: Any): Any {
+        val t = tensor as OptimizedMegaTensor
+        
+        if (index < 0 || index >= t.size) {
+            throw IndexOutOfBoundsException("Index $index out of bounds for tensor of size ${t.size}")
+        }
+        
+        // Create a new tensor with the updated value (immutable approach)
+        val newStorage = when (t.storage) {
+            is TensorStorage.PackedBooleanStorage -> {
+                val newData = t.storage.data.copyOf()
+                TensorStorage.PackedBooleanStorage(newData, t.size, t.dtype)
+            }
+            is TensorStorage.NativeUByteStorage -> {
+                val newData = t.storage.data.copyOf()
+                TensorStorage.NativeUByteStorage(newData, t.size, t.dtype)
+            }
+            is TensorStorage.NativeIntStorage -> {
+                val newData = t.storage.data.copyOf()
+                TensorStorage.NativeIntStorage(newData, t.size, t.dtype)
+            }
+            is TensorStorage.NativeLongStorage -> {
+                val newData = t.storage.data.copyOf()
+                TensorStorage.NativeLongStorage(newData, t.size, t.dtype)
+            }
+            is TensorStorage.NativeFloatStorage -> {
+                val newData = t.storage.data.copyOf()
+                TensorStorage.NativeFloatStorage(newData, t.size, t.dtype)
+            }
+            is TensorStorage.NativeDoubleStorage -> {
+                val newData = t.storage.data.copyOf()
+                TensorStorage.NativeDoubleStorage(newData, t.size, t.dtype)
+            }
+            is TensorStorage.MegaNumberStorage -> {
+                val newData = t.storage.data.copyOf()
+                TensorStorage.MegaNumberStorage(newData, t.size, t.dtype)
+            }
+        }
+        
+        setStorageValue(newStorage, index, value, t.dtype)
+        return OptimizedMegaTensor(newStorage, t.shape, t.device)
+    }
+
     // Helper functions
 
     private fun fillStorageFromList(storage: TensorStorage, data: List<*>, dtype: EmberDType) {

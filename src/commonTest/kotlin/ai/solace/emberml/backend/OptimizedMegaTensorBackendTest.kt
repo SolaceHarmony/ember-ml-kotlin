@@ -263,4 +263,132 @@ class OptimizedMegaTensorBackendTest {
         assertEquals(true, storage.get(2))    // 2 % 2 == 0 = true
         assertEquals(false, storage.get(3))   // 3 % 2 == 0 = false
     }
+
+    @Test
+    fun testSumOperation() {
+        val data = intArrayOf(1, 2, 3, 4, 5)
+        val shape = intArrayOf(5)
+        
+        val tensor = backend.createTensor(data, shape, EmberDType.INT32)
+        val result = backend.sum(tensor) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        
+        // Verify result properties
+        assertEquals(1, result.size)
+        assertEquals(EmberDType.INT64, result.dtype) // INT32 sum promotes to INT64
+        assertTrue(result.storage is TensorStorage.NativeLongStorage)
+        
+        // Verify sum result
+        val storage = result.storage as TensorStorage.NativeLongStorage
+        assertEquals(15L, storage.get(0)) // 1 + 2 + 3 + 4 + 5 = 15
+    }
+
+    @Test
+    fun testSumBooleanOperation() {
+        val data = booleanArrayOf(true, false, true, true, false)
+        val shape = intArrayOf(5)
+        
+        val tensor = backend.createTensor(data, shape, EmberDType.BOOL)
+        val result = backend.sum(tensor) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        
+        // Verify result properties
+        assertEquals(1, result.size)
+        assertEquals(EmberDType.INT32, result.dtype) // Boolean sum gives count as INT32
+        assertTrue(result.storage is TensorStorage.NativeIntStorage)
+        
+        // Verify sum result
+        val storage = result.storage as TensorStorage.NativeIntStorage
+        assertEquals(3, storage.get(0)) // 3 true values
+    }
+
+    @Test
+    fun testMeanOperation() {
+        val data = doubleArrayOf(2.0, 4.0, 6.0, 8.0)
+        val shape = intArrayOf(4)
+        
+        val tensor = backend.createTensor(data, shape, EmberDType.FLOAT64)
+        val result = backend.mean(tensor) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        
+        // Verify result properties
+        assertEquals(1, result.size)
+        assertEquals(EmberDType.FLOAT64, result.dtype)
+        assertTrue(result.storage is TensorStorage.NativeDoubleStorage)
+        
+        // Verify mean result
+        val storage = result.storage as TensorStorage.NativeDoubleStorage
+        assertEquals(5.0, storage.get(0)) // (2 + 4 + 6 + 8) / 4 = 5
+    }
+
+    @Test
+    fun testMinOperation() {
+        val data = intArrayOf(5, 2, 8, 1, 9, 3)
+        val shape = intArrayOf(6)
+        
+        val tensor = backend.createTensor(data, shape, EmberDType.INT32)
+        val result = backend.min(tensor) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        
+        // Verify result properties
+        assertEquals(1, result.size)
+        assertEquals(EmberDType.INT32, result.dtype)
+        assertTrue(result.storage is TensorStorage.NativeIntStorage)
+        
+        // Verify min result
+        val storage = result.storage as TensorStorage.NativeIntStorage
+        assertEquals(1, storage.get(0)) // minimum value is 1
+    }
+
+    @Test
+    fun testMaxOperation() {
+        val data = intArrayOf(5, 2, 8, 1, 9, 3)
+        val shape = intArrayOf(6)
+        
+        val tensor = backend.createTensor(data, shape, EmberDType.INT32)
+        val result = backend.max(tensor) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        
+        // Verify result properties
+        assertEquals(1, result.size)
+        assertEquals(EmberDType.INT32, result.dtype)
+        assertTrue(result.storage is TensorStorage.NativeIntStorage)
+        
+        // Verify max result
+        val storage = result.storage as TensorStorage.NativeIntStorage
+        assertEquals(9, storage.get(0)) // maximum value is 9
+    }
+
+    @Test
+    fun testGetElementOperation() {
+        val data = intArrayOf(10, 20, 30, 40, 50)
+        val shape = intArrayOf(5)
+        
+        val tensor = backend.createTensor(data, shape, EmberDType.INT32)
+        
+        // Test getting various elements
+        assertEquals(10, backend.getElement(tensor, 0))
+        assertEquals(20, backend.getElement(tensor, 1))
+        assertEquals(30, backend.getElement(tensor, 2))
+        assertEquals(40, backend.getElement(tensor, 3))
+        assertEquals(50, backend.getElement(tensor, 4))
+    }
+
+    @Test
+    fun testSetElementOperation() {
+        val data = intArrayOf(10, 20, 30, 40, 50)
+        val shape = intArrayOf(5)
+        
+        val tensor = backend.createTensor(data, shape, EmberDType.INT32)
+        
+        // Set element at index 2 to 99
+        val newTensor = backend.setElement(tensor, 2, 99) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        
+        // Verify the new tensor has the updated value
+        assertEquals(99, backend.getElement(newTensor, 2))
+        
+        // Verify other elements remain unchanged
+        assertEquals(10, backend.getElement(newTensor, 0))
+        assertEquals(20, backend.getElement(newTensor, 1))
+        assertEquals(40, backend.getElement(newTensor, 3))
+        assertEquals(50, backend.getElement(newTensor, 4))
+        
+        // Verify original tensor is unchanged (immutable)
+        assertEquals(30, backend.getElement(tensor, 2))
+    }
 }
