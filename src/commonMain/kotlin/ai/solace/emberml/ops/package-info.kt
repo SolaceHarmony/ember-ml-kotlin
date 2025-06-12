@@ -278,7 +278,7 @@
  * // Get the name of the current active backend
  * val backend = getBackend()
  *
- * // Set the active backend (e.g., 'jvm', 'js', 'native')
+ * // Set the active backend (e.g., 'js', 'native')
  * setBackend(backendName)
  *
  * // Automatically select and set the best backend based on hardware

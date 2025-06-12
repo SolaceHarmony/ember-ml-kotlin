@@ -25,7 +25,7 @@
  *
  * - **`ai.solace.emberml.backend`**: Backend abstraction system
  *   - `common`: Common backend interfaces and utilities
- *   - `jvm`: JVM-specific backend implementations
+ *   - `native`: Native-specific backend implementations
  *
  * ## Neural Network Components
  *
