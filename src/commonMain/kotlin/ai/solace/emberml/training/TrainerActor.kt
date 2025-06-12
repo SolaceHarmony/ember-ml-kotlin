@@ -1,14 +1,13 @@
 package ai.solace.emberml.training
 
-import ai.solace.emberml.actors.ActorMessage
-import ai.solace.emberml.actors.BaseActor
+import ai.solace.emberml.actors.AbstractActor
 import ai.solace.emberml.nn.Module
 import ai.solace.emberml.tensor.common.EmberTensor
 
 /**
  * Messages for training operations.
  */
-sealed class TrainingMessage : ActorMessage
+sealed class TrainingMessage
 
 /**
  * Message to start training.
@@ -41,12 +40,12 @@ data class BackwardPassMessage(
 /**
  * Result message for forward pass.
  */
-data class ForwardPassResultMessage(val output: EmberTensor) : ActorMessage
+data class ForwardPassResultMessage(val output: EmberTensor)
 
 /**
  * Result message for backward pass.
  */
-data class BackwardPassResultMessage(val gradients: Map<String, EmberTensor>) : ActorMessage
+data class BackwardPassResultMessage(val gradients: Map<String, EmberTensor>)
 
 /**
  * Training progress message.
@@ -55,17 +54,17 @@ data class TrainingProgressMessage(
     val epoch: Int,
     val totalEpochs: Int,
     val loss: Float
-) : ActorMessage
+)
 
 /**
  * Training completed message.
  */
-data class TrainingCompletedMessage(val finalLoss: Float) : ActorMessage
+data class TrainingCompletedMessage(val finalLoss: Float)
 
 /**
  * Actor for handling training operations.
  */
-class TrainerActor : BaseActor<TrainingMessage>() {
+class TrainerActor : AbstractActor<TrainingMessage>() {
     
     override suspend fun receive(message: TrainingMessage) {
         when (message) {

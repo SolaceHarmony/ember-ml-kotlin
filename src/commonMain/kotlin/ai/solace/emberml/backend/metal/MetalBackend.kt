@@ -117,6 +117,92 @@ class MetalBackend : Backend {
         }
     }
     
+    // Bitwise operations - implementations using Metal kernels
+    override fun leftShift(x: Any, shifts: Any): Any {
+        requireMetalAvailable()
+        return MetalOperations.leftShift(x, shifts)
+    }
+    
+    override fun rightShift(x: Any, shifts: Any): Any {
+        requireMetalAvailable()
+        return MetalOperations.rightShift(x, shifts)
+    }
+    
+    override fun rotateLeft(x: Any, shifts: Any, bitWidth: Int): Any {
+        requireMetalAvailable()
+        return MetalOperations.rotateLeft(x, shifts, bitWidth)
+    }
+    
+    override fun rotateRight(x: Any, shifts: Any, bitWidth: Int): Any {
+        requireMetalAvailable()
+        return MetalOperations.rotateRight(x, shifts, bitWidth)
+    }
+    
+    override fun countOnes(x: Any): Any {
+        requireMetalAvailable()
+        return MetalOperations.countOnes(x)
+    }
+    
+    override fun countZeros(x: Any): Any {
+        requireMetalAvailable()
+        return MetalOperations.countZeros(x)
+    }
+    
+    override fun getBit(x: Any, position: Any): Any {
+        requireMetalAvailable()
+        return MetalOperations.getBit(x, position)
+    }
+    
+    override fun setBit(x: Any, position: Any, value: Any): Any {
+        requireMetalAvailable()
+        return MetalOperations.setBit(x, position, value)
+    }
+    
+    override fun toggleBit(x: Any, position: Any): Any {
+        requireMetalAvailable()
+        return MetalOperations.toggleBit(x, position)
+    }
+    
+    override fun bitwiseAnd(x: Any, y: Any): Any {
+        requireMetalAvailable()
+        return MetalOperations.bitwiseAnd(x, y)
+    }
+    
+    override fun bitwiseOr(x: Any, y: Any): Any {
+        requireMetalAvailable()
+        return MetalOperations.bitwiseOr(x, y)
+    }
+    
+    override fun bitwiseXor(x: Any, y: Any): Any {
+        requireMetalAvailable()
+        return MetalOperations.bitwiseXor(x, y)
+    }
+    
+    override fun bitwiseNot(x: Any): Any {
+        requireMetalAvailable()
+        return MetalOperations.bitwiseNot(x)
+    }
+    
+    override fun binaryWaveInterference(waves: List<Any>, mode: String): Any {
+        requireMetalAvailable()
+        return MetalOperations.binaryWaveInterference(waves, mode)
+    }
+    
+    override fun binaryWavePropagate(wave: Any, shift: Any): Any {
+        requireMetalAvailable()
+        return MetalOperations.binaryWavePropagate(wave, shift)
+    }
+    
+    override fun createDutyCycle(length: Int, dutyCycle: Float, dtype: EmberDType): Any {
+        requireMetalAvailable()
+        return MetalOperations.createDutyCycle(length, dutyCycle, dtype)
+    }
+    
+    override fun generateBlockySin(length: Int, halfPeriod: Int, dtype: EmberDType): Any {
+        requireMetalAvailable()
+        return MetalOperations.generateBlockySin(length, halfPeriod, dtype)
+    }
+    
     companion object {
         /**
          * Creates a Metal context if available on the platform.

@@ -7,7 +7,7 @@ import kotlinx.coroutines.channels.SendChannel
 /**
  * Base class for all tensor-related messages.
  */
-sealed class TensorMessage : ActorMessage
+sealed class TensorMessage
 
 /**
  * Request to add two tensors.
@@ -48,34 +48,54 @@ data class ReshapeTensorMessage(
 /**
  * Base class for tensor responses.
  */
-sealed class TensorResponse : ActorMessage
+sealed class TensorResponse
 
-data class TensorResultMessage(val result: EmberTensor) : TensorResponse
-data class TensorErrorMessage(val error: Throwable) : TensorResponse
+data class TensorResultMessage(val result: EmberTensor) : TensorResponse()
+data class TensorErrorMessage(val error: Throwable) : TensorResponse()
 
 /**
  * Actor that handles tensor operations in a non-blocking coroutine-safe way.
  */
-class TensorActor : BaseActor<TensorMessage>() {
+class TensorActor : AbstractActor<TensorMessage>() {
 
     override suspend fun receive(message: TensorMessage) {
         when (message) {
-            is AddTensorMessage -> handle(message) { it.a + it.b }
-            is MultiplyTensorMessage -> handle(message) { it.a * it.b }
-            is MatmulTensorMessage -> handle(message) { it.a.matmul(it.b) }
-            is ReshapeTensorMessage -> handle(message) { it.tensor.reshape(it.newShape) }
+            is AddTensorMessage -> {
+                try {
+                    val result = message.a + message.b
+                    message.responseChannel?.send(TensorResultMessage(result))
+                } catch (e: Exception) {
+                    message.responseChannel?.send(TensorErrorMessage(e))
+                }
+            }
+            is MultiplyTensorMessage -> {
+                try {
+                    val result = message.a * message.b
+                    message.responseChannel?.send(TensorResultMessage(result))
+                } catch (e: Exception) {
+                    message.responseChannel?.send(TensorErrorMessage(e))
+                }
+            }
+            is MatmulTensorMessage -> {
+                try {
+                    val result = message.a.matmul(message.b)
+                    message.responseChannel?.send(TensorResultMessage(result))
+                } catch (e: Exception) {
+                    message.responseChannel?.send(TensorErrorMessage(e))
+                }
+            }
+            is ReshapeTensorMessage -> {
+                try {
+                    val reshaped = message.tensor.reshape(message.newShape)
+                    val result = if (reshaped is EmberTensor) reshaped 
+                        else throw IllegalStateException("Reshape operation did not return EmberTensor")
+                    message.responseChannel?.send(TensorResultMessage(result))
+                } catch (e: Exception) {
+                    message.responseChannel?.send(TensorErrorMessage(e))
+                }
+            }
         }
     }
 
-    private suspend inline fun <reified T : TensorMessage> handle(
-        message: T,
-        crossinline operation: suspend (T) -> EmberTensor
-    ) {
-        try {
-            val result = operation(message)
-            message.responseChannel?.send(TensorResultMessage(result))
-        } catch (e: Exception) {
-            message.responseChannel?.send(TensorErrorMessage(e))
-        }
-    }
+    // Remove the handle function since we're handling each case directly
 }

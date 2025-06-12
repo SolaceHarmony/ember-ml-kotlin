@@ -1,73 +1,48 @@
+/**
+ * # Actor Interface
+ *
+ * Base interface for all actors in the Ember ML Kotlin actor system.
+ * Actors communicate exclusively through message passing and encapsulate their own state.
+ *
+ * @param M The type of messages this actor can receive
+ */
 package ai.solace.emberml.actors
 
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.CoroutineScope
 
 /**
- * Base interface for all messages in the actor system.
- */
-interface ActorMessage
-
-/**
  * Base interface for all actors in the system.
  *
- * @param T The type of messages this actor can receive.
+ * @param M The message type this actor handles
  */
-interface Actor<T : ActorMessage> {
+interface Actor<M : Any> {
+    
     /**
-     * Processes a message.
+     * The mailbox channel for receiving messages.
      */
-    suspend fun receive(message: T)
-
+    val mailbox: Channel<M>
+    
     /**
-     * Sends a message to this actor.
+     * The coroutine scope for this actor.
      */
-    suspend fun send(message: T)
-
+    val scope: CoroutineScope
+    
     /**
-     * Stops the actor and cleans up resources.
+     * Handle a received message.
+     * This method is called for each message received by the actor.
+     *
+     * @param message The message to handle
+     */
+    suspend fun receive(message: M)
+    
+    /**
+     * Start the actor's message processing loop.
+     */
+    suspend fun start()
+    
+    /**
+     * Stop the actor and clean up resources.
      */
     suspend fun stop()
-}
-
-/**
- * Actor reference abstraction for external messaging.
- */
-interface ActorRef<T : ActorMessage> {
-    suspend fun tell(message: T)
-    suspend fun <R : ActorMessage> ask(message: T, responseType: kotlin.reflect.KClass<R>): R
-}
-
-/**
- * Abstract base actor with built-in mailbox and message loop.
- */
-abstract class BaseActor<T : ActorMessage> : Actor<T> {
-    private val mailbox = Channel<T>(Channel.UNLIMITED)
-    private var running = true
-
-    override suspend fun send(message: T) {
-        if (running) {
-            mailbox.send(message)
-        }
-    }
-
-    override suspend fun stop() {
-        running = false
-        mailbox.close()
-    }
-
-    suspend fun start() {
-        while (running) {
-            try {
-                val message = mailbox.receive()
-                receive(message)
-            } catch (e: Exception) {
-                onError(e)
-            }
-        }
-    }
-
-    protected open suspend fun onError(error: Exception) {
-        println("Error in actor: ${error.message}")
-    }
 }

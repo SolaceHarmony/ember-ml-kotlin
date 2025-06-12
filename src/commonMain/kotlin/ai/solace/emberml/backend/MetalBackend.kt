@@ -76,6 +76,75 @@ class MetalBackend : Backend {
         return defaultDevice
     }
     
+    // Bitwise operations - placeholder implementations
+    override fun leftShift(x: Any, shifts: Any): Any {
+        throw NotImplementedError("Metal backend bitwise operations not yet implemented")
+    }
+    
+    override fun rightShift(x: Any, shifts: Any): Any {
+        throw NotImplementedError("Metal backend bitwise operations not yet implemented")
+    }
+    
+    override fun rotateLeft(x: Any, shifts: Any, bitWidth: Int): Any {
+        throw NotImplementedError("Metal backend bitwise operations not yet implemented")
+    }
+    
+    override fun rotateRight(x: Any, shifts: Any, bitWidth: Int): Any {
+        throw NotImplementedError("Metal backend bitwise operations not yet implemented")
+    }
+    
+    override fun countOnes(x: Any): Any {
+        throw NotImplementedError("Metal backend bitwise operations not yet implemented")
+    }
+    
+    override fun countZeros(x: Any): Any {
+        throw NotImplementedError("Metal backend bitwise operations not yet implemented")
+    }
+    
+    override fun getBit(x: Any, position: Any): Any {
+        throw NotImplementedError("Metal backend bitwise operations not yet implemented")
+    }
+    
+    override fun setBit(x: Any, position: Any, value: Any): Any {
+        throw NotImplementedError("Metal backend bitwise operations not yet implemented")
+    }
+    
+    override fun toggleBit(x: Any, position: Any): Any {
+        throw NotImplementedError("Metal backend bitwise operations not yet implemented")
+    }
+    
+    override fun bitwiseAnd(x: Any, y: Any): Any {
+        throw NotImplementedError("Metal backend bitwise operations not yet implemented")
+    }
+    
+    override fun bitwiseOr(x: Any, y: Any): Any {
+        throw NotImplementedError("Metal backend bitwise operations not yet implemented")
+    }
+    
+    override fun bitwiseXor(x: Any, y: Any): Any {
+        throw NotImplementedError("Metal backend bitwise operations not yet implemented")
+    }
+    
+    override fun bitwiseNot(x: Any): Any {
+        throw NotImplementedError("Metal backend bitwise operations not yet implemented")
+    }
+    
+    override fun binaryWaveInterference(waves: List<Any>, mode: String): Any {
+        throw NotImplementedError("Metal backend binary wave operations not yet implemented")
+    }
+    
+    override fun binaryWavePropagate(wave: Any, shift: Any): Any {
+        throw NotImplementedError("Metal backend binary wave operations not yet implemented")
+    }
+    
+    override fun createDutyCycle(length: Int, dutyCycle: Float, dtype: EmberDType): Any {
+        throw NotImplementedError("Metal backend duty cycle generation not yet implemented")
+    }
+    
+    override fun generateBlockySin(length: Int, halfPeriod: Int, dtype: EmberDType): Any {
+        throw NotImplementedError("Metal backend blocky sin generation not yet implemented")
+    }
+    
     companion object {
         /**
          * Checks if Metal backend is available on the current platform.

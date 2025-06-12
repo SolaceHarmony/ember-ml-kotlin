@@ -215,4 +215,73 @@ object MetalOperations {
             "Tensors must have the same shape: ${a.shape.contentToString()} vs ${b.shape.contentToString()}" 
         }
     }
+    
+    // Bitwise operations - placeholder implementations for Metal
+    fun leftShift(x: Any, shifts: Any): Any {
+        throw NotImplementedError("Metal bitwise operations not yet implemented")
+    }
+    
+    fun rightShift(x: Any, shifts: Any): Any {
+        throw NotImplementedError("Metal bitwise operations not yet implemented")
+    }
+    
+    fun rotateLeft(x: Any, shifts: Any, bitWidth: Int): Any {
+        throw NotImplementedError("Metal bitwise operations not yet implemented")
+    }
+    
+    fun rotateRight(x: Any, shifts: Any, bitWidth: Int): Any {
+        throw NotImplementedError("Metal bitwise operations not yet implemented")
+    }
+    
+    fun countOnes(x: Any): Any {
+        throw NotImplementedError("Metal bitwise operations not yet implemented")
+    }
+    
+    fun countZeros(x: Any): Any {
+        throw NotImplementedError("Metal bitwise operations not yet implemented")
+    }
+    
+    fun getBit(x: Any, position: Any): Any {
+        throw NotImplementedError("Metal bitwise operations not yet implemented")
+    }
+    
+    fun setBit(x: Any, position: Any, value: Any): Any {
+        throw NotImplementedError("Metal bitwise operations not yet implemented")
+    }
+    
+    fun toggleBit(x: Any, position: Any): Any {
+        throw NotImplementedError("Metal bitwise operations not yet implemented")
+    }
+    
+    fun bitwiseAnd(x: Any, y: Any): Any {
+        throw NotImplementedError("Metal bitwise operations not yet implemented")
+    }
+    
+    fun bitwiseOr(x: Any, y: Any): Any {
+        throw NotImplementedError("Metal bitwise operations not yet implemented")
+    }
+    
+    fun bitwiseXor(x: Any, y: Any): Any {
+        throw NotImplementedError("Metal bitwise operations not yet implemented")
+    }
+    
+    fun bitwiseNot(x: Any): Any {
+        throw NotImplementedError("Metal bitwise operations not yet implemented")
+    }
+    
+    fun binaryWaveInterference(waves: List<Any>, mode: String): Any {
+        throw NotImplementedError("Metal binary wave operations not yet implemented")
+    }
+    
+    fun binaryWavePropagate(wave: Any, shift: Any): Any {
+        throw NotImplementedError("Metal binary wave operations not yet implemented")
+    }
+    
+    fun createDutyCycle(length: Int, dutyCycle: Float, dtype: EmberDType): Any {
+        throw NotImplementedError("Metal duty cycle generation not yet implemented")
+    }
+    
+    fun generateBlockySin(length: Int, halfPeriod: Int, dtype: EmberDType): Any {
+        throw NotImplementedError("Metal blocky sin generation not yet implemented")
+    }
 }
