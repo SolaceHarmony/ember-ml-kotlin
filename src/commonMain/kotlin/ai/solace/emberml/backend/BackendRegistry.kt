@@ -1,5 +1,7 @@
 package ai.solace.emberml.backend
 
+import ai.solace.emberml.backend.metal.MetalBackend
+
 /**
  * Registry for backend implementations.
  * This class manages the available backends and allows switching between them.
@@ -69,9 +71,16 @@ object BackendRegistry {
         // Register the MegaTensorBackend
         registerBackend("mega", MegaTensorBackend())
         
-        // Set the MegaTensorBackend as the default if no backend is set
+        // Register the Metal backend if available
+        val metalBackend = MetalBackend()
+        registerBackend("metal", metalBackend)
+        
+        // Set the best available backend as default
         if (currentBackend == null) {
-            setBackend("mega")
+            when {
+                metalBackend.isAvailable() -> setBackend("metal")
+                else -> setBackend("mega")
+            }
         }
     }
 }
@@ -100,12 +109,18 @@ fun setBackend(name: String): Boolean {
 
 /**
  * Automatically selects the best backend based on the available hardware.
- * For now, this just selects the MegaTensorBackend.
  *
  * @return The name of the selected backend.
  */
 fun autoSelectBackend(): String {
-    // For now, just select the MegaTensorBackend
+    // Try Metal backend first (highest performance on Apple platforms)
+    val metalBackend = BackendRegistry.getBackend("metal") as? MetalBackend
+    if (metalBackend?.isAvailable() == true) {
+        BackendRegistry.setBackend("metal")
+        return "metal"
+    }
+    
+    // Fall back to MegaTensorBackend
     BackendRegistry.setBackend("mega")
     return "mega"
 }
