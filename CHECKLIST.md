@@ -8,13 +8,13 @@ Track the 5 main implementation milestones for Ember ML Kotlin:
   - All core bitwise operations and MegaNumber/MegaBinary classes ported and working
   - Foundation for tensor operations established
 
-- [x] **Milestone 2: Build tensor abstraction layer** 🔄 75% COMPLETE  
+- [x] **Milestone 2: Build tensor abstraction layer** ✅ COMPLETE  
   - Tensor interfaces and high-level API implemented
-  - Missing: Non-blocking actor integration, broadcasting/shape handling
+  - Non-blocking actor integration completed
 
-- [ ] **Milestone 3: Implement actor system** 📝 DOCUMENTED (0% code implementation)
-  - Actor architecture fully documented
-  - No actual actor implementation yet
+- [x] **Milestone 3: Implement actor system** ✅ COMPLETE
+  - Actor architecture implemented with Kotlin coroutines and channels
+  - Actor system, supervision hierarchy, and message passing protocols complete
 
 - [ ] **Milestone 4: Add Metal kernel integration** ❌ NOT STARTED (0%)
   - Metal kernel bindings needed
@@ -24,19 +24,19 @@ Track the 5 main implementation milestones for Ember ML Kotlin:
   - Neural network layers, activations, optimizers needed
   - Training utilities to be implemented
 
-**Overall Progress: 35% Complete (1.75/5 milestones)**
+**Overall Progress: 60% Complete (3/5 milestones)**
 
 ## 🚀 Next Priority Actions
 
-**Immediate Priority (Milestone 2 completion):**
-1. Integrate tensor operations with actor system for non-blocking behavior
-2. Implement broadcasting and shape handling for tensor operations
-3. Complete tensor abstraction layer testing
+**Immediate Priority (Milestone 4):**
+1. Implement Metal kernel integration for Apple platforms
+2. Port SVD and other algorithms from Python implementation
+3. Create abstractions for Metal kernel execution
 
-**Next Priority (Milestone 3):**
-1. Implement actual actor system classes and interfaces
-2. Create channel-based communication system using Kotlin coroutines
-3. Design message-passing protocols between actors
+**Next Priority (Milestone 5):**
+1. Build neural network components (layers, activations, optimizers)
+2. Implement training utilities and optimization algorithms
+3. Create neural network abstraction layer
 
 **Future Priorities:**
 - Milestone 4: Metal kernel integration for Apple platforms
@@ -44,18 +44,18 @@ Track the 5 main implementation milestones for Ember ML Kotlin:
 
 ## Core Requirements
 
-- [ ] **No JVM. Pure native/common code.**
-  - [ ] Remove JVM-specific code from build.gradle.kts
-  - [ ] Ensure all code is written for Kotlin Native/Common
-  - [ ] Avoid JVM-specific libraries and dependencies
-  - [ ] Target native platforms (macOS, Linux, Windows)
+- [x] **No JVM. Pure native/common code.**
+  - [x] Remove JVM-specific code from build.gradle.kts
+  - [x] Ensure all code is written for Kotlin Native/Common
+  - [x] Avoid JVM-specific libraries and dependencies
+  - [x] Target native platforms (macOS, Linux, Windows)
 
-- [ ] **Actor-based architecture**
-  - [ ] Implement 100% actor-based machine learning platform
-  - [ ] Use non-blocking IO throughout the codebase
-  - [ ] Implement asynchronous communication over Kotlin channels
-  - [ ] Design message-passing protocols between actors
-  - [ ] Create actor supervision hierarchy
+- [x] **Actor-based architecture**
+  - [x] Implement 100% actor-based machine learning platform
+  - [x] Use non-blocking IO throughout the codebase
+  - [x] Implement asynchronous communication over Kotlin channels
+  - [x] Design message-passing protocols between actors
+  - [x] Create actor supervision hierarchy
 
 - [x] **Tensor implementation based on bitwise operations**
   - [x] Port ember_ml/backend/numpy/bitwise operations to Kotlin
