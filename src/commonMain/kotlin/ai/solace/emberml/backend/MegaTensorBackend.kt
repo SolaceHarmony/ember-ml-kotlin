@@ -4,6 +4,8 @@ import ai.solace.emberml.tensor.common.EmberDType
 import ai.solace.emberml.tensor.bitwise.MegaNumber
 import ai.solace.emberml.tensor.bitwise.MegaFloat
 import ai.solace.emberml.tensor.bitwise.MegaInteger
+import ai.solace.emberml.tensor.bitwise.MegaBinary
+import ai.solace.emberml.tensor.bitwise.DefaultConversionOperations
 
 /**
  * A backend implementation that uses the MegaNumber system for tensor operations.
@@ -574,6 +576,462 @@ class MegaTensorBackend : Backend {
                     }
                 }
             }
+        }
+    }
+
+    // ===== BITWISE OPERATIONS IMPLEMENTATION =====
+
+    /**
+     * Shift the bits of x to the left by shifts positions.
+     */
+    override fun leftShift(x: Any, shifts: Any): Any {
+        if (x !is MegaTensor) {
+            throw IllegalArgumentException("Expected MegaTensor, got ${x::class.simpleName}")
+        }
+
+        val shiftsValue = convertToShiftValue(shifts)
+        val resultData = applyBitwiseOperation(x.data) { megaNumber ->
+            val binary = if (megaNumber is MegaBinary) {
+                megaNumber.shiftLeft(createMegaBinaryFromInt(shiftsValue))
+            } else {
+                // Convert to MegaBinary, perform operation, convert back
+                val binaryNum = MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+                val result = binaryNum.shiftLeft(createMegaBinaryFromInt(shiftsValue))
+                convertBinaryToMegaNumber(result, x.dtype)
+            }
+            binary
+        }
+
+        return MegaTensor(resultData, x.shape, x.dtype, x.device)
+    }
+
+    /**
+     * Shift the bits of x to the right by shifts positions.
+     */
+    override fun rightShift(x: Any, shifts: Any): Any {
+        if (x !is MegaTensor) {
+            throw IllegalArgumentException("Expected MegaTensor, got ${x::class.simpleName}")
+        }
+
+        val shiftsValue = convertToShiftValue(shifts)
+        val resultData = applyBitwiseOperation(x.data) { megaNumber ->
+            val binary = if (megaNumber is MegaBinary) {
+                megaNumber.shiftRight(createMegaBinaryFromInt(shiftsValue))
+            } else {
+                val binaryNum = MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+                val result = binaryNum.shiftRight(createMegaBinaryFromInt(shiftsValue))
+                convertBinaryToMegaNumber(result, x.dtype)
+            }
+            binary
+        }
+
+        return MegaTensor(resultData, x.shape, x.dtype, x.device)
+    }
+
+    /**
+     * Rotate the bits of x to the left by shifts positions.
+     */
+    override fun rotateLeft(x: Any, shifts: Any, bitWidth: Int): Any {
+        if (x !is MegaTensor) {
+            throw IllegalArgumentException("Expected MegaTensor, got ${x::class.simpleName}")
+        }
+
+        val shiftsValue = convertToShiftValue(shifts)
+        val resultData = applyBitwiseOperation(x.data) { megaNumber ->
+            val binary = if (megaNumber is MegaBinary) {
+                // Implement rotation using shift and OR
+                val normalizedShift = shiftsValue % bitWidth
+                val leftPart = megaNumber.shiftLeft(createMegaBinaryFromInt(normalizedShift))
+                val rightPart = megaNumber.shiftRight(createMegaBinaryFromInt(bitWidth - normalizedShift))
+                leftPart.bitwiseOr(rightPart)
+            } else {
+                val binaryNum = MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+                val normalizedShift = shiftsValue % bitWidth
+                val leftPart = binaryNum.shiftLeft(createMegaBinaryFromInt(normalizedShift))
+                val rightPart = binaryNum.shiftRight(createMegaBinaryFromInt(bitWidth - normalizedShift))
+                val result = leftPart.bitwiseOr(rightPart)
+                convertBinaryToMegaNumber(result, x.dtype)
+            }
+            binary
+        }
+
+        return MegaTensor(resultData, x.shape, x.dtype, x.device)
+    }
+
+    /**
+     * Rotate the bits of x to the right by shifts positions.
+     */
+    override fun rotateRight(x: Any, shifts: Any, bitWidth: Int): Any {
+        if (x !is MegaTensor) {
+            throw IllegalArgumentException("Expected MegaTensor, got ${x::class.simpleName}")
+        }
+
+        val shiftsValue = convertToShiftValue(shifts)
+        val resultData = applyBitwiseOperation(x.data) { megaNumber ->
+            val binary = if (megaNumber is MegaBinary) {
+                val normalizedShift = shiftsValue % bitWidth
+                val rightPart = megaNumber.shiftRight(createMegaBinaryFromInt(normalizedShift))
+                val leftPart = megaNumber.shiftLeft(createMegaBinaryFromInt(bitWidth - normalizedShift))
+                rightPart.bitwiseOr(leftPart)
+            } else {
+                val binaryNum = MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+                val normalizedShift = shiftsValue % bitWidth
+                val rightPart = binaryNum.shiftRight(createMegaBinaryFromInt(normalizedShift))
+                val leftPart = binaryNum.shiftLeft(createMegaBinaryFromInt(bitWidth - normalizedShift))
+                val result = rightPart.bitwiseOr(leftPart)
+                convertBinaryToMegaNumber(result, x.dtype)
+            }
+            binary
+        }
+
+        return MegaTensor(resultData, x.shape, x.dtype, x.device)
+    }
+
+    /**
+     * Count the number of set bits (1s) in each element of x.
+     */
+    override fun countOnes(x: Any): Any {
+        if (x !is MegaTensor) {
+            throw IllegalArgumentException("Expected MegaTensor, got ${x::class.simpleName}")
+        }
+
+        val resultData = applyBitwiseOperation(x.data) { megaNumber ->
+            val binary = if (megaNumber is MegaBinary) megaNumber else MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+            val count = binary.toBits().count { it == 1 }
+            MegaInteger.fromValue(count)
+        }
+
+        return MegaTensor(resultData, x.shape, EmberDType.INT32, x.device)
+    }
+
+    /**
+     * Count the number of unset bits (0s) in each element of x.
+     */
+    override fun countZeros(x: Any): Any {
+        if (x !is MegaTensor) {
+            throw IllegalArgumentException("Expected MegaTensor, got ${x::class.simpleName}")
+        }
+
+        val resultData = applyBitwiseOperation(x.data) { megaNumber ->
+            val binary = if (megaNumber is MegaBinary) megaNumber else MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+            val bits = binary.toBits()
+            val bitWidth = when (x.dtype) {
+                EmberDType.UINT8 -> 8
+                EmberDType.INT32 -> 32
+                EmberDType.INT64 -> 64
+                else -> 32
+            }
+            val count = bitWidth - bits.count { it == 1 }
+            MegaInteger.fromValue(count)
+        }
+
+        return MegaTensor(resultData, x.shape, EmberDType.INT32, x.device)
+    }
+
+    /**
+     * Get the bit at the specified position in each element of x.
+     */
+    override fun getBit(x: Any, position: Any): Any {
+        if (x !is MegaTensor) {
+            throw IllegalArgumentException("Expected MegaTensor, got ${x::class.simpleName}")
+        }
+
+        val positionValue = convertToShiftValue(position)
+        val resultData = applyBitwiseOperation(x.data) { megaNumber ->
+            val binary = if (megaNumber is MegaBinary) megaNumber else MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+            val bit = binary.getBit(createMegaBinaryFromInt(positionValue))
+            MegaInteger.fromValue(if (bit) 1 else 0)
+        }
+
+        return MegaTensor(resultData, x.shape, EmberDType.INT32, x.device)
+    }
+
+    /**
+     * Set the bit at the specified position in each element of x to value (0 or 1).
+     */
+    override fun setBit(x: Any, position: Any, value: Any): Any {
+        if (x !is MegaTensor) {
+            throw IllegalArgumentException("Expected MegaTensor, got ${x::class.simpleName}")
+        }
+
+        val positionValue = convertToShiftValue(position)
+        val valueValue = convertToShiftValue(value) != 0
+        val resultData = applyBitwiseOperation(x.data) { megaNumber ->
+            val binary = if (megaNumber is MegaBinary) megaNumber.copy() else MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+            binary.setBit(createMegaBinaryFromInt(positionValue), valueValue)
+            if (megaNumber is MegaBinary) binary else convertBinaryToMegaNumber(binary, x.dtype)
+        }
+
+        return MegaTensor(resultData, x.shape, x.dtype, x.device)
+    }
+
+    /**
+     * Toggle the bit at the specified position in each element of x.
+     */
+    override fun toggleBit(x: Any, position: Any): Any {
+        if (x !is MegaTensor) {
+            throw IllegalArgumentException("Expected MegaTensor, got ${x::class.simpleName}")
+        }
+
+        val positionValue = convertToShiftValue(position)
+        val resultData = applyBitwiseOperation(x.data) { megaNumber ->
+            val binary = if (megaNumber is MegaBinary) megaNumber.copy() else MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+            val currentBit = binary.getBit(createMegaBinaryFromInt(positionValue))
+            binary.setBit(createMegaBinaryFromInt(positionValue), !currentBit)
+            if (megaNumber is MegaBinary) binary else convertBinaryToMegaNumber(binary, x.dtype)
+        }
+
+        return MegaTensor(resultData, x.shape, x.dtype, x.device)
+    }
+
+    /**
+     * Compute the bitwise AND of x and y element-wise.
+     */
+    override fun bitwiseAnd(x: Any, y: Any): Any {
+        if (x !is MegaTensor || y !is MegaTensor) {
+            throw IllegalArgumentException("Expected MegaTensor")
+        }
+
+        if (!x.shape.contentEquals(y.shape)) {
+            throw IllegalArgumentException("Tensors must have the same shape for bitwise AND")
+        }
+
+        val resultData = applyBinaryBitwiseOperation(x.data, y.data) { a, b ->
+            val binaryA = if (a is MegaBinary) a else MegaBinary(DefaultConversionOperations.toDecimalString(a))
+            val binaryB = if (b is MegaBinary) b else MegaBinary(DefaultConversionOperations.toDecimalString(b))
+            val result = binaryA.bitwiseAnd(binaryB)
+            if (a is MegaBinary) result else convertBinaryToMegaNumber(result, x.dtype)
+        }
+
+        val resultDType = promoteTypes(x.dtype, y.dtype)
+        return MegaTensor(resultData, x.shape, resultDType, x.device)
+    }
+
+    /**
+     * Compute the bitwise OR of x and y element-wise.
+     */
+    override fun bitwiseOr(x: Any, y: Any): Any {
+        if (x !is MegaTensor || y !is MegaTensor) {
+            throw IllegalArgumentException("Expected MegaTensor")
+        }
+
+        if (!x.shape.contentEquals(y.shape)) {
+            throw IllegalArgumentException("Tensors must have the same shape for bitwise OR")
+        }
+
+        val resultData = applyBinaryBitwiseOperation(x.data, y.data) { a, b ->
+            val binaryA = if (a is MegaBinary) a else MegaBinary(DefaultConversionOperations.toDecimalString(a))
+            val binaryB = if (b is MegaBinary) b else MegaBinary(DefaultConversionOperations.toDecimalString(b))
+            val result = binaryA.bitwiseOr(binaryB)
+            if (a is MegaBinary) result else convertBinaryToMegaNumber(result, x.dtype)
+        }
+
+        val resultDType = promoteTypes(x.dtype, y.dtype)
+        return MegaTensor(resultData, x.shape, resultDType, x.device)
+    }
+
+    /**
+     * Compute the bitwise XOR of x and y element-wise.
+     */
+    override fun bitwiseXor(x: Any, y: Any): Any {
+        if (x !is MegaTensor || y !is MegaTensor) {
+            throw IllegalArgumentException("Expected MegaTensor")
+        }
+
+        if (!x.shape.contentEquals(y.shape)) {
+            throw IllegalArgumentException("Tensors must have the same shape for bitwise XOR")
+        }
+
+        val resultData = applyBinaryBitwiseOperation(x.data, y.data) { a, b ->
+            val binaryA = if (a is MegaBinary) a else MegaBinary(DefaultConversionOperations.toDecimalString(a))
+            val binaryB = if (b is MegaBinary) b else MegaBinary(DefaultConversionOperations.toDecimalString(b))
+            val result = binaryA.bitwiseXor(binaryB)
+            if (a is MegaBinary) result else convertBinaryToMegaNumber(result, x.dtype)
+        }
+
+        val resultDType = promoteTypes(x.dtype, y.dtype)
+        return MegaTensor(resultData, x.shape, resultDType, x.device)
+    }
+
+    /**
+     * Compute the bitwise NOT (inversion) of x element-wise.
+     */
+    override fun bitwiseNot(x: Any): Any {
+        if (x !is MegaTensor) {
+            throw IllegalArgumentException("Expected MegaTensor, got ${x::class.simpleName}")
+        }
+
+        val resultData = applyBitwiseOperation(x.data) { megaNumber ->
+            val binary = if (megaNumber is MegaBinary) megaNumber else MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+            val result = binary.bitwiseNot()
+            if (megaNumber is MegaBinary) result else convertBinaryToMegaNumber(result, x.dtype)
+        }
+
+        return MegaTensor(resultData, x.shape, x.dtype, x.device)
+    }
+
+    /**
+     * Apply wave interference between multiple binary patterns element-wise.
+     */
+    override fun binaryWaveInterference(waves: List<Any>, mode: String): Any {
+        if (waves.isEmpty()) {
+            throw IllegalArgumentException("Waves list cannot be empty")
+        }
+
+        val megaTensors = waves.map { wave ->
+            if (wave !is MegaTensor) {
+                throw IllegalArgumentException("All waves must be MegaTensor")
+            }
+            wave
+        }
+
+        // Use the first tensor as the base
+        val baseTensor = megaTensors[0]
+        var result = baseTensor
+
+        // Apply interference iteratively
+        for (i in 1 until megaTensors.size) {
+            result = when (mode.lowercase()) {
+                "xor" -> bitwiseXor(result, megaTensors[i]) as MegaTensor
+                "and" -> bitwiseAnd(result, megaTensors[i]) as MegaTensor
+                "or" -> bitwiseOr(result, megaTensors[i]) as MegaTensor
+                else -> throw IllegalArgumentException("Unsupported interference mode: '$mode'. Choose 'xor', 'and', or 'or'.")
+            }
+        }
+
+        return result
+    }
+
+    /**
+     * Propagate a binary wave by shifting its bits.
+     */
+    override fun binaryWavePropagate(wave: Any, shift: Any): Any {
+        if (wave !is MegaTensor) {
+            throw IllegalArgumentException("Expected MegaTensor, got ${wave::class.simpleName}")
+        }
+
+        val shiftValue = convertToShiftValue(shift)
+        return if (shiftValue >= 0) {
+            leftShift(wave, shiftValue)
+        } else {
+            rightShift(wave, -shiftValue)
+        }
+    }
+
+    /**
+     * Create a binary pattern tensor with a specified duty cycle.
+     */
+    override fun createDutyCycle(length: Int, dutyCycle: Float, dtype: EmberDType): Any {
+        if (length <= 0) {
+            throw IllegalArgumentException("Length must be positive")
+        }
+        if (dutyCycle < 0.0f || dutyCycle > 1.0f) {
+            throw IllegalArgumentException("Duty cycle must be between 0.0 and 1.0")
+        }
+
+        val numOnes = (length * dutyCycle).toInt()
+        val pattern = Array(length) { i ->
+            val value = if (i < numOnes) 1 else 0
+            convertValueToMegaNumber(value, dtype)
+        }
+
+        return MegaTensor(pattern, intArrayOf(length), dtype, defaultDevice)
+    }
+
+    /**
+     * Generate a blocky sine wave pattern (square wave).
+     */
+    override fun generateBlockySin(length: Int, halfPeriod: Int, dtype: EmberDType): Any {
+        if (length <= 0) {
+            throw IllegalArgumentException("Length must be positive")
+        }
+        if (halfPeriod <= 0) {
+            throw IllegalArgumentException("Half period must be positive")
+        }
+
+        val fullPeriod = 2 * halfPeriod
+        val pattern = Array(length) { i ->
+            val cyclePosition = i % fullPeriod
+            val value = if (cyclePosition < halfPeriod) 1 else 0
+            convertValueToMegaNumber(value, dtype)
+        }
+
+        return MegaTensor(pattern, intArrayOf(length), dtype, defaultDevice)
+    }
+
+    // ===== HELPER METHODS FOR BITWISE OPERATIONS =====
+
+    /**
+     * Convert shift parameter to integer value.
+     */
+    private fun convertToShiftValue(shifts: Any): Int {
+        return when (shifts) {
+            is Int -> shifts
+            is MegaTensor -> {
+                if (shifts.shape.contentEquals(intArrayOf())) {
+                    // Scalar tensor
+                    val megaNumber = shifts.data as MegaNumber
+                    when (megaNumber) {
+                        is MegaInteger -> DefaultConversionOperations.toDecimalString(megaNumber).toInt()
+                        is MegaFloat -> DefaultConversionOperations.toDecimalString(megaNumber).split("*")[0].trim().toDouble().toInt()
+                        else -> throw IllegalArgumentException("Cannot convert ${megaNumber::class.simpleName} to shift value")
+                    }
+                } else {
+                    throw IllegalArgumentException("Shift value must be scalar")
+                }
+            }
+            else -> throw IllegalArgumentException("Unsupported shift type: ${shifts::class.simpleName}")
+        }
+    }
+
+    /**
+     * Create a MegaBinary from an integer value.
+     */
+    private fun createMegaBinaryFromInt(value: Int): MegaBinary {
+        return MegaBinary(value.toString())
+    }
+
+    /**
+     * Apply a bitwise operation to each element in the data array.
+     */
+    private fun applyBitwiseOperation(data: Array<*>, operation: (MegaNumber) -> MegaNumber): Array<*> {
+        return if (data.isEmpty()) {
+            emptyArray<MegaNumber>()
+        } else if (data[0] is Array<*>) {
+            Array(data.size) { i ->
+                applyBitwiseOperation(data[i] as Array<*>, operation)
+            }
+        } else {
+            Array(data.size) { i ->
+                operation(data[i] as MegaNumber)
+            }
+        }
+    }
+
+    /**
+     * Apply a binary bitwise operation to each pair of elements.
+     */
+    private fun applyBinaryBitwiseOperation(dataA: Array<*>, dataB: Array<*>, operation: (MegaNumber, MegaNumber) -> MegaNumber): Array<*> {
+        return if (dataA.isEmpty() || dataB.isEmpty()) {
+            emptyArray<MegaNumber>()
+        } else if (dataA[0] is Array<*> && dataB[0] is Array<*>) {
+            Array(dataA.size) { i ->
+                applyBinaryBitwiseOperation(dataA[i] as Array<*>, dataB[i] as Array<*>, operation)
+            }
+        } else {
+            Array(dataA.size) { i ->
+                operation(dataA[i] as MegaNumber, dataB[i] as MegaNumber)
+            }
+        }
+    }
+
+    /**
+     * Convert a MegaBinary result back to the appropriate MegaNumber type.
+     */
+    private fun convertBinaryToMegaNumber(binary: MegaBinary, dtype: EmberDType): MegaNumber {
+        return when (dtype) {
+            EmberDType.FLOAT32, EmberDType.FLOAT64 -> MegaFloat(binary)
+            else -> MegaInteger(binary)
         }
     }
 
