@@ -26,6 +26,18 @@ enum class EmberDType {
         BOOL -> "bool"
     }
 
+    /**
+     * Gets the size in bytes of this data type.
+     */
+    val sizeInBytes: Int get() = when (this) {
+        FLOAT32 -> 4
+        FLOAT64 -> 8
+        INT32 -> 4
+        INT64 -> 8
+        UINT8 -> 1
+        BOOL -> 1
+    }
+
     companion object {
         /**
          * Gets a data type from its string representation.
