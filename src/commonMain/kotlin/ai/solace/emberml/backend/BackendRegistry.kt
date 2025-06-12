@@ -69,6 +69,11 @@ object BackendRegistry {
         // Register the MegaTensorBackend
         registerBackend("mega", MegaTensorBackend())
         
+        // Register Metal backend if available
+        if (MetalBackend.isAvailable()) {
+            registerBackend("metal", MetalBackend())
+        }
+        
         // Set the MegaTensorBackend as the default if no backend is set
         if (currentBackend == null) {
             setBackend("mega")

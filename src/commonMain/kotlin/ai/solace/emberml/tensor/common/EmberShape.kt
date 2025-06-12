@@ -47,6 +47,61 @@ class EmberShape(val dimensions: IntArray) {
      */
     override fun hashCode(): Int = dimensions.contentHashCode()
 
+    /**
+     * Calculates the total number of elements in the tensor.
+     *
+     * @return The total number of elements.
+     */
+    fun totalSize(): Int = dimensions.fold(1) { acc, dim -> acc * dim }
+
+    /**
+     * Checks if this shape is compatible for broadcasting with another shape.
+     *
+     * @param other The other shape to check compatibility with.
+     * @return True if the shapes are compatible for broadcasting, false otherwise.
+     */
+    fun isBroadcastableWith(other: EmberShape): Boolean {
+        val thisReversed = dimensions.reversedArray()
+        val otherReversed = other.dimensions.reversedArray()
+        val maxLength = maxOf(thisReversed.size, otherReversed.size)
+        
+        for (i in 0 until maxLength) {
+            val thisDim = if (i < thisReversed.size) thisReversed[i] else 1
+            val otherDim = if (i < otherReversed.size) otherReversed[i] else 1
+            
+            if (thisDim != otherDim && thisDim != 1 && otherDim != 1) {
+                return false
+            }
+        }
+        return true
+    }
+
+    /**
+     * Broadcasts this shape with another shape.
+     *
+     * @param other The other shape to broadcast with.
+     * @return The broadcasted shape.
+     * @throws IllegalArgumentException if the shapes are not compatible for broadcasting.
+     */
+    fun broadcastWith(other: EmberShape): EmberShape {
+        if (!isBroadcastableWith(other)) {
+            throw IllegalArgumentException("Shapes $this and $other are not compatible for broadcasting")
+        }
+        
+        val thisReversed = dimensions.reversedArray()
+        val otherReversed = other.dimensions.reversedArray()
+        val maxLength = maxOf(thisReversed.size, otherReversed.size)
+        val result = IntArray(maxLength)
+        
+        for (i in 0 until maxLength) {
+            val thisDim = if (i < thisReversed.size) thisReversed[i] else 1
+            val otherDim = if (i < otherReversed.size) otherReversed[i] else 1
+            result[i] = maxOf(thisDim, otherDim)
+        }
+        
+        return EmberShape(result.reversedArray())
+    }
+
     companion object {
         /**
          * Creates a shape from a list of dimensions.
@@ -55,5 +110,16 @@ class EmberShape(val dimensions: IntArray) {
          * @return A new shape with the specified dimensions.
          */
         fun of(vararg dims: Int): EmberShape = EmberShape(dims)
+
+        /**
+         * Broadcasts multiple shapes together.
+         *
+         * @param shapes The shapes to broadcast.
+         * @return The broadcasted shape.
+         * @throws IllegalArgumentException if any shapes are not compatible for broadcasting.
+         */
+        fun broadcast(vararg shapes: EmberShape): EmberShape {
+            return shapes.reduce { acc, shape -> acc.broadcastWith(shape) }
+        }
     }
 }
