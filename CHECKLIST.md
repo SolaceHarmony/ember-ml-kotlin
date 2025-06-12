@@ -84,10 +84,10 @@
 
 ## Testing Strategy
 
-- [ ] Unit tests for bitwise operations
-- [ ] Integration tests for tensor operations
-- [ ] Performance benchmarks comparing to Python implementation
-- [ ] Correctness tests against reference implementations
+- [x] Unit tests for bitwise operations
+- [x] Integration tests for tensor operations
+- [x] Performance benchmarks comparing to Python implementation
+- [x] Correctness tests against reference implementations
 
 ## Documentation
 
