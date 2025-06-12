@@ -325,6 +325,332 @@ class EmberTensor(
         )
     }
 
+    // ===== BITWISE OPERATIONS =====
+
+    /**
+     * Shift the bits of this tensor to the left by shifts positions.
+     *
+     * @param shifts Number of bits to shift (integer or tensor).
+     * @return New tensor with bits shifted left.
+     */
+    fun leftShift(shifts: Int): EmberTensor = leftShift(EmberTensor(intArrayOf(shifts)))
+
+    fun leftShift(shifts: EmberTensor): EmberTensor {
+        val backend = BackendRegistry.getCurrentBackend()
+        val resultTensor = backend.leftShift(this.backendTensor, shifts.backendTensor)
+        val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+        val resultDType = backend.getTensorDType(resultTensor)
+        val resultDevice = backend.getTensorDevice(resultTensor)
+
+        return EmberTensor(
+            shape = resultShape,
+            dtype = resultDType,
+            device = resultDevice,
+            requiresGrad = this.requiresGrad,
+            backendTensor = resultTensor
+        )
+    }
+
+    /**
+     * Shift the bits of this tensor to the right by shifts positions.
+     *
+     * @param shifts Number of bits to shift (integer or tensor).
+     * @return New tensor with bits shifted right.
+     */
+    fun rightShift(shifts: Int): EmberTensor = rightShift(EmberTensor(intArrayOf(shifts)))
+
+    fun rightShift(shifts: EmberTensor): EmberTensor {
+        val backend = BackendRegistry.getCurrentBackend()
+        val resultTensor = backend.rightShift(this.backendTensor, shifts.backendTensor)
+        val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+        val resultDType = backend.getTensorDType(resultTensor)
+        val resultDevice = backend.getTensorDevice(resultTensor)
+
+        return EmberTensor(
+            shape = resultShape,
+            dtype = resultDType,
+            device = resultDevice,
+            requiresGrad = this.requiresGrad,
+            backendTensor = resultTensor
+        )
+    }
+
+    /**
+     * Rotate the bits of this tensor to the left by shifts positions.
+     *
+     * @param shifts Number of bits to rotate.
+     * @param bitWidth The bit width of the integer type.
+     * @return New tensor with bits rotated left.
+     */
+    fun rotateLeft(shifts: Int, bitWidth: Int = 32): EmberTensor = rotateLeft(EmberTensor(intArrayOf(shifts)), bitWidth)
+
+    fun rotateLeft(shifts: EmberTensor, bitWidth: Int = 32): EmberTensor {
+        val backend = BackendRegistry.getCurrentBackend()
+        val resultTensor = backend.rotateLeft(this.backendTensor, shifts.backendTensor, bitWidth)
+        val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+        val resultDType = backend.getTensorDType(resultTensor)
+        val resultDevice = backend.getTensorDevice(resultTensor)
+
+        return EmberTensor(
+            shape = resultShape,
+            dtype = resultDType,
+            device = resultDevice,
+            requiresGrad = this.requiresGrad,
+            backendTensor = resultTensor
+        )
+    }
+
+    /**
+     * Rotate the bits of this tensor to the right by shifts positions.
+     *
+     * @param shifts Number of bits to rotate.
+     * @param bitWidth The bit width of the integer type.
+     * @return New tensor with bits rotated right.
+     */
+    fun rotateRight(shifts: Int, bitWidth: Int = 32): EmberTensor = rotateRight(EmberTensor(intArrayOf(shifts)), bitWidth)
+
+    fun rotateRight(shifts: EmberTensor, bitWidth: Int = 32): EmberTensor {
+        val backend = BackendRegistry.getCurrentBackend()
+        val resultTensor = backend.rotateRight(this.backendTensor, shifts.backendTensor, bitWidth)
+        val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+        val resultDType = backend.getTensorDType(resultTensor)
+        val resultDevice = backend.getTensorDevice(resultTensor)
+
+        return EmberTensor(
+            shape = resultShape,
+            dtype = resultDType,
+            device = resultDevice,
+            requiresGrad = this.requiresGrad,
+            backendTensor = resultTensor
+        )
+    }
+
+    /**
+     * Count the number of set bits (1s) in each element.
+     *
+     * @return New tensor with bit counts.
+     */
+    fun countOnes(): EmberTensor {
+        val backend = BackendRegistry.getCurrentBackend()
+        val resultTensor = backend.countOnes(this.backendTensor)
+        val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+        val resultDType = backend.getTensorDType(resultTensor)
+        val resultDevice = backend.getTensorDevice(resultTensor)
+
+        return EmberTensor(
+            shape = resultShape,
+            dtype = resultDType,
+            device = resultDevice,
+            requiresGrad = false, // Bit count operations don't require gradients
+            backendTensor = resultTensor
+        )
+    }
+
+    /**
+     * Count the number of unset bits (0s) in each element.
+     *
+     * @return New tensor with zero bit counts.
+     */
+    fun countZeros(): EmberTensor {
+        val backend = BackendRegistry.getCurrentBackend()
+        val resultTensor = backend.countZeros(this.backendTensor)
+        val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+        val resultDType = backend.getTensorDType(resultTensor)
+        val resultDevice = backend.getTensorDevice(resultTensor)
+
+        return EmberTensor(
+            shape = resultShape,
+            dtype = resultDType,
+            device = resultDevice,
+            requiresGrad = false,
+            backendTensor = resultTensor
+        )
+    }
+
+    /**
+     * Get the bit at the specified position in each element.
+     *
+     * @param position Bit position (0-based, LSB).
+     * @return New tensor with bit values (0 or 1).
+     */
+    fun getBit(position: Int): EmberTensor = getBit(EmberTensor(intArrayOf(position)))
+
+    fun getBit(position: EmberTensor): EmberTensor {
+        val backend = BackendRegistry.getCurrentBackend()
+        val resultTensor = backend.getBit(this.backendTensor, position.backendTensor)
+        val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+        val resultDType = backend.getTensorDType(resultTensor)
+        val resultDevice = backend.getTensorDevice(resultTensor)
+
+        return EmberTensor(
+            shape = resultShape,
+            dtype = resultDType,
+            device = resultDevice,
+            requiresGrad = false,
+            backendTensor = resultTensor
+        )
+    }
+
+    /**
+     * Set the bit at the specified position to the given value.
+     *
+     * @param position Bit position (0-based, LSB).
+     * @param value Bit value (0 or 1).
+     * @return New tensor with the bit set.
+     */
+    fun setBit(position: Int, value: Int): EmberTensor = setBit(EmberTensor(intArrayOf(position)), EmberTensor(intArrayOf(value)))
+
+    fun setBit(position: EmberTensor, value: EmberTensor): EmberTensor {
+        val backend = BackendRegistry.getCurrentBackend()
+        val resultTensor = backend.setBit(this.backendTensor, position.backendTensor, value.backendTensor)
+        val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+        val resultDType = backend.getTensorDType(resultTensor)
+        val resultDevice = backend.getTensorDevice(resultTensor)
+
+        return EmberTensor(
+            shape = resultShape,
+            dtype = resultDType,
+            device = resultDevice,
+            requiresGrad = this.requiresGrad,
+            backendTensor = resultTensor
+        )
+    }
+
+    /**
+     * Toggle the bit at the specified position.
+     *
+     * @param position Bit position (0-based, LSB).
+     * @return New tensor with the bit toggled.
+     */
+    fun toggleBit(position: Int): EmberTensor = toggleBit(EmberTensor(intArrayOf(position)))
+
+    fun toggleBit(position: EmberTensor): EmberTensor {
+        val backend = BackendRegistry.getCurrentBackend()
+        val resultTensor = backend.toggleBit(this.backendTensor, position.backendTensor)
+        val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+        val resultDType = backend.getTensorDType(resultTensor)
+        val resultDevice = backend.getTensorDevice(resultTensor)
+
+        return EmberTensor(
+            shape = resultShape,
+            dtype = resultDType,
+            device = resultDevice,
+            requiresGrad = this.requiresGrad,
+            backendTensor = resultTensor
+        )
+    }
+
+    /**
+     * Compute the bitwise AND with another tensor.
+     *
+     * @param other The other tensor.
+     * @return New tensor with element-wise bitwise AND.
+     */
+    infix fun bitwiseAnd(other: EmberTensor): EmberTensor {
+        val backend = BackendRegistry.getCurrentBackend()
+        val resultTensor = backend.bitwiseAnd(this.backendTensor, other.backendTensor)
+        val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+        val resultDType = backend.getTensorDType(resultTensor)
+        val resultDevice = backend.getTensorDevice(resultTensor)
+
+        return EmberTensor(
+            shape = resultShape,
+            dtype = resultDType,
+            device = resultDevice,
+            requiresGrad = this.requiresGrad || other.requiresGrad,
+            backendTensor = resultTensor
+        )
+    }
+
+    /**
+     * Compute the bitwise OR with another tensor.
+     *
+     * @param other The other tensor.
+     * @return New tensor with element-wise bitwise OR.
+     */
+    infix fun bitwiseOr(other: EmberTensor): EmberTensor {
+        val backend = BackendRegistry.getCurrentBackend()
+        val resultTensor = backend.bitwiseOr(this.backendTensor, other.backendTensor)
+        val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+        val resultDType = backend.getTensorDType(resultTensor)
+        val resultDevice = backend.getTensorDevice(resultTensor)
+
+        return EmberTensor(
+            shape = resultShape,
+            dtype = resultDType,
+            device = resultDevice,
+            requiresGrad = this.requiresGrad || other.requiresGrad,
+            backendTensor = resultTensor
+        )
+    }
+
+    /**
+     * Compute the bitwise XOR with another tensor.
+     *
+     * @param other The other tensor.
+     * @return New tensor with element-wise bitwise XOR.
+     */
+    infix fun bitwiseXor(other: EmberTensor): EmberTensor {
+        val backend = BackendRegistry.getCurrentBackend()
+        val resultTensor = backend.bitwiseXor(this.backendTensor, other.backendTensor)
+        val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+        val resultDType = backend.getTensorDType(resultTensor)
+        val resultDevice = backend.getTensorDevice(resultTensor)
+
+        return EmberTensor(
+            shape = resultShape,
+            dtype = resultDType,
+            device = resultDevice,
+            requiresGrad = this.requiresGrad || other.requiresGrad,
+            backendTensor = resultTensor
+        )
+    }
+
+    /**
+     * Compute the bitwise NOT (inversion).
+     *
+     * @return New tensor with element-wise bitwise NOT.
+     */
+    fun bitwiseNot(): EmberTensor {
+        val backend = BackendRegistry.getCurrentBackend()
+        val resultTensor = backend.bitwiseNot(this.backendTensor)
+        val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+        val resultDType = backend.getTensorDType(resultTensor)
+        val resultDevice = backend.getTensorDevice(resultTensor)
+
+        return EmberTensor(
+            shape = resultShape,
+            dtype = resultDType,
+            device = resultDevice,
+            requiresGrad = this.requiresGrad,
+            backendTensor = resultTensor
+        )
+    }
+
+    /**
+     * Propagate this binary wave by shifting its bits.
+     *
+     * @param shift Number of positions to shift (positive = left, negative = right).
+     * @return New tensor representing the propagated wave pattern.
+     */
+    fun propagate(shift: Int): EmberTensor = propagate(EmberTensor(intArrayOf(shift)))
+
+    fun propagate(shift: EmberTensor): EmberTensor {
+        val backend = BackendRegistry.getCurrentBackend()
+        val resultTensor = backend.binaryWavePropagate(this.backendTensor, shift.backendTensor)
+        val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+        val resultDType = backend.getTensorDType(resultTensor)
+        val resultDevice = backend.getTensorDevice(resultTensor)
+
+        return EmberTensor(
+            shape = resultShape,
+            dtype = resultDType,
+            device = resultDevice,
+            requiresGrad = this.requiresGrad,
+            backendTensor = resultTensor
+        )
+    }
+
     companion object {
         /**
          * Infers the shape of a tensor from a list of values.
@@ -363,6 +689,96 @@ class EmberTensor(
             val backend = BackendRegistry.getCurrentBackend()
             val shape = inferShape(data).dimensions
             return backend.createTensor(data, shape, dtype)
+        }
+
+        // ===== BITWISE OPERATIONS FACTORY METHODS =====
+
+        /**
+         * Apply wave interference between multiple binary patterns element-wise.
+         *
+         * @param waves List of input tensors (must be integer type).
+         * @param mode Interference type ('xor', 'and', or 'or'). Defaults to 'xor'.
+         * @return Tensor representing the interference pattern.
+         */
+        fun binaryWaveInterference(waves: List<EmberTensor>, mode: String = "xor"): EmberTensor {
+            if (waves.isEmpty()) {
+                throw IllegalArgumentException("Waves list cannot be empty")
+            }
+
+            val backend = BackendRegistry.getCurrentBackend()
+            val backendWaves = waves.map { it.backendTensor }
+            val resultTensor = backend.binaryWaveInterference(backendWaves, mode)
+            val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+            val resultDType = backend.getTensorDType(resultTensor)
+            val resultDevice = backend.getTensorDevice(resultTensor)
+
+            return EmberTensor(
+                shape = resultShape,
+                dtype = resultDType,
+                device = resultDevice,
+                requiresGrad = waves.any { it.requiresGrad },
+                backendTensor = resultTensor
+            )
+        }
+
+        /**
+         * Create a binary pattern tensor with a specified duty cycle.
+         *
+         * @param length The length of the binary pattern (number of bits).
+         * @param dutyCycle The fraction of bits that should be 1 (between 0.0 and 1.0).
+         * @param dtype The data type of the tensor (must be integer type).
+         * @param device The device where the tensor is stored.
+         * @return Tensor representing the binary pattern.
+         */
+        fun createDutyCycle(
+            length: Int,
+            dutyCycle: Float,
+            dtype: EmberDType = int32,
+            device: String = "cpu"
+        ): EmberTensor {
+            val backend = BackendRegistry.getCurrentBackend()
+            val resultTensor = backend.createDutyCycle(length, dutyCycle, dtype)
+            val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+            val resultDType = backend.getTensorDType(resultTensor)
+            val resultDevice = backend.getTensorDevice(resultTensor)
+
+            return EmberTensor(
+                shape = resultShape,
+                dtype = resultDType,
+                device = resultDevice,
+                requiresGrad = false,
+                backendTensor = resultTensor
+            )
+        }
+
+        /**
+         * Generate a blocky sine wave pattern (square wave).
+         *
+         * @param length The length of the binary pattern (number of bits).
+         * @param halfPeriod Half the period of the wave in bits.
+         * @param dtype The data type of the tensor (must be integer type).
+         * @param device The device where the tensor is stored.
+         * @return Tensor representing the blocky sine wave pattern.
+         */
+        fun generateBlockySin(
+            length: Int,
+            halfPeriod: Int,
+            dtype: EmberDType = int32,
+            device: String = "cpu"
+        ): EmberTensor {
+            val backend = BackendRegistry.getCurrentBackend()
+            val resultTensor = backend.generateBlockySin(length, halfPeriod, dtype)
+            val resultShape = EmberShape(backend.getTensorShape(resultTensor))
+            val resultDType = backend.getTensorDType(resultTensor)
+            val resultDevice = backend.getTensorDevice(resultTensor)
+
+            return EmberTensor(
+                shape = resultShape,
+                dtype = resultDType,
+                device = resultDevice,
+                requiresGrad = false,
+                backendTensor = resultTensor
+            )
         }
     }
 }
