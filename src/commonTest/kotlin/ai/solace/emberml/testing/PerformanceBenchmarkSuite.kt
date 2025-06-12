@@ -10,7 +10,21 @@ package ai.solace.emberml.testing
 import ai.solace.emberml.tensor.bitwise.MegaBinary
 import ai.solace.emberml.tensor.bitwise.InterferenceMode
 import kotlin.test.*
-import kotlin.system.measureTimeMillis
+
+/**
+ * Cross-platform time measurement function
+ */
+expect fun getCurrentTimeMs(): Long
+
+/**
+ * Cross-platform inline time measurement
+ */
+inline fun <T> measureTimeMs(block: () -> T): Pair<T, Long> {
+    val start = getCurrentTimeMs()
+    val result = block()
+    val end = getCurrentTimeMs()
+    return result to (end - start)
+}
 
 /**
  * Performance benchmarking data class to store results
@@ -233,7 +247,7 @@ class PerformanceBenchmarkSuite {
         repeat(10) { operation() }
         
         // Actual benchmark
-        val executionTime = measureTimeMillis {
+        val (_, executionTime) = measureTimeMs {
             repeat(iterations) {
                 operation()
             }

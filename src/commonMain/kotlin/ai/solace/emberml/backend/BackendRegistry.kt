@@ -71,11 +71,13 @@ object BackendRegistry {
         // Register the MegaTensorBackend
         registerBackend("mega", MegaTensorBackend())
         
-        // Register the Metal backend if available
-        val metalBackend = MetalBackend()
-        registerBackend("metal", metalBackend)
+        // Register Metal backend if available
+        if (MetalBackend.isAvailable()) {
+            registerBackend("metal", MetalBackend())
+        }
         
-        // Set the best available backend as default
+        // Set the MegaTensorBackend as the default if no backend is set
+
         if (currentBackend == null) {
             when {
                 metalBackend.isAvailable() -> setBackend("metal")
