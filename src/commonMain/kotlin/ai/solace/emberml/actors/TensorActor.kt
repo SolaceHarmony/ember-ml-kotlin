@@ -1,105 +1,101 @@
 package ai.solace.emberml.actors
 
 import ai.solace.emberml.tensor.common.EmberTensor
+import ai.solace.emberml.tensor.common.EmberShape
+import kotlinx.coroutines.channels.SendChannel
 
 /**
- * Messages for tensor operations.
+ * Base class for all tensor-related messages.
  */
-sealed class TensorMessage : ActorMessage
+sealed class TensorMessage
 
 /**
- * Message to perform tensor addition.
+ * Request to add two tensors.
  */
 data class AddTensorMessage(
     val a: EmberTensor,
     val b: EmberTensor,
-    val responseChannel: kotlinx.coroutines.channels.SendChannel<TensorResultMessage>? = null
+    val responseChannel: SendChannel<TensorResponse>? = null
 ) : TensorMessage()
 
 /**
- * Message to perform tensor multiplication.
+ * Request to multiply two tensors.
  */
 data class MultiplyTensorMessage(
     val a: EmberTensor,
     val b: EmberTensor,
-    val responseChannel: kotlinx.coroutines.channels.SendChannel<TensorResultMessage>? = null
+    val responseChannel: SendChannel<TensorResponse>? = null
 ) : TensorMessage()
 
 /**
- * Message to perform matrix multiplication.
+ * Request to perform matrix multiplication.
  */
 data class MatmulTensorMessage(
     val a: EmberTensor,
     val b: EmberTensor,
-    val responseChannel: kotlinx.coroutines.channels.SendChannel<TensorResultMessage>? = null
+    val responseChannel: SendChannel<TensorResponse>? = null
 ) : TensorMessage()
 
 /**
- * Message to reshape a tensor.
+ * Request to reshape a tensor.
  */
 data class ReshapeTensorMessage(
     val tensor: EmberTensor,
-    val newShape: ai.solace.emberml.tensor.common.EmberShape,
-    val responseChannel: kotlinx.coroutines.channels.SendChannel<TensorResultMessage>? = null
+    val newShape: EmberShape,
+    val responseChannel: SendChannel<TensorResponse>? = null
 ) : TensorMessage()
 
 /**
- * Result message containing a tensor operation result.
+ * Base class for tensor responses.
  */
-data class TensorResultMessage(val result: EmberTensor) : ActorMessage
+sealed class TensorResponse
+
+data class TensorResultMessage(val result: EmberTensor) : TensorResponse()
+data class TensorErrorMessage(val error: Throwable) : TensorResponse()
 
 /**
- * Error message for tensor operations.
+ * Actor that handles tensor operations in a non-blocking coroutine-safe way.
  */
-data class TensorErrorMessage(val error: Throwable) : ActorMessage
+class TensorActor : AbstractActor<TensorMessage>() {
 
-/**
- * Actor for handling tensor operations in a non-blocking manner.
- */
-class TensorActor : BaseActor<TensorMessage>() {
-    
     override suspend fun receive(message: TensorMessage) {
         when (message) {
-            is AddTensorMessage -> handleAdd(message)
-            is MultiplyTensorMessage -> handleMultiply(message)
-            is MatmulTensorMessage -> handleMatmul(message)
-            is ReshapeTensorMessage -> handleReshape(message)
+            is AddTensorMessage -> {
+                try {
+                    val result = message.a + message.b
+                    message.responseChannel?.send(TensorResultMessage(result))
+                } catch (e: Exception) {
+                    message.responseChannel?.send(TensorErrorMessage(e))
+                }
+            }
+            is MultiplyTensorMessage -> {
+                try {
+                    val result = message.a * message.b
+                    message.responseChannel?.send(TensorResultMessage(result))
+                } catch (e: Exception) {
+                    message.responseChannel?.send(TensorErrorMessage(e))
+                }
+            }
+            is MatmulTensorMessage -> {
+                try {
+                    val result = message.a.matmul(message.b)
+                    message.responseChannel?.send(TensorResultMessage(result))
+                } catch (e: Exception) {
+                    message.responseChannel?.send(TensorErrorMessage(e))
+                }
+            }
+            is ReshapeTensorMessage -> {
+                try {
+                    val reshaped = message.tensor.reshape(message.newShape)
+                    val result = if (reshaped is EmberTensor) reshaped 
+                        else throw IllegalStateException("Reshape operation did not return EmberTensor")
+                    message.responseChannel?.send(TensorResultMessage(result))
+                } catch (e: Exception) {
+                    message.responseChannel?.send(TensorErrorMessage(e))
+                }
+            }
         }
     }
-    
-    private suspend fun handleAdd(message: AddTensorMessage) {
-        try {
-            val result = message.a + message.b
-            message.responseChannel?.send(TensorResultMessage(result))
-        } catch (e: Exception) {
-            message.responseChannel?.send(TensorResultMessage(message.a)) // Fallback
-        }
-    }
-    
-    private suspend fun handleMultiply(message: MultiplyTensorMessage) {
-        try {
-            val result = message.a * message.b
-            message.responseChannel?.send(TensorResultMessage(result))
-        } catch (e: Exception) {
-            message.responseChannel?.send(TensorResultMessage(message.a)) // Fallback
-        }
-    }
-    
-    private suspend fun handleMatmul(message: MatmulTensorMessage) {
-        try {
-            val result = message.a.matmul(message.b)
-            message.responseChannel?.send(TensorResultMessage(result))
-        } catch (e: Exception) {
-            message.responseChannel?.send(TensorResultMessage(message.a)) // Fallback
-        }
-    }
-    
-    private suspend fun handleReshape(message: ReshapeTensorMessage) {
-        try {
-            val result = message.tensor.reshape(message.newShape)
-            message.responseChannel?.send(TensorResultMessage(result as EmberTensor))
-        } catch (e: Exception) {
-            message.responseChannel?.send(TensorResultMessage(message.tensor)) // Fallback
-        }
-    }
+
+    // Remove the handle function since we're handling each case directly
 }

@@ -2,7 +2,7 @@
  * # Backend Module
  *
  * The `ai.solace.emberml.backend` module provides the backend abstraction system for Ember ML Kotlin.
- * It allows the library to work with different computation backends (JVM, JS, Native) while providing
+ * It allows the library to work with different computation backends (JS, Native) while providing
  * a consistent API to the user.
  *
  * ## Overview
@@ -26,7 +26,7 @@
  * val backend = getBackend()
  *
  * // Set the backend to use
- * setBackend("jvm")
+ * setBackend("native")
  *
  * // Automatically select the best backend based on the available hardware
  * autoSelectBackend()
@@ -36,7 +36,6 @@
  *
  * Ember ML Kotlin provides backend implementations for different platforms:
  *
- * - JVM: Uses libraries like DJL (Deep Java Library) for computation on the JVM
  * - JS: Uses TensorFlow.js or similar libraries for computation in JavaScript environments
  * - Native: Uses platform-specific libraries for computation on native platforms
  *
@@ -114,13 +113,6 @@
  * Each backend implementation may provide additional extensions or optimizations specific to that backend:
  *
  * ```kotlin
- * // JVM-specific extensions
- * object JvmBackendExtensions {
- *     fun useGPU(): Boolean
- *     fun useMPS(): Boolean
- *     fun useThreads(numThreads: Int)
- * }
- *
  * // JS-specific extensions
  * object JsBackendExtensions {
  *     fun useWebGL(): Boolean

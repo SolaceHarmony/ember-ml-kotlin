@@ -14,12 +14,6 @@ repositories {
 }
 
 kotlin {
-    // Add minimal JVM target for IDE support
-    jvm()
-
-    // Configure JVM toolchain
-    jvmToolchain(17)
-
     // Native targets for Kotlin Native build
     linuxX64()
     macosX64()
