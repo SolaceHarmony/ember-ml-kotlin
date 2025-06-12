@@ -66,17 +66,5 @@ jobs:
             cp .env.example .env
           fi
 
-      - name: Build project
-        run: |
-          echo "🏗️ Building project..."
-          ./gradlew build --no-daemon
-          echo "✅ Project built successfully"
-
-      - name: Run tests
-        run: |
-          echo "🧪 Running tests..."
-          ./gradlew test --no-daemon
-          echo "✅ Tests completed"
-
       - name: Setup complete
         run: echo "🎉 All dependencies are in place—network can go dark now. Happy coding!"
