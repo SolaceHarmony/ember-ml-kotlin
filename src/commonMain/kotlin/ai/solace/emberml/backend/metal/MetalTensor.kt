@@ -14,17 +14,17 @@ class MetalTensor private constructor(
     val dtype: EmberDType,
     val context: MetalContext
 ) {
-    
+
     /**
      * Gets the number of elements in the tensor.
      */
     val size: Int = shape.fold(1) { acc, dim -> acc * dim }
-    
+
     /**
      * Gets the number of dimensions.
      */
     val ndim: Int = shape.size
-    
+
     /**
      * Gets the strides for this tensor (assuming row-major layout).
      */
@@ -37,14 +37,14 @@ class MetalTensor private constructor(
         }
         strides
     }
-    
+
     /**
      * Copies the tensor data to a FloatArray.
      */
     fun toFloatArray(): FloatArray {
         return buffer.toFloatArray()
     }
-    
+
     /**
      * Copies data from a FloatArray to this tensor.
      */
@@ -54,20 +54,20 @@ class MetalTensor private constructor(
         }
         buffer.fromFloatArray(data)
     }
-    
+
     /**
      * Creates a copy of this tensor.
      */
     fun copy(): MetalTensor {
         val newBuffer = context.createBuffer(size * dtype.sizeInBytes)
         val newTensor = MetalTensor(newBuffer, shape.copyOf(), dtype, context)
-        
+
         // Copy data using Metal operations
         MetalOperations.copy(this, newTensor, context)
-        
+
         return newTensor
     }
-    
+
     /**
      * Reshapes the tensor to a new shape.
      */
@@ -78,21 +78,21 @@ class MetalTensor private constructor(
         }
         return MetalTensor(buffer, newShape, dtype, context)
     }
-    
+
     /**
      * Returns a string representation of the tensor.
      */
     override fun toString(): String {
         return "MetalTensor(shape=${shape.contentToString()}, dtype=$dtype, size=$size)"
     }
-    
+
     /**
      * Releases the tensor resources.
      */
     fun release() {
         buffer.release()
     }
-    
+
     companion object {
         /**
          * Creates a Metal tensor from data.
@@ -104,7 +104,7 @@ class MetalTensor private constructor(
          */
         fun create(data: Any, shape: IntArray, dtype: EmberDType, context: MetalContext): MetalTensor {
             val size = shape.fold(1) { acc, dim -> acc * dim }
-            
+
             val floatData = when (data) {
                 is FloatArray -> data
                 is IntArray -> data.map { it.toFloat() }.toFloatArray()
@@ -113,7 +113,7 @@ class MetalTensor private constructor(
                     @Suppress("UNCHECKED_CAST")
                     val flatArray = flattenArray(data as Array<Any>)
                     when (flatArray.firstOrNull()) {
-                        is Float -> (flatArray as Array<Float>).toFloatArray()
+                        is Float -> flatArray.map { (it as Float) }.toFloatArray()
                         is Int -> flatArray.map { (it as Int).toFloat() }.toFloatArray()
                         is Double -> flatArray.map { (it as Double).toFloat() }.toFloatArray()
                         else -> throw IllegalArgumentException("Unsupported data type in array")
@@ -121,15 +121,15 @@ class MetalTensor private constructor(
                 }
                 else -> throw IllegalArgumentException("Unsupported data type: ${data::class}")
             }
-            
+
             require(floatData.size == size) { 
                 "Data size (${floatData.size}) must match tensor size ($size)" 
             }
-            
+
             val buffer = context.createBuffer(floatData)
             return MetalTensor(buffer, shape, dtype, context)
         }
-        
+
         /**
          * Creates a Metal tensor with zeros.
          */
@@ -138,7 +138,7 @@ class MetalTensor private constructor(
             val data = FloatArray(size) { 0.0f }
             return create(data, shape, dtype, context)
         }
-        
+
         /**
          * Creates a Metal tensor with ones.
          */
@@ -147,7 +147,7 @@ class MetalTensor private constructor(
             val data = FloatArray(size) { 1.0f }
             return create(data, shape, dtype, context)
         }
-        
+
         /**
          * Creates a Metal tensor with random values.
          */
@@ -156,20 +156,20 @@ class MetalTensor private constructor(
             val data = FloatArray(size) { kotlin.random.Random.nextFloat() }
             return create(data, shape, dtype, context)
         }
-        
+
         /**
          * Flattens a multi-dimensional array to a single-dimensional array.
          */
         private fun flattenArray(array: Array<Any>): Array<Any> {
             val result = mutableListOf<Any>()
-            
+
             fun flatten(arr: Any) {
                 when (arr) {
                     is Array<*> -> arr.forEach { if (it != null) flatten(it) }
                     else -> result.add(arr)
                 }
             }
-            
+
             flatten(array)
             return result.toTypedArray()
         }

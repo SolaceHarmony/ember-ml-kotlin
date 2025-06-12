@@ -18,22 +18,23 @@ import kotlinx.coroutines.channels.Channel
 abstract class AbstractActor<M : Any>(
     capacity: Int = Channel.UNLIMITED
 ) : Actor<M> {
-    
+
     override val mailbox: Channel<M> = Channel(capacity)
     override val scope: CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-    
+
     private var job: Job? = null
     private var isRunning = false
-    
+
     /**
      * Start the actor's message processing loop.
      */
     override suspend fun start() {
         if (isRunning) return
-        
+
         isRunning = true
         job = scope.launch {
             try {
+                @OptIn(DelicateCoroutinesApi::class)
                 while (isActive && !mailbox.isClosedForSend) {
                     try {
                         val message = mailbox.receive()
@@ -47,20 +48,20 @@ abstract class AbstractActor<M : Any>(
             }
         }
     }
-    
+
     /**
      * Stop the actor and clean up resources.
      */
     override suspend fun stop() {
         if (!isRunning) return
-        
+
         isRunning = false
         mailbox.close()
         job?.cancel()
         job?.join()
         scope.cancel()
     }
-    
+
     /**
      * Send a message to this actor.
      *
@@ -71,11 +72,11 @@ abstract class AbstractActor<M : Any>(
         return try {
             mailbox.send(message)
             true
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             false
         }
     }
-    
+
     /**
      * Handle errors that occur during message processing.
      * Override this method to implement custom error handling.
@@ -86,7 +87,7 @@ abstract class AbstractActor<M : Any>(
         // Default error handling - log error if possible
         println("Actor error: ${error.message}")
     }
-    
+
     /**
      * Cleanup resources when the actor stops.
      * Override this method to implement custom cleanup logic.

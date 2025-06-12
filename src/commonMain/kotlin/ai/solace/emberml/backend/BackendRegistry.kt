@@ -9,10 +9,10 @@ import ai.solace.emberml.backend.metal.MetalBackend
 object BackendRegistry {
     // Map of backend names to backend implementations
     private val backends = mutableMapOf<String, Backend>()
-    
+
     // The current backend
     private var currentBackend: Backend? = null
-    
+
     /**
      * Registers a backend with the registry.
      *
@@ -22,7 +22,7 @@ object BackendRegistry {
     fun registerBackend(name: String, backend: Backend) {
         backends[name] = backend
     }
-    
+
     /**
      * Gets a backend by name.
      *
@@ -32,7 +32,7 @@ object BackendRegistry {
     fun getBackend(name: String): Backend? {
         return backends[name]
     }
-    
+
     /**
      * Sets the current backend.
      *
@@ -44,7 +44,7 @@ object BackendRegistry {
         currentBackend = backend
         return true
     }
-    
+
     /**
      * Gets the current backend.
      *
@@ -54,7 +54,7 @@ object BackendRegistry {
     fun getCurrentBackend(): Backend {
         return currentBackend ?: throw IllegalStateException("No backend is set")
     }
-    
+
     /**
      * Gets a list of available backend names.
      *
@@ -63,17 +63,17 @@ object BackendRegistry {
     fun getAvailableBackends(): List<String> {
         return backends.keys.toList()
     }
-    
+
     /**
      * Initializes the registry with the default backends.
      */
     fun initialize() {
         // Register the MegaTensorBackend
         registerBackend("mega", MegaTensorBackend())
-        
-        // TODO: Register Metal backend when fully implemented
-        // registerBackend("metal", MetalBackend())
-        
+
+        // Register Metal backend
+        registerBackend("metal", MetalBackend())
+
         // Set the MegaTensorBackend as the default if no backend is set
         if (currentBackend == null) {
             setBackend("mega")
@@ -115,7 +115,7 @@ fun autoSelectBackend(): String {
         BackendRegistry.setBackend("metal")
         return "metal"
     }
-    
+
     // Fall back to MegaTensorBackend
     BackendRegistry.setBackend("mega")
     return "mega"

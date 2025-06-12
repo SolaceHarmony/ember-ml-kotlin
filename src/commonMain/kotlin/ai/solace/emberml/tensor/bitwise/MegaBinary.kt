@@ -396,9 +396,21 @@ class MegaBinary : MegaNumber {
      */
     fun getBit(position: MegaBinary): Boolean {
         val posVal = chunksToInt(position.mantissa)
-        val selfVal = chunksToInt(mantissa)
-        val mask = 1 shl posVal
-        return (selfVal and mask) != 0
+
+        // Convert binary string to check specific bit
+        val binStr = toBinaryString()
+
+        // Reverse the string to get LSB-first order
+        val reversedBinStr = binStr.reversed()
+
+        // Check if position is valid
+        return if (posVal < reversedBinStr.length) {
+            // Get the bit at the specified position
+            reversedBinStr[posVal] == '1'
+        } else {
+            // Position is out of range, return false
+            false
+        }
     }
 
     /**
@@ -472,8 +484,17 @@ class MegaBinary : MegaNumber {
             return "0"
         }
 
-        val value = chunksToInt(mantissa)
-        val binStr = value.toString(2)
+        // Use byteData directly to avoid chunksToInt limitations
+        val binStr = buildString {
+            for (byte in byteData) {
+                append(byte.toUByte().toString(2).padStart(8, '0'))
+            }
+        }.trimStart('0')
+
+        // Handle empty string case (all zeros)
+        if (binStr.isEmpty()) {
+            return "0"
+        }
 
         return if (keepLeadingZeros && bitLength > 0) {
             binStr.padStart(bitLength, '0')

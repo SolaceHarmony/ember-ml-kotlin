@@ -126,6 +126,14 @@ class MegaBinaryTest {
     fun testBitManipulation() {
         val a = MegaBinary("1010")
 
+        // Debug output
+        println("[DEBUG_LOG] Binary string: ${a.toBinaryString()}")
+        println("[DEBUG_LOG] Reversed binary string: ${a.toBinaryString().reversed()}")
+        println("[DEBUG_LOG] Bit at position 0: ${a.getBit(MegaBinary("0"))}")
+        println("[DEBUG_LOG] Bit at position 1: ${a.getBit(MegaBinary("1"))}")
+        println("[DEBUG_LOG] Bit at position 2: ${a.getBit(MegaBinary("10"))}")
+        println("[DEBUG_LOG] Bit at position 3: ${a.getBit(MegaBinary("11"))}")
+
         // Test getBit
         assertTrue(a.getBit(MegaBinary("1")))
         assertFalse(a.getBit(MegaBinary("0")))
