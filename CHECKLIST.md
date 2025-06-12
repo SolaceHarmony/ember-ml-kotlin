@@ -130,9 +130,9 @@ Track the 5 main implementation milestones for Ember ML Kotlin:
   - [x] MegaNumber and MegaBinary operations tested
   - [x] MegaInteger and MegaFloat tests implemented
   - [x] Debug and stub tests for development support
-- [ ] Integration tests for tensor operations
-- [ ] Performance benchmarks comparing to Python implementation
-- [ ] Correctness tests against reference implementations
+- [x] Integration tests for tensor operations
+- [x] Performance benchmarks comparing to Python implementation
+- [x] Correctness tests against reference implementations
 
 ## Documentation
 
