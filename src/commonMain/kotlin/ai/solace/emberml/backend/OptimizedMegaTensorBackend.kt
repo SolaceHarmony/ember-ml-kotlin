@@ -1,6 +1,7 @@
 package ai.solace.emberml.backend
 
 import ai.solace.emberml.tensor.common.EmberDType
+import ai.solace.emberml.tensor.common.EmberShape
 import ai.solace.emberml.tensor.bitwise.MegaNumber
 import ai.solace.emberml.tensor.bitwise.MegaFloat
 import ai.solace.emberml.tensor.bitwise.MegaInteger
@@ -114,25 +115,20 @@ class OptimizedMegaTensorBackend : Backend {
     }
 
     /**
-     * Adds two tensors element-wise.
+     * Adds two tensors element-wise with broadcasting support.
      */
     override fun add(tensor1: Any, tensor2: Any): Any {
         val t1 = tensor1 as OptimizedMegaTensor
         val t2 = tensor2 as OptimizedMegaTensor
         
-        if (!t1.shape.contentEquals(t2.shape)) {
-            throw IllegalArgumentException("Shape mismatch: ${t1.shape.contentToString()} vs ${t2.shape.contentToString()}")
-        }
-        
         if (t1.dtype != t2.dtype) {
             throw IllegalArgumentException("Data type mismatch: ${t1.dtype} vs ${t2.dtype}")
         }
         
-        val resultStorage = TensorStorage.createOptimalStorage(t1.dtype, t1.size)
-        performElementWiseOperation(t1.storage, t2.storage, resultStorage) { a, b ->
+        return performElementWiseWithBroadcasting(t1, t2) { a, b ->
             when (a) {
                 is Boolean -> (a || b as Boolean) // For boolean, OR operation
-                is UByte -> ((a.toInt() + (b as UByte).toInt()).toUByte())
+                is UByte -> ((a.toInt() + (b as UByte).toInt()).coerceAtMost(255).toUByte())
                 is Int -> (a + b as Int)
                 is Long -> (a + b as Long)
                 is Float -> (a + b as Float)
@@ -140,27 +136,20 @@ class OptimizedMegaTensorBackend : Backend {
                 else -> throw IllegalArgumentException("Unsupported type for addition: ${a::class.simpleName}")
             }
         }
-        
-        return OptimizedMegaTensor(resultStorage, t1.shape, t1.device)
     }
 
     /**
-     * Subtracts tensor2 from tensor1 element-wise.
+     * Subtracts tensor2 from tensor1 element-wise with broadcasting support.
      */
     override fun subtract(tensor1: Any, tensor2: Any): Any {
         val t1 = tensor1 as OptimizedMegaTensor
         val t2 = tensor2 as OptimizedMegaTensor
         
-        if (!t1.shape.contentEquals(t2.shape)) {
-            throw IllegalArgumentException("Shape mismatch: ${t1.shape.contentToString()} vs ${t2.shape.contentToString()}")
-        }
-        
         if (t1.dtype != t2.dtype) {
             throw IllegalArgumentException("Data type mismatch: ${t1.dtype} vs ${t2.dtype}")
         }
         
-        val resultStorage = TensorStorage.createOptimalStorage(t1.dtype, t1.size)
-        performElementWiseOperation(t1.storage, t2.storage, resultStorage) { a, b ->
+        return performElementWiseWithBroadcasting(t1, t2) { a, b ->
             when (a) {
                 is Boolean -> (a && !(b as Boolean)) // For boolean, AND NOT operation
                 is UByte -> ((a.toInt() - (b as UByte).toInt()).coerceAtLeast(0).toUByte())
@@ -171,27 +160,20 @@ class OptimizedMegaTensorBackend : Backend {
                 else -> throw IllegalArgumentException("Unsupported type for subtraction: ${a::class.simpleName}")
             }
         }
-        
-        return OptimizedMegaTensor(resultStorage, t1.shape, t1.device)
     }
 
     /**
-     * Multiplies two tensors element-wise.
+     * Multiplies two tensors element-wise with broadcasting support.
      */
     override fun multiply(tensor1: Any, tensor2: Any): Any {
         val t1 = tensor1 as OptimizedMegaTensor
         val t2 = tensor2 as OptimizedMegaTensor
         
-        if (!t1.shape.contentEquals(t2.shape)) {
-            throw IllegalArgumentException("Shape mismatch: ${t1.shape.contentToString()} vs ${t2.shape.contentToString()}")
-        }
-        
         if (t1.dtype != t2.dtype) {
             throw IllegalArgumentException("Data type mismatch: ${t1.dtype} vs ${t2.dtype}")
         }
         
-        val resultStorage = TensorStorage.createOptimalStorage(t1.dtype, t1.size)
-        performElementWiseOperation(t1.storage, t2.storage, resultStorage) { a, b ->
+        return performElementWiseWithBroadcasting(t1, t2) { a, b ->
             when (a) {
                 is Boolean -> (a && b as Boolean) // For boolean, AND operation
                 is UByte -> ((a.toInt() * (b as UByte).toInt()).coerceAtMost(255).toUByte())
@@ -202,27 +184,20 @@ class OptimizedMegaTensorBackend : Backend {
                 else -> throw IllegalArgumentException("Unsupported type for multiplication: ${a::class.simpleName}")
             }
         }
-        
-        return OptimizedMegaTensor(resultStorage, t1.shape, t1.device)
     }
 
     /**
-     * Divides tensor1 by tensor2 element-wise.
+     * Divides tensor1 by tensor2 element-wise with broadcasting support.
      */
     override fun divide(tensor1: Any, tensor2: Any): Any {
         val t1 = tensor1 as OptimizedMegaTensor
         val t2 = tensor2 as OptimizedMegaTensor
         
-        if (!t1.shape.contentEquals(t2.shape)) {
-            throw IllegalArgumentException("Shape mismatch: ${t1.shape.contentToString()} vs ${t2.shape.contentToString()}")
-        }
-        
         if (t1.dtype != t2.dtype) {
             throw IllegalArgumentException("Data type mismatch: ${t1.dtype} vs ${t2.dtype}")
         }
         
-        val resultStorage = TensorStorage.createOptimalStorage(t1.dtype, t1.size)
-        performElementWiseOperation(t1.storage, t2.storage, resultStorage) { a, b ->
+        return performElementWiseWithBroadcasting(t1, t2) { a, b ->
             when (a) {
                 is Boolean -> a // For boolean, just return first value
                 is UByte -> {
@@ -253,8 +228,6 @@ class OptimizedMegaTensorBackend : Backend {
                 else -> throw IllegalArgumentException("Unsupported type for division: ${a::class.simpleName}")
             }
         }
-        
-        return OptimizedMegaTensor(resultStorage, t1.shape, t1.device)
     }
 
     // ===== ADDITIONAL TENSOR OPERATIONS =====
@@ -1237,7 +1210,238 @@ class OptimizedMegaTensorBackend : Backend {
         return OptimizedMegaTensor(storage, intArrayOf(length), defaultDevice)
     }
 
+    // ===== SLICING OPERATIONS =====
+    
+    /**
+     * Slice a tensor using multi-dimensional indices.
+     * 
+     * @param tensor The tensor to slice
+     * @param sliceRanges Array of ranges for each dimension (start:end pairs)
+     * @return A new tensor containing the sliced data
+     */
+    fun slice(tensor: Any, sliceRanges: Array<IntRange>): Any {
+        val t = tensor as OptimizedMegaTensor
+        
+        if (sliceRanges.size != t.shape.size) {
+            throw IllegalArgumentException("Number of slice ranges (${sliceRanges.size}) must match tensor rank (${t.shape.size})")
+        }
+        
+        // Calculate new shape and validate ranges
+        val newShape = IntArray(t.shape.size)
+        for (i in sliceRanges.indices) {
+            val range = sliceRanges[i]
+            val dimSize = t.shape[i]
+            
+            // Validate range bounds
+            if (range.first < 0 || range.last >= dimSize) {
+                throw IndexOutOfBoundsException("Slice range $range is out of bounds for dimension $i (size $dimSize)")
+            }
+            
+            newShape[i] = range.last - range.first + 1
+        }
+        
+        val newSize = newShape.fold(1) { acc, dim -> acc * dim }
+        val newStorage = TensorStorage.createOptimalStorage(t.dtype, newSize)
+        
+        // Extract sliced data
+        var newIndex = 0
+        extractSlicedData(t, sliceRanges, IntArray(t.shape.size), 0, newStorage, newIndex)
+        
+        return OptimizedMegaTensor(newStorage, newShape, t.device)
+    }
+    
+    /**
+     * Get a single element from a tensor using multi-dimensional indices.
+     */
+    fun getElementAtIndex(tensor: Any, indices: IntArray): Any {
+        val t = tensor as OptimizedMegaTensor
+        
+        if (indices.size != t.shape.size) {
+            throw IllegalArgumentException("Number of indices (${indices.size}) must match tensor rank (${t.shape.size})")
+        }
+        
+        // Validate indices
+        for (i in indices.indices) {
+            if (indices[i] < 0 || indices[i] >= t.shape[i]) {
+                throw IndexOutOfBoundsException("Index ${indices[i]} is out of bounds for dimension $i (size ${t.shape[i]})")
+            }
+        }
+        
+        val flatIndex = multiIndexToFlatIndex(indices, t.shape)
+        return getStorageValue(t.storage, flatIndex)
+    }
+    
+    /**
+     * Set a single element in a tensor using multi-dimensional indices.
+     */
+    fun setElementAtIndex(tensor: Any, indices: IntArray, value: Any): Any {
+        val t = tensor as OptimizedMegaTensor
+        
+        if (indices.size != t.shape.size) {
+            throw IllegalArgumentException("Number of indices (${indices.size}) must match tensor rank (${t.shape.size})")
+        }
+        
+        // Validate indices
+        for (i in indices.indices) {
+            if (indices[i] < 0 || indices[i] >= t.shape[i]) {
+                throw IndexOutOfBoundsException("Index ${indices[i]} is out of bounds for dimension $i (size ${t.shape[i]})")
+            }
+        }
+        
+        // Create a new tensor with the updated value (immutable approach)
+        val newStorage = when (t.storage) {
+            is TensorStorage.PackedBooleanStorage -> {
+                val newData = t.storage.data.copyOf()
+                TensorStorage.PackedBooleanStorage(newData, t.size, t.dtype)
+            }
+            is TensorStorage.NativeUByteStorage -> {
+                val newData = t.storage.data.copyOf()
+                TensorStorage.NativeUByteStorage(newData, t.size, t.dtype)
+            }
+            is TensorStorage.NativeIntStorage -> {
+                val newData = t.storage.data.copyOf()
+                TensorStorage.NativeIntStorage(newData, t.size, t.dtype)
+            }
+            is TensorStorage.NativeLongStorage -> {
+                val newData = t.storage.data.copyOf()
+                TensorStorage.NativeLongStorage(newData, t.size, t.dtype)
+            }
+            is TensorStorage.NativeFloatStorage -> {
+                val newData = t.storage.data.copyOf()
+                TensorStorage.NativeFloatStorage(newData, t.size, t.dtype)
+            }
+            is TensorStorage.NativeDoubleStorage -> {
+                val newData = t.storage.data.copyOf()
+                TensorStorage.NativeDoubleStorage(newData, t.size, t.dtype)
+            }
+            is TensorStorage.MegaNumberStorage -> {
+                val newData = t.storage.data.copyOf()
+                TensorStorage.MegaNumberStorage(newData, t.size, t.dtype)
+            }
+        }
+        
+        val flatIndex = multiIndexToFlatIndex(indices, t.shape)
+        setStorageValue(newStorage, flatIndex, value, t.dtype)
+        return OptimizedMegaTensor(newStorage, t.shape, t.device)
+    }
+
     // Helper functions
+
+    /**
+     * Recursively extract sliced data from a tensor.
+     */
+    private fun extractSlicedData(
+        tensor: OptimizedMegaTensor,
+        sliceRanges: Array<IntRange>,
+        currentIndices: IntArray,
+        dimension: Int,
+        targetStorage: TensorStorage,
+        targetIndex: Int
+    ): Int {
+        var currentTargetIndex = targetIndex
+        
+        if (dimension == tensor.shape.size) {
+            // Base case: we have a complete multi-index, copy the element
+            val sourceIndex = multiIndexToFlatIndex(currentIndices, tensor.shape)
+            val value = getStorageValue(tensor.storage, sourceIndex)
+            setStorageValue(targetStorage, currentTargetIndex, value, tensor.dtype)
+            return currentTargetIndex + 1
+        }
+        
+        // Recursive case: iterate through the slice range for this dimension
+        val range = sliceRanges[dimension]
+        for (i in range) {
+            currentIndices[dimension] = i
+            currentTargetIndex = extractSlicedData(tensor, sliceRanges, currentIndices, dimension + 1, targetStorage, currentTargetIndex)
+        }
+        
+        return currentTargetIndex
+    }
+    
+    /**
+     * Convert multi-dimensional indices to a flat index.
+     */
+    private fun multiIndexToFlatIndex(multiIndex: IntArray, shape: IntArray): Int {
+        var flatIndex = 0
+        for (i in multiIndex.indices) {
+            flatIndex = flatIndex * shape[i] + multiIndex[i]
+        }
+        return flatIndex
+    }
+
+    /**
+     * Performs element-wise operation with broadcasting support.
+     */
+    private fun performElementWiseWithBroadcasting(
+        t1: OptimizedMegaTensor, 
+        t2: OptimizedMegaTensor, 
+        operation: (Any, Any) -> Any
+    ): OptimizedMegaTensor {
+        val shape1 = EmberShape(t1.shape)
+        val shape2 = EmberShape(t2.shape)
+        
+        // Check if broadcasting is possible
+        if (!shape1.isBroadcastableWith(shape2)) {
+            throw IllegalArgumentException("Shapes ${t1.shape.contentToString()} and ${t2.shape.contentToString()} are not compatible for broadcasting")
+        }
+        
+        // Calculate the broadcasted shape
+        val broadcastShape = shape1.broadcastWith(shape2)
+        val resultSize = broadcastShape.totalSize()
+        val resultStorage = TensorStorage.createOptimalStorage(t1.dtype, resultSize)
+        
+        // Perform the operation with broadcasting
+        for (i in 0 until resultSize) {
+            val multiIndex = flatIndexToMultiIndex(i, broadcastShape.dimensions)
+            
+            val index1 = multiIndexToBroadcastedFlatIndex(multiIndex, broadcastShape.dimensions, t1.shape)
+            val index2 = multiIndexToBroadcastedFlatIndex(multiIndex, broadcastShape.dimensions, t2.shape)
+            
+            val value1 = getStorageValue(t1.storage, index1)
+            val value2 = getStorageValue(t2.storage, index2)
+            val result = operation(value1, value2)
+            
+            setStorageValue(resultStorage, i, result, t1.dtype)
+        }
+        
+        return OptimizedMegaTensor(resultStorage, broadcastShape.dimensions, t1.device)
+    }
+
+    /**
+     * Converts a flat index to multi-dimensional indices.
+     */
+    private fun flatIndexToMultiIndex(flatIndex: Int, shape: IntArray): IntArray {
+        val result = IntArray(shape.size)
+        var remaining = flatIndex
+        
+        for (i in shape.size - 1 downTo 0) {
+            result[i] = remaining % shape[i]
+            remaining /= shape[i]
+        }
+        
+        return result
+    }
+
+    /**
+     * Converts multi-dimensional indices to a flat index with broadcasting.
+     */
+    private fun multiIndexToBroadcastedFlatIndex(multiIndex: IntArray, broadcastShape: IntArray, tensorShape: IntArray): Int {
+        var flatIndex = 0
+        val tensorRank = tensorShape.size
+        val broadcastRank = broadcastShape.size
+        
+        for (i in 0 until tensorRank) {
+            val broadcastDim = broadcastRank - tensorRank + i
+            val tensorDim = multiIndex[broadcastDim]
+            
+            // Handle broadcasting: if tensor dimension is 1, use index 0
+            val actualIndex = if (tensorShape[i] == 1) 0 else tensorDim
+            
+            flatIndex = flatIndex * tensorShape[i] + actualIndex
+        }
+        
+        return flatIndex
+    }
 
     private fun convertValueToType(value: Any, targetType: EmberDType): Any {
         return when (targetType) {
