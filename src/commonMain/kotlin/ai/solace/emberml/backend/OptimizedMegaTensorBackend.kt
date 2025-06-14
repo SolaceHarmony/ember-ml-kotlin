@@ -551,7 +551,705 @@ class OptimizedMegaTensorBackend : Backend {
         return OptimizedMegaTensor(newStorage, t.shape, t.device)
     }
 
+    // ===== MATRIX AND TENSOR OPERATIONS =====
+    
+    /**
+     * Performs matrix multiplication of two tensors.
+     */
+    override fun matmul(a: Any, b: Any): Any {
+        val t1 = a as OptimizedMegaTensor
+        val t2 = b as OptimizedMegaTensor
+        
+        // Basic matrix multiplication for 2D tensors
+        if (t1.shape.size != 2 || t2.shape.size != 2) {
+            throw IllegalArgumentException("Matrix multiplication currently only supports 2D tensors")
+        }
+        
+        val (m, k) = t1.shape
+        val (k2, n) = t2.shape
+        
+        if (k != k2) {
+            throw IllegalArgumentException("Matrix dimensions incompatible: ${t1.shape.contentToString()} x ${t2.shape.contentToString()}")
+        }
+        
+        val resultShape = intArrayOf(m, n)
+        val resultStorage = TensorStorage.createOptimalStorage(t1.dtype, m * n)
+        
+        // Perform matrix multiplication
+        for (i in 0 until m) {
+            for (j in 0 until n) {
+                var sum = when (t1.dtype) {
+                    EmberDType.INT32 -> 0
+                    EmberDType.INT64 -> 0L
+                    EmberDType.FLOAT32 -> 0.0f
+                    EmberDType.FLOAT64 -> 0.0
+                    else -> throw IllegalArgumentException("Unsupported dtype for matmul: ${t1.dtype}")
+                }
+                
+                for (k_idx in 0 until k) {
+                    val val1 = getStorageValue(t1.storage, i * k + k_idx)
+                    val val2 = getStorageValue(t2.storage, k_idx * n + j)
+                    
+                    sum = when (sum) {
+                        is Int -> sum + (val1 as Int) * (val2 as Int)
+                        is Long -> sum + (val1 as Long) * (val2 as Long)
+                        is Float -> sum + (val1 as Float) * (val2 as Float)
+                        is Double -> sum + (val1 as Double) * (val2 as Double)
+                        else -> throw IllegalArgumentException("Unsupported type for matmul")
+                    }
+                }
+                
+                setStorageValue(resultStorage, i * n + j, sum, t1.dtype)
+            }
+        }
+        
+        return OptimizedMegaTensor(resultStorage, resultShape, t1.device)
+    }
+
+    /**
+     * Casts a tensor to a different data type.
+     */
+    override fun cast(tensor: Any, dtype: EmberDType): Any {
+        val t = tensor as OptimizedMegaTensor
+        
+        if (t.dtype == dtype) {
+            return t // No conversion needed
+        }
+        
+        val newStorage = TensorStorage.createOptimalStorage(dtype, t.size)
+        
+        for (i in 0 until t.size) {
+            val value = getStorageValue(t.storage, i)
+            val convertedValue = convertValueToType(value, dtype)
+            setStorageValue(newStorage, i, convertedValue, dtype)
+        }
+        
+        return OptimizedMegaTensor(newStorage, t.shape, t.device)
+    }
+
+    /**
+     * Reshapes a tensor to a new shape.
+     */
+    override fun reshape(tensor: Any, newShape: IntArray): Any {
+        val t = tensor as OptimizedMegaTensor
+        
+        val newSize = newShape.fold(1) { acc, dim -> acc * dim }
+        if (newSize != t.size) {
+            throw IllegalArgumentException("Cannot reshape tensor of size ${t.size} to shape ${newShape.contentToString()} (size $newSize)")
+        }
+        
+        return OptimizedMegaTensor(t.storage, newShape, t.device)
+    }
+
+    /**
+     * Transposes a tensor.
+     */
+    override fun transpose(tensor: Any, axes: IntArray?): Any {
+        val t = tensor as OptimizedMegaTensor
+        
+        if (t.shape.size != 2) {
+            throw IllegalArgumentException("Transpose currently only supports 2D tensors")
+        }
+        
+        val (rows, cols) = t.shape
+        val newShape = intArrayOf(cols, rows)
+        val newStorage = TensorStorage.createOptimalStorage(t.dtype, t.size)
+        
+        // Transpose the data
+        for (i in 0 until rows) {
+            for (j in 0 until cols) {
+                val value = getStorageValue(t.storage, i * cols + j)
+                setStorageValue(newStorage, j * rows + i, value, t.dtype)
+            }
+        }
+        
+        return OptimizedMegaTensor(newStorage, newShape, t.device)
+    }
+
+    // ===== DEVICE MANAGEMENT =====
+    
+    /**
+     * Moves a tensor to a different device.
+     */
+    override fun toDevice(tensor: Any, device: String): Any {
+        val t = tensor as OptimizedMegaTensor
+        // For now, just return a copy with the new device name
+        // In a real implementation, this would involve actual device transfer
+        return OptimizedMegaTensor(t.storage, t.shape, device)
+    }
+
+    /**
+     * Gets a list of available devices.
+     */
+    override fun getAvailableDevices(): List<String> {
+        return listOf("cpu") // For now, only CPU is supported
+    }
+
+    /**
+     * Sets the default device for tensor operations.
+     */
+    override fun setDefaultDevice(device: String) {
+        if (device !in getAvailableDevices()) {
+            throw IllegalArgumentException("Device '$device' is not available")
+        }
+        defaultDevice = device
+    }
+
+    /**
+     * Gets the default device for tensor operations.
+     */
+    override fun getDefaultDevice(): String {
+        return defaultDevice
+    }
+
+    // ===== BITWISE OPERATIONS =====
+    
+    /**
+     * Shift the bits of x to the left by shifts positions.
+     */
+    override fun leftShift(x: Any, shifts: Any): Any {
+        val tensor = x as OptimizedMegaTensor
+        val shiftValue = when (shifts) {
+            is Int -> shifts
+            is OptimizedMegaTensor -> {
+                if (shifts.size != 1) throw IllegalArgumentException("Shift tensor must be scalar")
+                getStorageValue(shifts.storage, 0) as Int
+            }
+            else -> throw IllegalArgumentException("Shifts must be Int or scalar tensor")
+        }
+        
+        val resultStorage = TensorStorage.createOptimalStorage(tensor.dtype, tensor.size)
+        
+        for (i in 0 until tensor.size) {
+            val value = getStorageValue(tensor.storage, i)
+            val shifted = when (value) {
+                is Int -> value shl shiftValue
+                is Long -> value shl shiftValue
+                is UByte -> (value.toInt() shl shiftValue).toUByte()
+                else -> throw IllegalArgumentException("Left shift only supported for integer types")
+            }
+            setStorageValue(resultStorage, i, shifted, tensor.dtype)
+        }
+        
+        return OptimizedMegaTensor(resultStorage, tensor.shape, tensor.device)
+    }
+
+    /**
+     * Shift the bits of x to the right by shifts positions.
+     */
+    override fun rightShift(x: Any, shifts: Any): Any {
+        val tensor = x as OptimizedMegaTensor
+        val shiftValue = when (shifts) {
+            is Int -> shifts
+            is OptimizedMegaTensor -> {
+                if (shifts.size != 1) throw IllegalArgumentException("Shift tensor must be scalar")
+                getStorageValue(shifts.storage, 0) as Int
+            }
+            else -> throw IllegalArgumentException("Shifts must be Int or scalar tensor")
+        }
+        
+        val resultStorage = TensorStorage.createOptimalStorage(tensor.dtype, tensor.size)
+        
+        for (i in 0 until tensor.size) {
+            val value = getStorageValue(tensor.storage, i)
+            val shifted = when (value) {
+                is Int -> value shr shiftValue
+                is Long -> value shr shiftValue
+                is UByte -> (value.toInt() shr shiftValue).toUByte()
+                else -> throw IllegalArgumentException("Right shift only supported for integer types")
+            }
+            setStorageValue(resultStorage, i, shifted, tensor.dtype)
+        }
+        
+        return OptimizedMegaTensor(resultStorage, tensor.shape, tensor.device)
+    }
+
+    /**
+     * Rotate the bits of x to the left by shifts positions.
+     */
+    override fun rotateLeft(x: Any, shifts: Any, bitWidth: Int): Any {
+        val tensor = x as OptimizedMegaTensor
+        val shiftValue = when (shifts) {
+            is Int -> shifts % bitWidth
+            is OptimizedMegaTensor -> {
+                if (shifts.size != 1) throw IllegalArgumentException("Shift tensor must be scalar")
+                (getStorageValue(shifts.storage, 0) as Int) % bitWidth
+            }
+            else -> throw IllegalArgumentException("Shifts must be Int or scalar tensor")
+        }
+        
+        val resultStorage = TensorStorage.createOptimalStorage(tensor.dtype, tensor.size)
+        
+        for (i in 0 until tensor.size) {
+            val value = getStorageValue(tensor.storage, i)
+            val rotated = when (value) {
+                is Int -> {
+                    val mask = (1 shl bitWidth) - 1
+                    val maskedValue = value and mask
+                    ((maskedValue shl shiftValue) or (maskedValue shr (bitWidth - shiftValue))) and mask
+                }
+                is UByte -> {
+                    val intValue = value.toInt()
+                    val mask = (1 shl bitWidth) - 1
+                    val maskedValue = intValue and mask
+                    (((maskedValue shl shiftValue) or (maskedValue shr (bitWidth - shiftValue))) and mask).toUByte()
+                }
+                else -> throw IllegalArgumentException("Rotate left only supported for integer types")
+            }
+            setStorageValue(resultStorage, i, rotated, tensor.dtype)
+        }
+        
+        return OptimizedMegaTensor(resultStorage, tensor.shape, tensor.device)
+    }
+
+    /**
+     * Rotate the bits of x to the right by shifts positions.
+     */
+    override fun rotateRight(x: Any, shifts: Any, bitWidth: Int): Any {
+        val tensor = x as OptimizedMegaTensor
+        val shiftValue = when (shifts) {
+            is Int -> shifts % bitWidth
+            is OptimizedMegaTensor -> {
+                if (shifts.size != 1) throw IllegalArgumentException("Shift tensor must be scalar")
+                (getStorageValue(shifts.storage, 0) as Int) % bitWidth
+            }
+            else -> throw IllegalArgumentException("Shifts must be Int or scalar tensor")
+        }
+        
+        val resultStorage = TensorStorage.createOptimalStorage(tensor.dtype, tensor.size)
+        
+        for (i in 0 until tensor.size) {
+            val value = getStorageValue(tensor.storage, i)
+            val rotated = when (value) {
+                is Int -> {
+                    val mask = (1 shl bitWidth) - 1
+                    val maskedValue = value and mask
+                    ((maskedValue shr shiftValue) or (maskedValue shl (bitWidth - shiftValue))) and mask
+                }
+                is UByte -> {
+                    val intValue = value.toInt()
+                    val mask = (1 shl bitWidth) - 1
+                    val maskedValue = intValue and mask
+                    (((maskedValue shr shiftValue) or (maskedValue shl (bitWidth - shiftValue))) and mask).toUByte()
+                }
+                else -> throw IllegalArgumentException("Rotate right only supported for integer types")
+            }
+            setStorageValue(resultStorage, i, rotated, tensor.dtype)
+        }
+        
+        return OptimizedMegaTensor(resultStorage, tensor.shape, tensor.device)
+    }
+
+    /**
+     * Count the number of set bits (1s) in each element of x.
+     */
+    override fun countOnes(x: Any): Any {
+        val tensor = x as OptimizedMegaTensor
+        val resultStorage = TensorStorage.createOptimalStorage(EmberDType.INT32, tensor.size)
+        
+        for (i in 0 until tensor.size) {
+            val value = getStorageValue(tensor.storage, i)
+            val count = when (value) {
+                is Int -> value.countOneBits()
+                is Long -> value.countOneBits()
+                is UByte -> value.toInt().countOneBits()
+                else -> throw IllegalArgumentException("Count ones only supported for integer types")
+            }
+            setStorageValue(resultStorage, i, count, EmberDType.INT32)
+        }
+        
+        return OptimizedMegaTensor(resultStorage, tensor.shape, tensor.device)
+    }
+
+    /**
+     * Count the number of unset bits (0s) in each element of x.
+     */
+    override fun countZeros(x: Any): Any {
+        val tensor = x as OptimizedMegaTensor
+        val resultStorage = TensorStorage.createOptimalStorage(EmberDType.INT32, tensor.size)
+        
+        for (i in 0 until tensor.size) {
+            val value = getStorageValue(tensor.storage, i)
+            val count = when (value) {
+                is Int -> 32 - value.countOneBits()
+                is Long -> 64 - value.countOneBits()
+                is UByte -> 8 - value.toInt().countOneBits()
+                else -> throw IllegalArgumentException("Count zeros only supported for integer types")
+            }
+            setStorageValue(resultStorage, i, count, EmberDType.INT32)
+        }
+        
+        return OptimizedMegaTensor(resultStorage, tensor.shape, tensor.device)
+    }
+
+    /**
+     * Get the bit at the specified position in each element of x.
+     */
+    override fun getBit(x: Any, position: Any): Any {
+        val tensor = x as OptimizedMegaTensor
+        val pos = when (position) {
+            is Int -> position
+            is OptimizedMegaTensor -> {
+                if (position.size != 1) throw IllegalArgumentException("Position tensor must be scalar")
+                getStorageValue(position.storage, 0) as Int
+            }
+            else -> throw IllegalArgumentException("Position must be Int or scalar tensor")
+        }
+        
+        val resultStorage = TensorStorage.createOptimalStorage(EmberDType.INT32, tensor.size)
+        
+        for (i in 0 until tensor.size) {
+            val value = getStorageValue(tensor.storage, i)
+            val bit = when (value) {
+                is Int -> (value shr pos) and 1
+                is Long -> ((value shr pos) and 1L).toInt()
+                is UByte -> (value.toInt() shr pos) and 1
+                else -> throw IllegalArgumentException("Get bit only supported for integer types")
+            }
+            setStorageValue(resultStorage, i, bit, EmberDType.INT32)
+        }
+        
+        return OptimizedMegaTensor(resultStorage, tensor.shape, tensor.device)
+    }
+
+    /**
+     * Set the bit at the specified position in each element of x to value (0 or 1).
+     */
+    override fun setBit(x: Any, position: Any, value: Any): Any {
+        val tensor = x as OptimizedMegaTensor
+        val pos = when (position) {
+            is Int -> position
+            is OptimizedMegaTensor -> {
+                if (position.size != 1) throw IllegalArgumentException("Position tensor must be scalar")
+                getStorageValue(position.storage, 0) as Int
+            }
+            else -> throw IllegalArgumentException("Position must be Int or scalar tensor")
+        }
+        val bitValue = when (value) {
+            is Int -> value and 1
+            is OptimizedMegaTensor -> {
+                if (value.size != 1) throw IllegalArgumentException("Value tensor must be scalar")
+                (getStorageValue(value.storage, 0) as Int) and 1
+            }
+            else -> throw IllegalArgumentException("Value must be Int or scalar tensor")
+        }
+        
+        val resultStorage = TensorStorage.createOptimalStorage(tensor.dtype, tensor.size)
+        
+        for (i in 0 until tensor.size) {
+            val originalValue = getStorageValue(tensor.storage, i)
+            val newValue = when (originalValue) {
+                is Int -> {
+                    if (bitValue == 1) {
+                        originalValue or (1 shl pos)
+                    } else {
+                        originalValue and (1 shl pos).inv()
+                    }
+                }
+                is Long -> {
+                    if (bitValue == 1) {
+                        originalValue or (1L shl pos)
+                    } else {
+                        originalValue and (1L shl pos).inv()
+                    }
+                }
+                is UByte -> {
+                    val intValue = originalValue.toInt()
+                    if (bitValue == 1) {
+                        (intValue or (1 shl pos)).toUByte()
+                    } else {
+                        (intValue and (1 shl pos).inv()).toUByte()
+                    }
+                }
+                else -> throw IllegalArgumentException("Set bit only supported for integer types")
+            }
+            setStorageValue(resultStorage, i, newValue, tensor.dtype)
+        }
+        
+        return OptimizedMegaTensor(resultStorage, tensor.shape, tensor.device)
+    }
+
+    /**
+     * Toggle the bit at the specified position in each element of x.
+     */
+    override fun toggleBit(x: Any, position: Any): Any {
+        val tensor = x as OptimizedMegaTensor
+        val pos = when (position) {
+            is Int -> position
+            is OptimizedMegaTensor -> {
+                if (position.size != 1) throw IllegalArgumentException("Position tensor must be scalar")
+                getStorageValue(position.storage, 0) as Int
+            }
+            else -> throw IllegalArgumentException("Position must be Int or scalar tensor")
+        }
+        
+        val resultStorage = TensorStorage.createOptimalStorage(tensor.dtype, tensor.size)
+        
+        for (i in 0 until tensor.size) {
+            val value = getStorageValue(tensor.storage, i)
+            val toggled = when (value) {
+                is Int -> value xor (1 shl pos)
+                is Long -> value xor (1L shl pos)
+                is UByte -> (value.toInt() xor (1 shl pos)).toUByte()
+                else -> throw IllegalArgumentException("Toggle bit only supported for integer types")
+            }
+            setStorageValue(resultStorage, i, toggled, tensor.dtype)
+        }
+        
+        return OptimizedMegaTensor(resultStorage, tensor.shape, tensor.device)
+    }
+
+    /**
+     * Compute the bitwise AND of x and y element-wise.
+     */
+    override fun bitwiseAnd(x: Any, y: Any): Any {
+        val t1 = x as OptimizedMegaTensor
+        val t2 = y as OptimizedMegaTensor
+        
+        if (!t1.shape.contentEquals(t2.shape)) {
+            throw IllegalArgumentException("Shape mismatch: ${t1.shape.contentToString()} vs ${t2.shape.contentToString()}")
+        }
+        
+        val resultStorage = TensorStorage.createOptimalStorage(t1.dtype, t1.size)
+        
+        for (i in 0 until t1.size) {
+            val val1 = getStorageValue(t1.storage, i)
+            val val2 = getStorageValue(t2.storage, i)
+            val result = when (val1) {
+                is Int -> (val1 and val2 as Int)
+                is Long -> (val1 and val2 as Long)
+                is UByte -> (val1.toInt() and (val2 as UByte).toInt()).toUByte()
+                is Boolean -> (val1 && val2 as Boolean)
+                else -> throw IllegalArgumentException("Bitwise AND only supported for integer and boolean types")
+            }
+            setStorageValue(resultStorage, i, result, t1.dtype)
+        }
+        
+        return OptimizedMegaTensor(resultStorage, t1.shape, t1.device)
+    }
+
+    /**
+     * Compute the bitwise OR of x and y element-wise.
+     */
+    override fun bitwiseOr(x: Any, y: Any): Any {
+        val t1 = x as OptimizedMegaTensor
+        val t2 = y as OptimizedMegaTensor
+        
+        if (!t1.shape.contentEquals(t2.shape)) {
+            throw IllegalArgumentException("Shape mismatch: ${t1.shape.contentToString()} vs ${t2.shape.contentToString()}")
+        }
+        
+        val resultStorage = TensorStorage.createOptimalStorage(t1.dtype, t1.size)
+        
+        for (i in 0 until t1.size) {
+            val val1 = getStorageValue(t1.storage, i)
+            val val2 = getStorageValue(t2.storage, i)
+            val result = when (val1) {
+                is Int -> (val1 or val2 as Int)
+                is Long -> (val1 or val2 as Long)
+                is UByte -> (val1.toInt() or (val2 as UByte).toInt()).toUByte()
+                is Boolean -> (val1 || val2 as Boolean)
+                else -> throw IllegalArgumentException("Bitwise OR only supported for integer and boolean types")
+            }
+            setStorageValue(resultStorage, i, result, t1.dtype)
+        }
+        
+        return OptimizedMegaTensor(resultStorage, t1.shape, t1.device)
+    }
+
+    /**
+     * Compute the bitwise XOR of x and y element-wise.
+     */
+    override fun bitwiseXor(x: Any, y: Any): Any {
+        val t1 = x as OptimizedMegaTensor
+        val t2 = y as OptimizedMegaTensor
+        
+        if (!t1.shape.contentEquals(t2.shape)) {
+            throw IllegalArgumentException("Shape mismatch: ${t1.shape.contentToString()} vs ${t2.shape.contentToString()}")
+        }
+        
+        val resultStorage = TensorStorage.createOptimalStorage(t1.dtype, t1.size)
+        
+        for (i in 0 until t1.size) {
+            val val1 = getStorageValue(t1.storage, i)
+            val val2 = getStorageValue(t2.storage, i)
+            val result = when (val1) {
+                is Int -> (val1 xor val2 as Int)
+                is Long -> (val1 xor val2 as Long)
+                is UByte -> (val1.toInt() xor (val2 as UByte).toInt()).toUByte()
+                is Boolean -> (val1 xor val2 as Boolean)
+                else -> throw IllegalArgumentException("Bitwise XOR only supported for integer and boolean types")
+            }
+            setStorageValue(resultStorage, i, result, t1.dtype)
+        }
+        
+        return OptimizedMegaTensor(resultStorage, t1.shape, t1.device)
+    }
+
+    /**
+     * Compute the bitwise NOT (inversion) of x element-wise.
+     */
+    override fun bitwiseNot(x: Any): Any {
+        val tensor = x as OptimizedMegaTensor
+        val resultStorage = TensorStorage.createOptimalStorage(tensor.dtype, tensor.size)
+        
+        for (i in 0 until tensor.size) {
+            val value = getStorageValue(tensor.storage, i)
+            val result = when (value) {
+                is Int -> value.inv()
+                is Long -> value.inv()
+                is UByte -> value.toInt().inv().toUByte()
+                is Boolean -> !value
+                else -> throw IllegalArgumentException("Bitwise NOT only supported for integer and boolean types")
+            }
+            setStorageValue(resultStorage, i, result, tensor.dtype)
+        }
+        
+        return OptimizedMegaTensor(resultStorage, tensor.shape, tensor.device)
+    }
+
+    // ===== WAVE OPERATIONS =====
+    
+    /**
+     * Apply wave interference between multiple binary patterns element-wise.
+     */
+    override fun binaryWaveInterference(waves: List<Any>, mode: String): Any {
+        if (waves.isEmpty()) {
+            throw IllegalArgumentException("At least one wave is required")
+        }
+        
+        val tensors = waves.map { it as OptimizedMegaTensor }
+        val firstTensor = tensors[0]
+        
+        // Verify all tensors have the same shape
+        for (tensor in tensors) {
+            if (!tensor.shape.contentEquals(firstTensor.shape)) {
+                throw IllegalArgumentException("All waves must have the same shape")
+            }
+        }
+        
+        val resultStorage = TensorStorage.createOptimalStorage(firstTensor.dtype, firstTensor.size)
+        
+        for (i in 0 until firstTensor.size) {
+            var result = getStorageValue(firstTensor.storage, i)
+            
+            for (j in 1 until tensors.size) {
+                val value = getStorageValue(tensors[j].storage, i)
+                result = when (mode.lowercase()) {
+                    "xor" -> when (result) {
+                        is Int -> result xor (value as Int)
+                        is Long -> result xor (value as Long)
+                        is UByte -> (result.toInt() xor (value as UByte).toInt()).toUByte()
+                        else -> throw IllegalArgumentException("XOR interference only supported for integer types")
+                    }
+                    "and" -> when (result) {
+                        is Int -> result and (value as Int)
+                        is Long -> result and (value as Long)
+                        is UByte -> (result.toInt() and (value as UByte).toInt()).toUByte()
+                        else -> throw IllegalArgumentException("AND interference only supported for integer types")
+                    }
+                    "or" -> when (result) {
+                        is Int -> result or (value as Int)
+                        is Long -> result or (value as Long)
+                        is UByte -> (result.toInt() or (value as UByte).toInt()).toUByte()
+                        else -> throw IllegalArgumentException("OR interference only supported for integer types")
+                    }
+                    else -> throw IllegalArgumentException("Unknown interference mode: $mode")
+                }
+            }
+            
+            setStorageValue(resultStorage, i, result, firstTensor.dtype)
+        }
+        
+        return OptimizedMegaTensor(resultStorage, firstTensor.shape, firstTensor.device)
+    }
+
+    /**
+     * Propagate a binary wave by shifting its bits.
+     */
+    override fun binaryWavePropagate(wave: Any, shift: Any): Any {
+        return leftShift(wave, shift) // Wave propagation is essentially a left shift
+    }
+
+    /**
+     * Create a binary pattern tensor with a specified duty cycle.
+     */
+    override fun createDutyCycle(length: Int, dutyCycle: Float, dtype: EmberDType): Any {
+        if (dutyCycle < 0.0f || dutyCycle > 1.0f) {
+            throw IllegalArgumentException("Duty cycle must be between 0.0 and 1.0")
+        }
+        
+        val storage = TensorStorage.createOptimalStorage(dtype, length)
+        val onBits = (length * dutyCycle).toInt()
+        
+        for (i in 0 until length) {
+            val value = if (i < onBits) {
+                when (dtype) {
+                    EmberDType.BOOL -> true
+                    EmberDType.UINT8 -> 1u.toUByte()
+                    EmberDType.INT32 -> 1
+                    EmberDType.INT64 -> 1L
+                    else -> throw IllegalArgumentException("Duty cycle only supported for integer and boolean types")
+                }
+            } else {
+                when (dtype) {
+                    EmberDType.BOOL -> false
+                    EmberDType.UINT8 -> 0u.toUByte()
+                    EmberDType.INT32 -> 0
+                    EmberDType.INT64 -> 0L
+                    else -> throw IllegalArgumentException("Duty cycle only supported for integer and boolean types")
+                }
+            }
+            setStorageValue(storage, i, value, dtype)
+        }
+        
+        return OptimizedMegaTensor(storage, intArrayOf(length), defaultDevice)
+    }
+
+    /**
+     * Generate a blocky sine wave pattern (square wave).
+     */
+    override fun generateBlockySin(length: Int, halfPeriod: Int, dtype: EmberDType): Any {
+        val storage = TensorStorage.createOptimalStorage(dtype, length)
+        
+        for (i in 0 until length) {
+            val phase = (i / halfPeriod) % 2
+            val value = if (phase == 0) {
+                when (dtype) {
+                    EmberDType.BOOL -> true
+                    EmberDType.UINT8 -> 1u.toUByte()
+                    EmberDType.INT32 -> 1
+                    EmberDType.INT64 -> 1L
+                    else -> throw IllegalArgumentException("Blocky sine only supported for integer and boolean types")
+                }
+            } else {
+                when (dtype) {
+                    EmberDType.BOOL -> false
+                    EmberDType.UINT8 -> 0u.toUByte()
+                    EmberDType.INT32 -> 0
+                    EmberDType.INT64 -> 0L
+                    else -> throw IllegalArgumentException("Blocky sine only supported for integer and boolean types")
+                }
+            }
+            setStorageValue(storage, i, value, dtype)
+        }
+        
+        return OptimizedMegaTensor(storage, intArrayOf(length), defaultDevice)
+    }
+
     // Helper functions
+
+    private fun convertValueToType(value: Any, targetType: EmberDType): Any {
+        return when (targetType) {
+            EmberDType.BOOL -> convertToBoolean(value)
+            EmberDType.UINT8 -> convertToUByte(value)
+            EmberDType.INT32 -> convertToInt(value)
+            EmberDType.INT64 -> convertToLong(value)
+            EmberDType.FLOAT32 -> convertToFloat(value)
+            EmberDType.FLOAT64 -> convertToDouble(value)
+            else -> throw IllegalArgumentException("Unsupported target type: $targetType")
+        }
+    }
 
     private fun fillStorageFromList(storage: TensorStorage, data: List<*>, dtype: EmberDType) {
         for (i in data.indices) {
