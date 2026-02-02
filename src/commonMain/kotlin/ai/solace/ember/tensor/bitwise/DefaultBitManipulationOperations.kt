@@ -29,15 +29,17 @@ object DefaultBitManipulationOperations : BitManipulationOperations {
             // Just shift chunks
             limbs.copyInto(result, chunkShift)
         } else {
-            // Need to handle bit shifting
-            var carry = 0
+            // Need to handle bit shifting (treat limbs as unsigned 32-bit)
+            var carry = 0L
+            val mask = MegaNumberConstants.MASK
             for (i in limbs.indices) {
-                val value = limbs[i]
-                result[i + chunkShift] = carry or ((value shl bitShift) and Int.MAX_VALUE)
+                val value = limbs[i].toLong() and mask
+                val shifted = (value shl bitShift)
+                result[i + chunkShift] = ((carry or shifted) and mask).toInt()
                 carry = value ushr (MegaNumberConstants.GLOBAL_CHUNK_SIZE - bitShift)
             }
-            if (carry != 0) {
-                result[limbs.size + chunkShift] = carry
+            if (carry != 0L) {
+                result[limbs.size + chunkShift] = carry.toInt()
             }
         }
 
@@ -81,14 +83,18 @@ object DefaultBitManipulationOperations : BitManipulationOperations {
             // Just shift chunks
             limbs.copyInto(result, 0, chunkShift)
         } else {
-            // Need to handle bit shifting
+            // Need to handle bit shifting (treat limbs as unsigned 32-bit)
+            val mask = MegaNumberConstants.MASK
             for (i in 0 until resultSize - 1) {
-                val highBits = limbs[i + chunkShift] ushr bitShift
-                val lowBits = limbs[i + chunkShift + 1] shl (MegaNumberConstants.GLOBAL_CHUNK_SIZE - bitShift)
-                result[i] = highBits or (lowBits and Int.MAX_VALUE)
+                val cur = limbs[i + chunkShift].toLong() and mask
+                val next = limbs[i + chunkShift + 1].toLong() and mask
+                val highBits = cur ushr bitShift
+                val lowBits = next shl (MegaNumberConstants.GLOBAL_CHUNK_SIZE - bitShift)
+                result[i] = ((highBits or lowBits) and mask).toInt()
             }
             // Handle the last chunk
-            result[resultSize - 1] = limbs[limbs.size - 1] ushr bitShift
+            val lastVal = limbs[limbs.size - 1].toLong() and mask
+            result[resultSize - 1] = (lastVal ushr bitShift).toInt()
         }
 
         // Trim trailing zeros
