@@ -5,6 +5,13 @@ package ai.solace.ember.tensor.bitwise
  * This class provides implementations for the methods defined in the ChunkOperations interface.
  */
 object DefaultChunkOperations : ChunkOperations {
+    private fun effectiveLength(value: IntArray): Int {
+        var lastNonZero = value.size - 1
+        while (lastNonZero > 0 && (value[lastNonZero].toLong() and MegaNumberConstants.MASK) == 0L) {
+            lastNonZero--
+        }
+        return lastNonZero + 1
+    }
     /**
      * Add two chunk arrays
      * 
@@ -96,7 +103,14 @@ object DefaultChunkOperations : ChunkOperations {
                 carry = product ushr MegaNumberConstants.GLOBAL_CHUNK_SIZE
             }
             if (carry != 0L) {
-                result[i + b.size] = (result[i + b.size] + carry).toInt()
+                var idx = i + b.size
+                var c = carry
+                while (c != 0L && idx < result.size) {
+                    val sum = (result[idx].toLong() and MegaNumberConstants.MASK) + c
+                    result[idx] = (sum and MegaNumberConstants.MASK).toInt()
+                    c = sum ushr MegaNumberConstants.GLOBAL_CHUNK_SIZE
+                    idx++
+                }
             }
         }
         
@@ -117,13 +131,14 @@ object DefaultChunkOperations : ChunkOperations {
      * @return Negative if a < b, positive if a > b, zero if a == b
      */
     fun compareAbs(a: IntArray, b: IntArray): Int {
-        // Compare lengths first
-        if (a.size != b.size) {
-            return a.size - b.size
+        val aLen = effectiveLength(a)
+        val bLen = effectiveLength(b)
+        if (aLen != bLen) {
+            return aLen - bLen
         }
         
         // Compare chunks from most significant to least
-        for (i in a.indices.reversed()) {
+        for (i in aLen - 1 downTo 0) {
             val aUnsigned = a[i].toLong() and MegaNumberConstants.MASK
             val bUnsigned = b[i].toLong() and MegaNumberConstants.MASK
             if (aUnsigned != bUnsigned) {

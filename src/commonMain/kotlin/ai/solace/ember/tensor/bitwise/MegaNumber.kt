@@ -208,13 +208,21 @@ open class MegaNumber : BasicArithmeticOperations, FloatSpecificOperations,
          * Returns 1 if |A| > |B|, -1 if |A| < |B|, 0 if equal.
          */
         internal fun compareAbs(a: IntArray, b: IntArray): Int {
-            // Quick length comparison
-            if (a.size != b.size) return a.size.compareTo(b.size)
+            var aLen = a.size
+            while (aLen > 1 && (a[aLen - 1].toLong() and MegaNumberConstants.MASK) == 0L) {
+                aLen--
+            }
+            var bLen = b.size
+            while (bLen > 1 && (b[bLen - 1].toLong() and MegaNumberConstants.MASK) == 0L) {
+                bLen--
+            }
 
-            // Same length – check limbs from most‑significant down
-            for (i in a.indices.reversed()) {
-                val cmp = a[i].compareTo(b[i])
-                if (cmp != 0) return cmp
+            if (aLen != bLen) return aLen.compareTo(bLen)
+
+            for (i in aLen - 1 downTo 0) {
+                val av = a[i].toLong() and MegaNumberConstants.MASK
+                val bv = b[i].toLong() and MegaNumberConstants.MASK
+                if (av != bv) return if (av < bv) -1 else 1
             }
             return 0
         }
@@ -243,7 +251,14 @@ open class MegaNumber : BasicArithmeticOperations, FloatSpecificOperations,
                 }
 
                 if (carry != 0L) {
-                    out[i + lb] = carry.toInt()
+                    var idx = i + lb
+                    var c = carry
+                    while (c != 0L && idx < out.size) {
+                        val sum = (out[idx].toLong() and MegaNumberConstants.MASK) + c
+                        out[idx] = (sum and MegaNumberConstants.MASK).toInt()
+                        c = sum ushr MegaNumberConstants.GLOBAL_CHUNK_SIZE
+                        idx++
+                    }
                 }
             }
 
