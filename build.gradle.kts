@@ -1,6 +1,6 @@
 plugins {
-    kotlin("multiplatform") version "2.2.20"
-    kotlin("plugin.serialization") version "2.2.20"
+    kotlin("multiplatform") version "2.3.20"
+    kotlin("plugin.serialization") version "2.3.20"
     id("com.github.ben-manes.versions") version "0.51.0"
     id("maven-publish")
 }
@@ -10,7 +10,6 @@ group = "ai.solace.ember"
 version = "0.1.0"
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 

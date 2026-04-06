@@ -6,7 +6,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("multiplatform") version "2.2.20" apply true
+    kotlin("multiplatform") version "2.3.20" apply true
     id("org.barfuin.gradle.taskinfo") version "2.2.0"
     idea
     id("maven-publish")
@@ -18,7 +18,6 @@ version = "0.7.1"
 //project.gradle.taskGraph.whenReady { println(project.gradle.taskGraph.allTasks) }
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 
