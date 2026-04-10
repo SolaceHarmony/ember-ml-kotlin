@@ -129,3 +129,14 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
+
+---
+
+## Acknowledgments
+
+This Kotlin Multiplatform port was created by **Sydney Renee** of [The Solace Project](mailto:sydney@solace.ofharmony.ai)
+for [KotlinMania](https://github.com/KotlinMania).
+
+Special thanks to the original authors:
+
+- The [ember-ml](https://github.com/ember-ml) team for the original [ember-ml](https://github.com/ember-ml/ember-ml) Python implementation
