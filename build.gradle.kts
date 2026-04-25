@@ -10,6 +10,7 @@ group = "ai.solace.ember"
 version = "0.1.0"
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -63,6 +64,8 @@ kotlin {
                 "ai/solace/ember/tensor/**",
                 "ai/solace/ember/training/**",
                 "ai/solace/ember/utils/**",
+                "ai/solace/ember/examples/**",
+                "ai/solace/ember/Ember.kt",
                 "ai/solace/emberml/**",
             )
         }
