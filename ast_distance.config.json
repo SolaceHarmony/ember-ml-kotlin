@@ -1,7 +1,0 @@
-{
-  "_comment": "Files matching these patterns are treated as Rust reexport/wiring modules and surfaced separately as consult-only instead of porting targets. Patterns without '/' match basenames.",
-  "reexport_modules": [
-    "mod.rs",
-    "lib.rs"
-  ]
-}
