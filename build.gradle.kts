@@ -7,7 +7,7 @@ plugins {
 
 
 group = "ai.solace.ember"
-version = "0.1.0"
+version = "0.1.1"
 
 repositories {
     mavenLocal()
@@ -51,7 +51,7 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:atomicfu:0.23.1")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
-                implementation("ai.solace:klang:0.7.1")
+                implementation("ai.solace:klang:0.7.2")
             }
             kotlin.srcDir("src/commonMain/kotlin")
             resources.srcDir("src/commonMain/resources")
