@@ -4,6 +4,7 @@ import ai.solace.ember.dtype.DType
 import ai.solace.klang.fp.CDouble
 import ai.solace.klang.fp.CFloat16
 import ai.solace.klang.fp.CFloat32
+import ai.solace.ember.backend.klang.LimbEngine
 import ai.solace.ember.backend.klang.LimbEngineActor
 
 /**
@@ -85,10 +86,10 @@ sealed class Scalar {
     }
 
     // ============================================
-    // Float128 scalar (128-bit extended precision via BigScalar)
+    // Float128 scalar (128-bit extended precision via LimbEngine)
     // ============================================
 
-    data class Float128(val value: BigScalar) : Scalar() {
+    data class Float128(val value: LimbEngine) : Scalar() {
         override val dtype = DType.Float128
         override fun toDouble(): Double = value.toDecimalString(DEFAULT_FLOAT128_DIGITS).toDouble()
         override fun toFloat(): Float = toDouble().toFloat()
@@ -101,7 +102,7 @@ sealed class Scalar {
         operator fun minus(other: Float128) = Float128(value.sub(other.value))
         operator fun times(other: Float128) = Float128(value.mul(other.value))
         operator fun div(other: Float128) = Float128(value.div(other.value))
-        operator fun unaryMinus() = Float128(BigScalar.zero().sub(value))
+        operator fun unaryMinus() = Float128(LimbEngine.zero().sub(value))
 
         fun shiftLeft(bits: Int): Float128 = Float128(value.copy().shiftLeft(bits))
         fun shiftRight(bits: Int): Float128 = Float128(value.copy().shiftRight(bits))
@@ -208,7 +209,7 @@ sealed class Scalar {
             DType.Float16 -> Float16(CFloat16.fromFloat(value.toFloat()))
             DType.Float32 -> Float32(CFloat32.fromFloat(value.toFloat()))
             DType.Float64 -> Float64(CDouble.fromDouble(value.toDouble()))
-            DType.Float128 -> Float128(BigScalar.fromDecimalString(value.toString()))
+            DType.Float128 -> Float128(LimbEngine.fromDecimalString(value.toString()))
             DType.Int8 -> Int8(value.toByte())
             DType.Int32 -> Int32(value.toInt())
             DType.Int64 -> Int64(value.toLong())

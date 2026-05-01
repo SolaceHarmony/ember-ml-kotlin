@@ -84,9 +84,9 @@ public/*!*/ abstract class AbstractRuntime(val REQUESTED_HEAP_SIZE: Int = 0, val
     private val engine32 = ai.solace.klang.bitwise.BitShiftEngine(ai.solace.klang.bitwise.BitShiftConfig.defaultMode, 32)
     private val engine64 = ai.solace.klang.bitwise.BitShiftEngine(ai.solace.klang.bitwise.BitShiftConfig.defaultMode, 64)
 
-    ///////////////////////////////////
+    /** //////////////////////////////// */
     // MEMORY TRANSFER / STRING/MEMORY OPERATIONS
-    ///////////////////////////////////
+    /** //////////////////////////////// */
 
     abstract fun lb(ptr: Int): Byte
     abstract fun sb(ptr: Int, value: Byte): Unit
@@ -141,9 +141,9 @@ public/*!*/ abstract class AbstractRuntime(val REQUESTED_HEAP_SIZE: Int = 0, val
     open fun memWrite(ptr: CPointer<*>, data: ShortArray, offset: Int = 0, size: Int = data.size) { for (n in offset until offset + size) sh(ptr.ptr + n * 2, data[n]) }
     open fun memRead(ptr: CPointer<*>, data: ShortArray, offset: Int = 0, size: Int = data.size) { for (n in offset until offset + size) data[n] = lh(ptr.ptr + n * 2) }
 
-    ///////////////////////////////////
+    /** //////////////////////////////// */
     // CASTING OPERATIONS
-    ///////////////////////////////////
+    /** //////////////////////////////// */
 
     fun Boolean.toInt(): Int = if (this) 1 else 0
     fun CPointer<*>.toInt(): Int = ptr
@@ -160,9 +160,9 @@ public/*!*/ abstract class AbstractRuntime(val REQUESTED_HEAP_SIZE: Int = 0, val
     fun ULong.toBool(): Boolean = this.toInt() != 0
     fun Boolean.toBool(): Boolean = this
 
-    ///////////////////////////////////
+    /** //////////////////////////////// */
     // POINTER OPERATIONS
-    ///////////////////////////////////
+    /** //////////////////////////////// */
 
     fun <T> CPointer<T>.addPtr(offset: Int, elementSize: Int): CPointer<T> = CPointer<T>(this.ptr + offset * elementSize)
 
@@ -202,7 +202,7 @@ public/*!*/ abstract class AbstractRuntime(val REQUESTED_HEAP_SIZE: Int = 0, val
     var IntPointer.value: Int get() = this[0]; set(value): Unit { this[0] = value }
     inline fun fixedArrayOfInt(size: Int, setItems: IntPointer.() -> Unit): IntPointer = IntPointer(alloca_zero(size * 4).ptr).apply(setItems)
     fun fixedArrayOfInt(vararg values: Int, size: Int = values.size): IntPointer = fixedArrayOfInt(size) { for (n in 0 until values.size) this[n] = values[n] }
-    ///////////////////////////////////////
+    /** //////////////////////////////////// */
 
     // long*
     operator fun CPointer<Long>.get(offset: Int): Long = ld(this.ptr + offset * 8)
@@ -252,13 +252,13 @@ public/*!*/ abstract class AbstractRuntime(val REQUESTED_HEAP_SIZE: Int = 0, val
     inline fun fixedArrayOfULong(size: Int, setItems: CPointer<ULong>.() -> Unit): CPointer<ULong> = CPointer<ULong>(alloca_zero(size * 8).ptr).apply(setItems)
     fun fixedArrayOfULong(vararg values: ULong, size: Int = values.size): CPointer<ULong> = fixedArrayOfULong(size) { for (n in 0 until values.size) this[n] = values[n] }
 
-    ///////////////////////////////////////
+    /** //////////////////////////////////// */
     operator fun FloatPointer.get(offset: Int): Float = lwf(this.ptr + offset * 4)
     operator fun FloatPointer.set(offset: Int, value: Float): Unit = swf(this.ptr + offset * 4, (value))
     var FloatPointer.value: Float get() = this[0]; set(value): Unit { this[0] = value }
     inline fun fixedArrayOfFloat(size: Int, setItems: FloatPointer.() -> Unit): FloatPointer = FloatPointer(alloca_zero(size * 4).ptr).apply(setItems)
     fun fixedArrayOfFloat(vararg values: Float, size: Int = values.size): FloatPointer = fixedArrayOfFloat(size) { for (n in 0 until values.size) this[n] = values[n] }
-    ///////////////////////////////////////
+    /** //////////////////////////////////// */
 
     operator fun CPointer<Double>.get(offset: Int): Double = ldf(this.ptr + offset * 4)
     operator fun CPointer<Double>.set(offset: Int, value: Double): Unit = sdf(this.ptr + offset * 4, (value))
@@ -269,9 +269,9 @@ public/*!*/ abstract class AbstractRuntime(val REQUESTED_HEAP_SIZE: Int = 0, val
     inline fun fixedArrayOfDouble(size: Int, setItems: CPointer<Double>.() -> Unit): CPointer<Double> = CPointer<Double>(alloca_zero(size * 4).ptr).apply(setItems)
     fun fixedArrayOfDouble(vararg values: Double, size: Int = values.size): CPointer<Double> = fixedArrayOfDouble(size) { for (n in 0 until values.size) this[n] = values[n] }
 
-    ///////////////////////////////////////
+    /** //////////////////////////////////// */
     // STACK ALLOC
-    ///////////////////////////////////////
+    /** //////////////////////////////////// */
     inline fun <T> stackFrame(callback: () -> T): T {
         val oldPos = STACK_PTR
         return try { callback() } finally { STACK_PTR = oldPos }
@@ -279,9 +279,9 @@ public/*!*/ abstract class AbstractRuntime(val REQUESTED_HEAP_SIZE: Int = 0, val
     fun alloca(size: Int): CPointer<Unit> = CPointer<Unit>(STACK_PTR - size).also { STACK_PTR -= size }
     fun alloca_zero(size: Int): CPointer<Unit> = alloca(size).also { memset(it, 0, size) }
 
-    ///////////////////////////////////////
+    /** //////////////////////////////////// */
     // HEAP ALLOC
-    ///////////////////////////////////////
+    /** //////////////////////////////////// */
     // @TODO: OPTIMIZE!
     // Pair<head: Int, size: Int>
     private val chunks: LinkedHashMap<Int, Pair<Int, Int>> = LinkedHashMap<Int, Pair<Int, Int>>()
@@ -301,17 +301,17 @@ public/*!*/ abstract class AbstractRuntime(val REQUESTED_HEAP_SIZE: Int = 0, val
     }
     fun free(ptr: CPointer<*>): Unit { chunks.remove(ptr.ptr)?.let { freeChunks += it } }
 
-    ///////////////////////////////////////
+    /** //////////////////////////////////// */
     // I/O
-    ///////////////////////////////////////
+    /** //////////////////////////////////// */
     fun putchar(c: Int): Int {
         print(c.toChar())
         return c
     }
 
-    ///////////////////////////////////////
+    /** //////////////////////////////////// */
     // STRINGS
-    ///////////////////////////////////////
+    /** //////////////////////////////////// */
     private val STRINGS: LinkedHashMap<String, CPointer<Byte>> = LinkedHashMap<String, CPointer<Byte>>()
 
     val String.ptr: CPointer<Byte> get() = STRINGS.getOrPut(this) {
@@ -350,9 +350,9 @@ public/*!*/ abstract class AbstractRuntime(val REQUESTED_HEAP_SIZE: Int = 0, val
         this[bytes.size] = 0.toByte()
     }
 
-    ///////////////////////////////////////
+    /** //////////////////////////////////// */
     // FUNCTIONS
-    ///////////////////////////////////////
+    /** //////////////////////////////////// */
     val FUNCTIONS: ArrayList<kotlin.reflect.KFunction<*>> = arrayListOf<kotlin.reflect.KFunction<*>>()
     val FUNCTION_PTRS: LinkedHashMap<kotlin.reflect.KFunction<*>, Int> = LinkedHashMap<kotlin.reflect.KFunction<*>, Int>()
 
@@ -367,9 +367,9 @@ public/*!*/ abstract class AbstractRuntime(val REQUESTED_HEAP_SIZE: Int = 0, val
     inline operator fun <T0, T1, T2, T3, T4, TR> CFunction<(T0, T1, T2, T3, T4) -> TR>.invoke(v0: T0, v1: T1, v2: T2, v3: T3, v4: T4): TR = func.invoke(v0, v1, v2, v3, v4)
     inline operator fun <T0, T1, T2, T3, T4, T5, TR> CFunction<(T0, T1, T2, T3, T4, T5) -> TR>.invoke(v0: T0, v1: T1, v2: T2, v3: T3, v4: T4, v5: T5): TR = func.invoke(v0, v1, v2, v3, v4, v5)
 
-    ///////////////////////////////////////
+    /** //////////////////////////////////// */
     // TOOLS
-    ///////////////////////////////////////
+    /** //////////////////////////////////// */
     @OptIn(kotlin.contracts.ExperimentalContracts::class)
     public inline fun block(block: () -> Unit) {
         kotlin.contracts.contract { callsInPlace(block, kotlin.contracts.InvocationKind.EXACTLY_ONCE) }
@@ -418,7 +418,7 @@ public/*!*/ interface RuntimeSyscalls {
 
 public/*!*/ object DummyRuntimeSyscalls : RuntimeSyscalls
 
-//////////////////////
+/** /////////////////// */
 
 public class CPointer<T>(val ptr: Int)
 public class CFunction<T>(val ptr: Int)

@@ -59,7 +59,6 @@ object ArithmeticUtils {
                     isFloat = false
                 )
             } else if (c > 0) {
-                // |a| > |b|, so result has sign of a
                 val diff = DefaultChunkOperations.subChunks(aMantissa, bMantissa)
                 return MegaNumber(
                     mantissa = diff,
@@ -68,7 +67,6 @@ object ArithmeticUtils {
                     isFloat = false
                 )
             } else {
-                // |a| < |b|, so result has sign of b
                 val diff = DefaultChunkOperations.subChunks(bMantissa, aMantissa)
                 return MegaNumber(
                     mantissa = diff,
