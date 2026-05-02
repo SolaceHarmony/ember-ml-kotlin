@@ -127,7 +127,7 @@ tasks {
     //    from(kotlin.sourceSets["commonMain"].resources)
     //}
 
-    val jsWebResources by creating(Copy::class) {
+    val jsWebResources by registering(Copy::class) {
         dependsOn("jsMainClasses")
         into(file("docs"))
         includeEmptyDirs = false
@@ -135,7 +135,7 @@ tasks {
         from(kotlin.sourceSets["commonMain"].resources)
     }
 
-    //val jsWebDce by creating(Copy::class) {
+    //val jsWebDce by registering(Copy::class) {
     //    dependsOn(jsWebResourcesDce)
     //    into(file("docs"))
     //    includeEmptyDirs = false
@@ -143,7 +143,7 @@ tasks {
     //    from(named("compileProductionExecutableKotlinJs").get().outputs)
     //}
 
-    val jsWeb by creating(Copy::class) {
+    val jsWeb by registering(Copy::class) {
         dependsOn(jsWebResources)
         into(file("docs"))
         includeEmptyDirs = false
@@ -152,19 +152,13 @@ tasks {
         from(named("compileDevelopmentExecutableKotlinJs").get().outputs)
     }
 
-    val buildDockerImage by creating {
-        afterEvaluate {
-            dependsOn("linkReleaseExecutableLinuxArm64")
-        }
-        doLast {
-            exec { commandLine = listOf("docker", "build", ".", "-t", "klang:latest") }
-        }
+    val buildDockerImage by registering(Exec::class) {
+        dependsOn("linkReleaseExecutableLinuxArm64")
+        commandLine("docker", "build", ".", "-t", "klang:latest")
     }
-    val buildDockerImageAndPublish by creating {
+    val buildDockerImageAndPublish by registering(Exec::class) {
         dependsOn("buildDockerImage")
-        doLast {
-            exec { commandLine = listOf("docker", "push", "klang:latest") }
-        }
+        commandLine("docker", "push", "klang:latest")
     }
     // Removed generateSources dependencies; no generated files needed
 }
