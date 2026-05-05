@@ -34,6 +34,11 @@ kotlin {
     }
     mingwX64()
 
+    swiftExport {
+        moduleName = "EmberML"
+        flattenPackage = "ai.solace.ember"
+    }
+
     // JavaScript target (disabled until we add a Node N-API/WASM addon to supply
     // zero-copy C-layout buffers; JS GC heap is too small for parity today).
     /*
