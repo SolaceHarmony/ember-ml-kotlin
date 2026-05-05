@@ -6,7 +6,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("multiplatform") version "2.3.20" apply true
+    kotlin("multiplatform") version "2.3.21" apply true
     id("org.barfuin.gradle.taskinfo") version "2.2.0"
     idea
     id("maven-publish")
@@ -69,7 +69,6 @@ kotlin {
 
     if (enableNative) {
         macosArm64 { configureNative() }
-        macosX64 { configureNative() }
         linuxX64 { configureNative() }
         linuxArm64 { configureNative() }
         mingwX64 { configureNative() }

@@ -1,6 +1,6 @@
 plugins {
-    kotlin("multiplatform") version "2.3.20"
-    kotlin("plugin.serialization") version "2.3.20"
+    kotlin("multiplatform") version "2.3.21"
+    kotlin("plugin.serialization") version "2.3.21"
     id("com.github.ben-manes.versions") version "0.51.0"
     id("maven-publish")
 }
@@ -19,7 +19,6 @@ val kcoroLib = layout.projectDirectory.file("external/kcoro/lab/mirror/core/buil
 kotlin {
     // Native targets for Kotlin Native build
     linuxX64()
-    macosX64()
     macosArm64 {
         binaries {
             executable("poc") {
@@ -50,7 +49,7 @@ kotlin {
                 implementation(kotlin("stdlib"))
                 implementation("org.jetbrains.kotlinx:atomicfu:0.23.1")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
                 implementation("ai.solace:klang:0.7.2")
             }
             kotlin.srcDir("src/commonMain/kotlin")
