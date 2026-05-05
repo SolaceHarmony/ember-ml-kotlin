@@ -76,7 +76,7 @@ kotlin {
         //sourceSets {
         //    val nativeMain = this.create("nativeMain")
         //    val nativeTest = this.create("nativeTest")
-        //    configure(listOf(this.getByName("macosX64Main"), this.getByName("macosArm64Main"), this.getByName("linuxX64Main"), this.getByName("mingwX64Main"))) {
+        //    configure(listOf(this.getByName("macosArm64Main"), this.getByName("linuxX64Main"), this.getByName("mingwX64Main"))) {
         //        dependsOn(nativeMain)
         //    }
         //}
@@ -164,7 +164,6 @@ tasks {
 
 afterEvaluate {
     tasks.findByName("linuxX64Test")?.enabled = false
-    tasks.findByName("macosX64Test")?.enabled = false
     tasks.findByName("mingwX64Test")?.enabled = false
     // Enable macOS aarch64 native tests
     tasks.findByName("macosArm64Test")?.enabled = true

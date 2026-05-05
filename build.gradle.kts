@@ -5,7 +5,6 @@ plugins {
     id("maven-publish")
 }
 
-
 group = "ai.solace.ember"
 version = "0.1.1"
 
@@ -102,10 +101,6 @@ kotlin {
             dependsOn(nativeMain)
         }
         val linuxX64Test by getting { dependsOn(nativeTest) }
-        val macosX64Main by getting {
-            dependsOn(nativeMain)
-        }
-        val macosX64Test by getting { dependsOn(nativeTest) }
         val macosArm64Main by getting {
             dependsOn(nativeMain)
             kotlin.setSrcDirs(emptyList<File>())
