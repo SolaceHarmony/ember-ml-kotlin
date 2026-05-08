@@ -89,9 +89,8 @@ class ActorSystem {
      * @param name The name of the actor
      * @return Actor reference if found, null otherwise
      */
-    @Suppress("UNCHECKED_CAST")
-    fun <M : Any> getActor(name: String): ActorRef<M>? {
-        return actors[name] as? ActorRef<M>
+    fun getActor(name: String): ActorRef<*>? {
+        return actors[name]
     }
     
     /**

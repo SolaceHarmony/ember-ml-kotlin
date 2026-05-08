@@ -110,8 +110,7 @@ class MetalTensor private constructor(
                 is IntArray -> data.map { it.toFloat() }.toFloatArray()
                 is DoubleArray -> data.map { it.toFloat() }.toFloatArray()
                 is Array<*> -> {
-                    @Suppress("UNCHECKED_CAST")
-                    val flatArray = flattenArray(data as Array<Any>)
+                    val flatArray = flattenArray(data)
                     when (flatArray.firstOrNull()) {
                         is Float -> flatArray.map { (it as Float) }.toFloatArray()
                         is Int -> flatArray.map { (it as Int).toFloat() }.toFloatArray()
@@ -160,7 +159,7 @@ class MetalTensor private constructor(
         /**
          * Flattens a multi-dimensional array to a single-dimensional array.
          */
-        private fun flattenArray(array: Array<Any>): Array<Any> {
+        private fun flattenArray(array: Array<*>): Array<Any> {
             val result = mutableListOf<Any>()
 
             fun flatten(arr: Any) {
