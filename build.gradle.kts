@@ -58,7 +58,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(kotlin("stdlib"))
-                implementation("org.jetbrains.kotlinx:atomicfu:0.23.1")
+                implementation("org.jetbrains.kotlinx:atomicfu:0.32.1")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
                 implementation("ai.solace:klang:0.7.2")
