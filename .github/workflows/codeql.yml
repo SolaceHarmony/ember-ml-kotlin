@@ -1,51 +1,115 @@
-name: CodeQL
+name: "CodeQL Advanced"
 
-# Universal CodeQL config for KotlinMania repos.
+# Job names, step names, and matrix shape follow GitHub's canonical
+# "CodeQL Advanced" Code Scanning template exactly. The Code Scanning UI
+# registers configurations keyed off `(workflow_path, job_id, category)`
+# tuples and shows status using template-default identifiers; deviating
+# from those names produces orphan configuration cards in the UI that
+# can't be cleaned up via API (PR-merge analyses are non-deletable).
 #
-# We do NOT analyze `java-kotlin`. The CodeQL Kotlin extractor only hooks
-# JVM `kotlinc` invocations; Kotlin/Native and Kotlin/JS compilations
-# produce no traced events, so `database finalize` aborts with
-# "CodeQL could not process any code written in Java/Kotlin" on KMP
-# projects without a JVM target. `actions` covers workflow files;
-# `javascript-typescript` covers any JS/TS in the repo.
+# Three matrix entries cover the languages CodeQL detects in this repo:
+#   - actions             (source-only)
+#   - java-kotlin         (manual build via codeqlCompileJvm — see note below)
+#   - javascript-typescript (source-only)
+#
+# For java-kotlin, the matrix-shared `Initialize CodeQL → Perform CodeQL
+# Analysis` flow is augmented with two conditional steps that run ONLY
+# for that language:
+#
+#   1. JDK + Gradle setup (the other two languages need no toolchain).
+#   2. A direct `./gradlew codeqlCompileJvm` invocation under
+#      JAVA_TOOL_OPTIONS=-javaagent:codeql-java-agent.jar=java,kotlin.
+#
+# `codeqlCompileJvm` is a JavaExec task in build.gradle.kts that runs
+# kotlin-compiler-embeddable 2.3.21 against commonMain as a single-target
+# compile (no -Xmulti-platform, no -Xfragments). The K2 phased pipeline
+# that bypasses K2JVMCompiler.doExecute — which the CodeQL Java agent
+# hooks for Kotlin extraction — is only engaged for multiplatform-fragment
+# compiles, so a single-target invocation still dispatches through
+# doExecute and the agent's class-load hook fires. Using autobuild here
+# (the template's default for java-kotlin) would route through KGP's
+# multiplatform compileKotlinJvm and produce 0 bytes of Kotlin TRAP.
+# That's why this file uses `build-mode: manual` for java-kotlin even
+# though autobuild is the template default.
 
 on:
   push:
-    branches: [main, master]
+    branches: [ "main" ]
   pull_request:
-    branches: [main, master]
+    branches: [ "main" ]
+  # Weekly periodic scan catches supply-chain CVEs that appear after merge.
   schedule:
-    - cron: "27 4 * * 1"
+    - cron: '44 16 * * 0'
+
+permissions:
+  contents: read
 
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
+    runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     permissions:
+      # required for SARIF upload
       security-events: write
-      packages: read
+      # required by codeql-action/analyze@v4 in private repos
       actions: read
+      # required to fetch internal or private CodeQL packs from GHCR
+      packages: read
       contents: read
 
     strategy:
       fail-fast: false
       matrix:
         include:
-          - language: javascript-typescript
-            build-mode: none
           - language: actions
+            build-mode: none
+          - language: java-kotlin
+            build-mode: manual
+          - language: javascript-typescript
             build-mode: none
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
+      # JDK + Gradle setup only for java-kotlin; the source-only languages
+      # don't run any build at all.
+      - name: Set up JDK 21
+        if: matrix.language == 'java-kotlin'
+        uses: actions/setup-java@v5.2.0
+        with:
+          distribution: zulu
+          java-version: '21'
+
+      - name: Setup Gradle
+        if: matrix.language == 'java-kotlin'
+        uses: gradle/actions/setup-gradle@v6.1.0
+
+      # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
+          # Restores+stores the CodeQL bundle and dependency cache between
+          # runs. Default off in Advanced Setup; turning on cuts ~30-60s
+          # off the init step on warm cache.
+          dependency-caching: true
+
+      # Manual build: only java-kotlin gates this. The CodeQL Java agent
+      # is attached to every JVM in this step via JAVA_TOOL_OPTIONS — every
+      # conforming JVM honors -javaagent at startup independently of any
+      # OS-level LD_PRELOAD tracing chain. The `java,kotlin` spec registers
+      # both JavacMainInterceptor and KotlinInterceptor; the latter hooks
+      # `K2JVMCompiler.doExecute(...)` at class load time and writes
+      # per-source-file `*.kt.trap.gz` outputs under
+      # ${CODEQL_EXTRACTOR_JAVA_TRAP_DIR}.
+      - name: Run manual build steps
+        if: matrix.build-mode == 'manual'
+        run: |
+          export JAVA_TOOL_OPTIONS="-javaagent:${CODEQL_EXTRACTOR_JAVA_ROOT}/tools/codeql-java-agent.jar=java,kotlin"
+          echo "JAVA_TOOL_OPTIONS=${JAVA_TOOL_OPTIONS}"
+          ./gradlew --no-daemon codeqlCompileJvm --no-configuration-cache
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
