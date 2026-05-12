@@ -1,10 +1,16 @@
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsEnvSpec
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootEnvSpec
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
+import org.jetbrains.kotlin.gradle.targets.wasm.nodejs.WasmNodeJsEnvSpec
+import org.jetbrains.kotlin.gradle.targets.wasm.yarn.WasmYarnRootEnvSpec
+
 plugins {
-    kotlin("multiplatform") version "2.3.20"
-    kotlin("plugin.serialization") version "2.3.20"
+    kotlin("multiplatform") version "2.3.21"
+    kotlin("plugin.serialization") version "2.3.21"
     id("com.github.ben-manes.versions") version "0.51.0"
     id("maven-publish")
 }
-
 
 group = "ai.solace.ember"
 version = "0.1.1"
@@ -19,7 +25,6 @@ val kcoroLib = layout.projectDirectory.file("external/kcoro/lab/mirror/core/buil
 kotlin {
     // Native targets for Kotlin Native build
     linuxX64()
-    macosX64()
     macosArm64 {
         binaries {
             executable("poc") {
@@ -34,6 +39,11 @@ kotlin {
         }
     }
     mingwX64()
+
+    swiftExport {
+        moduleName = "EmberML"
+        flattenPackage = "ai.solace.ember"
+    }
 
     // JavaScript target (disabled until we add a Node N-API/WASM addon to supply
     // zero-copy C-layout buffers; JS GC heap is too small for parity today).
@@ -50,7 +60,7 @@ kotlin {
                 implementation(kotlin("stdlib"))
                 implementation("org.jetbrains.kotlinx:atomicfu:0.23.1")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
                 implementation("ai.solace:klang:0.7.2")
             }
             kotlin.srcDir("src/commonMain/kotlin")
@@ -98,10 +108,6 @@ kotlin {
             dependsOn(nativeMain)
         }
         val linuxX64Test by getting { dependsOn(nativeTest) }
-        val macosX64Main by getting {
-            dependsOn(nativeMain)
-        }
-        val macosX64Test by getting { dependsOn(nativeTest) }
         val macosArm64Main by getting {
             dependsOn(nativeMain)
             kotlin.setSrcDirs(emptyList<File>())
@@ -114,6 +120,64 @@ kotlin {
 
         // JavaScript source sets (JS target currently disabled in kotlin { } to prioritize native)
     }
+}
+
+// Ember currently ships with Kotlin/JS targets disabled (see kotlin { } above).
+// Keep the Kotlin/JS hardening configuration guarded so it turns on automatically
+// when JS/Wasm targets are re-enabled without breaking native-only builds.
+(rootProject.extensions.findByName("kotlinNodeJsSpec") as? NodeJsEnvSpec)?.apply {
+    version.set("22.22.2")
+}
+
+(rootProject.extensions.findByName("kotlinWasmNodeJsSpec") as? WasmNodeJsEnvSpec)?.apply {
+    version.set("22.22.2")
+}
+
+(rootProject.extensions.findByName("kotlinYarnSpec") as? YarnRootEnvSpec)?.apply {
+    version.set("1.22.22")
+}
+
+(rootProject.extensions.findByName("kotlinWasmYarnSpec") as? WasmYarnRootEnvSpec)?.apply {
+    version.set("1.22.22")
+}
+
+(rootProject.extensions.findByName("kotlinYarn") as? YarnRootExtension)?.apply {
+    resolution("diff", "8.0.3")
+    resolution("**/diff", "8.0.3")
+    resolution("serialize-javascript", "7.0.5")
+    resolution("**/serialize-javascript", "7.0.5")
+    resolution("webpack", "5.106.2")
+    resolution("**/webpack", "5.106.2")
+    resolution("follow-redirects", "1.16.0")
+    resolution("**/follow-redirects", "1.16.0")
+    resolution("lodash", "4.18.1")
+    resolution("**/lodash", "4.18.1")
+    resolution("ajv", "8.20.0")
+    resolution("**/ajv", "8.20.0")
+    resolution("brace-expansion", "5.0.5")
+    resolution("**/brace-expansion", "5.0.5")
+    resolution("flatted", "3.4.2")
+    resolution("**/flatted", "3.4.2")
+    resolution("minimatch", "10.2.5")
+    resolution("**/minimatch", "10.2.5")
+    resolution("picomatch", "4.0.4")
+    resolution("**/picomatch", "4.0.4")
+    resolution("qs", "6.15.1")
+    resolution("**/qs", "6.15.1")
+    resolution("socket.io-parser", "4.2.6")
+    resolution("**/socket.io-parser", "4.2.6")
+}
+
+val patchedKarmaWebpackPackage =
+    rootProject.layout.projectDirectory.dir("gradle/npm/karma-webpack").asFile.absolutePath.replace("\\", "/")
+
+(rootProject.extensions.findByName("kotlinNodeJs") as? NodeJsRootExtension)?.apply {
+    versions.webpack.version = "5.106.2"
+    versions.webpackCli.version = "7.0.2"
+    versions.karma.version = "npm:karma-maintained@6.4.7"
+    versions.karmaWebpack.version = "file:$patchedKarmaWebpackPackage"
+    versions.mocha.version = "12.0.0-beta-10"
+    versions.kotlinWebHelpers.version = "3.1.0"
 }
 
 // Native test verbosity can be enabled ad-hoc via CLI if needed:

@@ -73,7 +73,7 @@ package ai.solace.klang.internal.runtime
  * @see RuntimeSyscalls For syscall interface
  * @see ai.solace.klang.mem.KMalloc For heap allocation implementation
  */
-@Suppress("MemberVisibilityCanBePrivate", "FunctionName", "CanBeVal", "DoubleNegation", "LocalVariableName", "NAME_SHADOWING", "VARIABLE_WITH_REDUNDANT_INITIALIZER", "RemoveRedundantCallsOfConversionMethods", "EXPERIMENTAL_IS_NOT_ENABLED", "RedundantExplicitType", "RemoveExplicitTypeArguments", "RedundantExplicitType", "unused", "UNCHECKED_CAST", "UNUSED_VARIABLE", "UNUSED_PARAMETER", "NOTHING_TO_INLINE", "PropertyName", "ClassName", "USELESS_CAST", "PrivatePropertyName", "CanBeParameter", "UnusedMainParameter")
+@Suppress("MemberVisibilityCanBePrivate", "FunctionName", "CanBeVal", "DoubleNegation", "LocalVariableName", "NAME_SHADOWING", "VARIABLE_WITH_REDUNDANT_INITIALIZER", "RemoveRedundantCallsOfConversionMethods", "EXPERIMENTAL_IS_NOT_ENABLED", "RedundantExplicitType", "RemoveExplicitTypeArguments", "RedundantExplicitType", "unused", "UNUSED_VARIABLE", "UNUSED_PARAMETER", "NOTHING_TO_INLINE", "PropertyName", "ClassName", "USELESS_CAST", "PrivatePropertyName", "CanBeParameter", "UnusedMainParameter")
 @OptIn(ExperimentalUnsignedTypes::class)
 public/*!*/ abstract class AbstractRuntime(val REQUESTED_HEAP_SIZE: Int = 0, val REQUESTED_STACK_PTR: Int = 0, val __syscalls: RuntimeSyscalls = DummyRuntimeSyscalls) : RuntimeSyscalls by __syscalls {
     val HEAP_SIZE: Int = if (REQUESTED_HEAP_SIZE <= 0) 16 * 1024 * 1024 else REQUESTED_HEAP_SIZE // 16 MB default
@@ -356,8 +356,8 @@ public/*!*/ abstract class AbstractRuntime(val REQUESTED_HEAP_SIZE: Int = 0, val
     val FUNCTIONS: ArrayList<kotlin.reflect.KFunction<*>> = arrayListOf<kotlin.reflect.KFunction<*>>()
     val FUNCTION_PTRS: LinkedHashMap<kotlin.reflect.KFunction<*>, Int> = LinkedHashMap<kotlin.reflect.KFunction<*>, Int>()
 
-    val <T> CFunction<T>.func: T get() = (FUNCTIONS[this.ptr] as T)
-    val <T : kotlin.reflect.KFunction<*>> T.cfunc: CFunction<T> get() = CFunction<T>(FUNCTION_PTRS.getOrPut(this) { FUNCTIONS.add(this); FUNCTIONS.size - 1 })
+    val <T> CFunction<T>.func: T get() = value
+    val <T : kotlin.reflect.KFunction<*>> T.cfunc: CFunction<T> get() = CFunction<T>(FUNCTION_PTRS.getOrPut(this) { FUNCTIONS.add(this); FUNCTIONS.size - 1 }, this)
 
     inline operator fun <TR> CFunction<() -> TR>.invoke(): TR = func.invoke()
     inline operator fun <T0, TR> CFunction<(T0) -> TR>.invoke(v0: T0): TR = func.invoke(v0)
@@ -377,7 +377,6 @@ public/*!*/ abstract class AbstractRuntime(val REQUESTED_HEAP_SIZE: Int = 0, val
     }
 }
 
-@Suppress("UNCHECKED_CAST")
 public/*!*/ open class Runtime(REQUESTED_HEAP_SIZE: Int = 0, REQUESTED_STACK_PTR: Int = 0, __syscalls: RuntimeSyscalls = DummyRuntimeSyscalls) : AbstractRuntime(REQUESTED_HEAP_SIZE, REQUESTED_STACK_PTR, __syscalls) {
     init {
         // Initialize pure-Kotlin heap allocator
@@ -391,8 +390,7 @@ public/*!*/ open class Runtime(REQUESTED_HEAP_SIZE: Int = 0, REQUESTED_STACK_PTR
 
     override fun memset(ptr: CPointer<*>, value: Int, num: Int): CPointer<Unit> {
         ai.solace.klang.mem.GlobalHeap.memset(ptr.ptr, value, num)
-        @Suppress("UNCHECKED_CAST")
-        return ptr as CPointer<Unit>
+        return CPointer<Unit>(ptr.ptr)
     }
     override fun memmove(dest: CPointer<Unit>, src: CPointer<Unit>, num: Int): CPointer<Unit> {
         ai.solace.klang.mem.GlobalHeap.memmove(dest.ptr, src.ptr, num)
@@ -421,7 +419,7 @@ public/*!*/ object DummyRuntimeSyscalls : RuntimeSyscalls
 /** /////////////////// */
 
 public class CPointer<T>(val ptr: Int)
-public class CFunction<T>(val ptr: Int)
+public class CFunction<T>(val ptr: Int, val value: T)
 
 public class FloatPointer(val ptr: Int) {
     operator fun plus(offset: Int): FloatPointer = FloatPointer(this.ptr + offset * 4)

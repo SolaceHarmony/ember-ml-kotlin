@@ -6,7 +6,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("multiplatform") version "2.3.20" apply true
+    kotlin("multiplatform") version "2.3.21" apply true
     id("org.barfuin.gradle.taskinfo") version "2.2.0"
     idea
     id("maven-publish")
@@ -69,7 +69,6 @@ kotlin {
 
     if (enableNative) {
         macosArm64 { configureNative() }
-        macosX64 { configureNative() }
         linuxX64 { configureNative() }
         linuxArm64 { configureNative() }
         mingwX64 { configureNative() }
@@ -77,7 +76,7 @@ kotlin {
         //sourceSets {
         //    val nativeMain = this.create("nativeMain")
         //    val nativeTest = this.create("nativeTest")
-        //    configure(listOf(this.getByName("macosX64Main"), this.getByName("macosArm64Main"), this.getByName("linuxX64Main"), this.getByName("mingwX64Main"))) {
+        //    configure(listOf(this.getByName("macosArm64Main"), this.getByName("linuxX64Main"), this.getByName("mingwX64Main"))) {
         //        dependsOn(nativeMain)
         //    }
         //}
@@ -165,7 +164,6 @@ tasks {
 
 afterEvaluate {
     tasks.findByName("linuxX64Test")?.enabled = false
-    tasks.findByName("macosX64Test")?.enabled = false
     tasks.findByName("mingwX64Test")?.enabled = false
     // Enable macOS aarch64 native tests
     tasks.findByName("macosArm64Test")?.enabled = true
