@@ -7,7 +7,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("multiplatform") version "2.3.21" apply true
-    id("org.barfuin.gradle.taskinfo") version "2.2.0"
+    id("org.barfuin.gradle.taskinfo") version "3.0.2"
     idea
     id("maven-publish")
 }
