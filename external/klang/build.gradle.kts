@@ -89,7 +89,7 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-stdlib-common")
                 // Added for ai.solace.klang parallel array operations and actors
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
             }
         }
         commonTest {
