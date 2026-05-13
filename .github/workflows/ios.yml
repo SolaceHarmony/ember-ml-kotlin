@@ -26,19 +26,36 @@ jobs:
         uses: gradle/actions/setup-gradle@v6.1.0
 
       - name: Build and test iOS targets + XCFramework
-        # Derive the XCFramework task from build.gradle.kts so this
-        # workflow stays portable across kotlinmania repos.
+        # The XCFramework name is derived per-repo from the
+        # `XCFramework("<Name>")` declaration in build.gradle.kts so this
+        # workflow stays portable across the kotlinmania workspace.
         run: |
           XCF_NAME=$(grep -oE 'XCFramework\("[^"]+"\)' build.gradle.kts | head -1 | sed 's/.*"\(.*\)".*/\1/')
           if [ -z "$XCF_NAME" ]; then
             echo "::error::No XCFramework(\"<Name>\") declaration found in build.gradle.kts"
             exit 1
           fi
-          echo "XCFramework name: $XCF_NAME -> task: assemble${XCF_NAME}XCFramework"
+          echo "XCFramework name: $XCF_NAME → task: assemble${XCF_NAME}XCFramework"
           ./gradlew \
             compileKotlinIosArm64 \
             compileKotlinIosSimulatorArm64 \
+            compileKotlinIosX64 \
             iosSimulatorArm64Test \
             "assemble${XCF_NAME}XCFramework" \
-            -PenableIosSimulatorTests=true \
             --no-configuration-cache
+
+      # Native upload-artifact (GitHub-published) makes the test reports
+      # downloadable from the run summary page. `if: success() || failure()`
+      # ensures uploads even when tests fail. Combined with the per-test
+      # testLogging events in build.gradle.kts, the audit trail covers both
+      # raw-log streaming and post-run inspection.
+      - name: Upload test reports (iOS)
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-ios
+          path: |
+            build/reports/tests/
+            build/test-results/
+          retention-days: 7
+          if-no-files-found: warn

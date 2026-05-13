@@ -1,70 +1,141 @@
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.ClasspathNormalizer
+import org.gradle.api.tasks.testing.AbstractTestTask
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsEnvSpec
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension
 import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootEnvSpec
-import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
 import org.jetbrains.kotlin.gradle.targets.wasm.nodejs.WasmNodeJsEnvSpec
 import org.jetbrains.kotlin.gradle.targets.wasm.yarn.WasmYarnRootEnvSpec
 
 plugins {
     kotlin("multiplatform") version "2.3.21"
     kotlin("plugin.serialization") version "2.3.21"
-    id("com.github.ben-manes.versions") version "0.54.0"
-    id("maven-publish")
+    id("com.android.kotlin.multiplatform.library") version "9.2.1"
+    id("com.vanniktech.maven.publish") version "0.36.0"
 }
 
-group = "ai.solace.ember"
+group = "io.github.kotlinmania"
 version = "0.1.1"
 
-repositories {
-    mavenLocal()
-    mavenCentral()
+val androidSdkDir: String? =
+    providers.environmentVariable("ANDROID_SDK_ROOT").orNull
+        ?: providers.environmentVariable("ANDROID_HOME").orNull
+
+if (androidSdkDir != null && file(androidSdkDir).exists()) {
+    val localProperties = rootProject.file("local.properties")
+    if (!localProperties.exists()) {
+        val sdkDirPropertyValue = file(androidSdkDir).absolutePath.replace("\\", "/")
+        localProperties.writeText("sdk.dir=$sdkDirPropertyValue")
+    }
 }
 
-val kcoroLib = layout.projectDirectory.file("external/kcoro/lab/mirror/core/build/lib/libkcoro.a")
-
 kotlin {
-    // Native targets for Kotlin Native build
-    linuxX64()
+    applyDefaultHierarchyTemplate()
+
+    sourceSets.all {
+        languageSettings.optIn("kotlin.time.ExperimentalTime")
+        languageSettings.optIn("kotlin.concurrent.atomics.ExperimentalAtomicApi")
+    }
+
+    compilerOptions {
+        allWarningsAsErrors.set(true)
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+
+    val xcf = XCFramework("EmberML")
+
     macosArm64 {
         binaries {
-            executable("poc") {
-                entryPoint = "ai.solace.klang.poc.main"
-            }
-            executable("limbBench") {
-                entryPoint = "ai.solace.ember.bench.main"
-            }
-            executable("heapBench") {
-                entryPoint = "ai.solace.ember.bench.heapBenchMain"
-            }
+            framework { baseName = "EmberML"; xcf.add(this) }
+            executable("poc") { entryPoint = "ai.solace.klang.poc.main" }
+            executable("limbBench") { entryPoint = "ai.solace.ember.bench.main" }
+            executable("heapBench") { entryPoint = "ai.solace.ember.bench.heapBenchMain" }
         }
     }
+    iosArm64 {
+        binaries.framework { baseName = "EmberML"; xcf.add(this) }
+    }
+    iosSimulatorArm64 {
+        binaries.framework { baseName = "EmberML"; xcf.add(this) }
+    }
+    iosX64 {
+        binaries.framework { baseName = "EmberML"; xcf.add(this) }
+    }
+
+    tvosArm64 {
+        binaries.framework { baseName = "EmberML"; xcf.add(this) }
+    }
+    tvosSimulatorArm64 {
+        binaries.framework { baseName = "EmberML"; xcf.add(this) }
+    }
+
+    watchosArm32 {
+        binaries.framework { baseName = "EmberML"; xcf.add(this) }
+    }
+    watchosArm64 {
+        binaries.framework { baseName = "EmberML"; xcf.add(this) }
+    }
+    watchosDeviceArm64 {
+        binaries.framework { baseName = "EmberML"; xcf.add(this) }
+    }
+    watchosSimulatorArm64 {
+        binaries.framework { baseName = "EmberML"; xcf.add(this) }
+    }
+
+    linuxX64()
+    linuxArm64()
     mingwX64()
+
+    androidNativeArm32()
+    androidNativeArm64()
+    androidNativeX86()
+    androidNativeX64()
+
+    js {
+        browser()
+        nodejs()
+    }
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        browser()
+        nodejs()
+    }
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmWasi {
+        nodejs()
+    }
 
     swiftExport {
         moduleName = "EmberML"
         flattenPackage = "ai.solace.ember"
     }
 
-    // JavaScript target (disabled until we add a Node N-API/WASM addon to supply
-    // zero-copy C-layout buffers; JS GC heap is too small for parity today).
-    /*
-    js(IR) {
-        browser()
-        nodejs()
+    android {
+        namespace = "ai.solace.ember"
+        compileSdk = 34
+        minSdk = 24
+        withHostTestBuilder {}.configure {}
+        withDeviceTestBuilder {
+            sourceSetTreeName = "test"
+        }
     }
-    */
 
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(kotlin("stdlib"))
-                implementation("org.jetbrains.kotlinx:atomicfu:0.32.1")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.4.0")
+                implementation("org.jetbrains.kotlinx:atomicfu:0.32.1")
                 implementation("ai.solace:klang:0.7.2")
             }
-            kotlin.srcDir("src/commonMain/kotlin")
-            resources.srcDir("src/commonMain/resources")
             kotlin.exclude(
                 "ai/solace/ember/backend/metal/**",
                 "ai/solace/ember/backend/storage/**",
@@ -85,63 +156,61 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
             }
             kotlin.setSrcDirs(listOf("src/commonTest/kotlin/ai/solace/limbengine"))
-            resources.setSrcDirs(emptyList<File>())
         }
-        // Native source sets
         val nativeMain by creating {
             dependsOn(commonMain)
-            dependencies {
-                // Native-specific dependencies
-            }
-            kotlin.srcDir("src/nativeMain/kotlin")
         }
         val nativeTest by creating {
             dependsOn(commonTest)
-            dependencies {
-                // Native-specific test dependencies
-            }
-            kotlin.setSrcDirs(emptyList<File>())
         }
-
-        // Configure all native targets to use the native source sets
-        val linuxX64Main by getting {
-            dependsOn(nativeMain)
-        }
+        val linuxX64Main by getting { dependsOn(nativeMain) }
         val linuxX64Test by getting { dependsOn(nativeTest) }
         val macosArm64Main by getting {
             dependsOn(nativeMain)
             kotlin.setSrcDirs(emptyList<File>())
         }
         val macosArm64Test by getting { dependsOn(nativeTest) }
-        val mingwX64Main by getting {
-            dependsOn(nativeMain)
-        }
+        val mingwX64Main by getting { dependsOn(nativeMain) }
         val mingwX64Test by getting { dependsOn(nativeTest) }
+    }
+    jvmToolchain(21)
+}
 
-        // JavaScript source sets (JS target currently disabled in kotlin { } to prioritize native)
+tasks.withType<AbstractTestTask>().configureEach {
+    testLogging {
+        events(
+            TestLogEvent.STARTED,
+            TestLogEvent.PASSED,
+            TestLogEvent.SKIPPED,
+            TestLogEvent.FAILED,
+            TestLogEvent.STANDARD_OUT,
+            TestLogEvent.STANDARD_ERROR,
+        )
+        exceptionFormat = TestExceptionFormat.FULL
+        showCauses = true
+        showExceptions = true
+        showStackTraces = true
+        showStandardStreams = true
     }
 }
 
-// Ember currently ships with Kotlin/JS targets disabled (see kotlin { } above).
-// Keep the Kotlin/JS hardening configuration guarded so it turns on automatically
-// when JS/Wasm targets are re-enabled without breaking native-only builds.
-(rootProject.extensions.findByName("kotlinNodeJsSpec") as? NodeJsEnvSpec)?.apply {
-    version.set("22.22.2")
+rootProject.extensions.configure<NodeJsEnvSpec>("kotlinNodeJsSpec") {
+    version.set("24.15.0")
 }
 
-(rootProject.extensions.findByName("kotlinWasmNodeJsSpec") as? WasmNodeJsEnvSpec)?.apply {
-    version.set("22.22.2")
+rootProject.extensions.configure<WasmNodeJsEnvSpec>("kotlinWasmNodeJsSpec") {
+    version.set("24.15.0")
 }
 
-(rootProject.extensions.findByName("kotlinYarnSpec") as? YarnRootEnvSpec)?.apply {
+rootProject.extensions.configure<YarnRootEnvSpec>("kotlinYarnSpec") {
     version.set("1.22.22")
 }
 
-(rootProject.extensions.findByName("kotlinWasmYarnSpec") as? WasmYarnRootEnvSpec)?.apply {
+rootProject.extensions.configure<WasmYarnRootEnvSpec>("kotlinWasmYarnSpec") {
     version.set("1.22.22")
 }
 
-(rootProject.extensions.findByName("kotlinYarn") as? YarnRootExtension)?.apply {
+rootProject.extensions.configure<YarnRootExtension>("kotlinYarn") {
     resolution("diff", "8.0.3")
     resolution("**/diff", "8.0.3")
     resolution("serialize-javascript", "7.0.5")
@@ -168,10 +237,10 @@ kotlin {
     resolution("**/socket.io-parser", "4.2.6")
 }
 
-val patchedKarmaWebpackPackage =
-    rootProject.layout.projectDirectory.dir("gradle/npm/karma-webpack").asFile.absolutePath.replace("\\", "/")
 
-(rootProject.extensions.findByName("kotlinNodeJs") as? NodeJsRootExtension)?.apply {
+val patchedKarmaWebpackPackage = rootProject.layout.projectDirectory.dir("gradle/npm/karma-webpack").asFile.absolutePath.replace("\\", "/")
+
+rootProject.extensions.configure<NodeJsRootExtension>("kotlinNodeJs") {
     versions.webpack.version = "5.106.2"
     versions.webpackCli.version = "7.0.2"
     versions.karma.version = "npm:karma-maintained@6.4.7"
@@ -180,82 +249,43 @@ val patchedKarmaWebpackPackage =
     versions.kotlinWebHelpers.version = "3.1.0"
 }
 
-// Native test verbosity can be enabled ad-hoc via CLI if needed:
-//   ./gradlew macosArm64Test --info --rerun-tasks \
-//      -Dkotlin.tests.verbose=true
+mavenPublishing {
+    publishToMavenCentral()
+    signAllPublications()
 
-// Convenience task: run the Kotlin/Native test binary directly with a simple, verbose logger
-// so per-test names and PASS/FAIL lines are printed to the console.
-tasks.register<Exec>("nativeTestVerbose") {
-    description = "Run macOS arm64 native tests with verbose logger"
-    group = "verification"
-    dependsOn("linkDebugTestMacosArm64")
-    doFirst {
-        val bin = layout.projectDirectory.file("build/bin/macosArm64/debugTest/test.kexe").asFile
-        if (!bin.exists()) throw GradleException("Native test binary not found: $bin. Run linkDebugTestMacosArm64 first.")
-        commandLine(bin.absolutePath, "--ktest_logger=SIMPLE")
-    }
-}
+    coordinates(group.toString(), "ember-ml-kotlin", version.toString())
 
-// Policy: forbid handled exceptions in tests. Fail build if tests contain try/catch or
-// exception-wrapping helpers (assertFails, runCatching, etc.).
-// Toggle with -PallowHandledExceptionsInTests=true to bypass, if needed temporarily.
-tasks.register("forbidExceptionsInTests") {
-    group = "verification"
-    description = "Fails if tests contain try/catch or exception-wrapping helpers"
-    doLast {
-        val allow = (project.findProperty("allowHandledExceptionsInTests") as String?)?.toBoolean() == true
-        if (allow) return@doLast
+    pom {
+        name.set("ember-ml-kotlin")
+        description.set("Kotlin Multiplatform port of openai/ember-ml — coding agent CLI")
+        inceptionYear.set("2026")
+        url.set("https://github.com/KotlinMania/ember-ml-kotlin")
 
-        // Only scan active test sources (we currently point commonTest to this subdir)
-        val testRoots = listOf(
-            layout.projectDirectory.dir("src/commonTest/kotlin/ai/solace/limbengine"),
-        )
-        val forbidden = listOf(
-            "\\btry\\s*\\{",
-            "\\bcatch\\s*\\(",
-            "\\bassertFails\\b",
-            "\\bassertFailsWith\\b",
-            "\\brunCatching\\s*\\(",
-            "\\bResult\\.runCatching\\s*\\(",
-        ).map { Regex(it) }
-
-        val offenders = mutableListOf<String>()
-        testRoots.forEach { root ->
-            if (!root.asFile.exists()) return@forEach
-            root.asFile.walkTopDown()
-                .filter { it.isFile && it.extension == "kt" }
-                .forEach { file ->
-                    val text = file.readText()
-                    if (forbidden.any { it.containsMatchIn(text) }) {
-                        offenders += file.relativeTo(layout.projectDirectory.asFile).path
-                    }
-                }
+        licenses {
+            license {
+                name.set("Apache-2.0")
+                url.set("https://opensource.org/licenses/Apache-2.0")
+                distribution.set("repo")
+            }
         }
-        if (offenders.isNotEmpty()) {
-            throw GradleException(
-                "Handled exceptions are forbidden in tests. Offending files:\n" + offenders.joinToString("\n")
-            )
+
+        developers {
+            developer {
+                id.set("sydneyrenee")
+                name.set("Sydney Renee")
+                email.set("sydney@solace.ofharmony.ai")
+                url.set("https://github.com/sydneyrenee")
+            }
+        }
+
+        scm {
+            url.set("https://github.com/KotlinMania/ember-ml-kotlin")
+            connection.set("scm:git:git://github.com/KotlinMania/ember-ml-kotlin.git")
+            developerConnection.set("scm:git:ssh://github.com/KotlinMania/ember-ml-kotlin.git")
         }
     }
 }
 
-tasks.named("macosArm64Test").configure { dependsOn("forbidExceptionsInTests") }
-tasks.named("nativeTestVerbose").configure { dependsOn("forbidExceptionsInTests") }
-
-publishing {
-    publications {
-        withType<MavenPublication> {
-            artifactId = "ember-ml-kotlin"
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// CodeQL Java/Kotlin extraction task
-//
-// .github/workflows/codeql.yml invokes ./gradlew codeqlCompileJvm to feed
-// kotlinc-compiled commonMain through the CodeQL Java agent.
 val codeqlKotlinc: Configuration by configurations.creating {
     description = "Kotlin compiler (CodeQL extraction target only — not published)"
     isCanBeResolved = true
@@ -274,7 +304,7 @@ dependencies {
     codeqlSourceClasspath("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.11.0")
     codeqlSourceClasspath("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.11.0")
     codeqlSourceClasspath("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.11.0")
-    codeqlSourceClasspath("org.jetbrains.kotlinx:kotlinx-datetime-jvm:0.7.1")
+    codeqlSourceClasspath("org.jetbrains.kotlinx:kotlinx-datetime-jvm:0.8.0")
     codeqlSourceClasspath("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.4.0")
 }
 
@@ -320,11 +350,32 @@ val codeqlCompileJvm = tasks.register<JavaExec>("codeqlCompileJvm") {
             "-no-reflect",
             "-language-version", "2.3",
             "-api-version", "2.3",
+            "-Xexpect-actual-classes",
+            "-opt-in", "kotlin.time.ExperimentalTime",
+            "-opt-in", "kotlin.concurrent.atomics.ExperimentalAtomicApi",
         ) + sourceFiles.map { it.absolutePath }
     }
 }
 
+tasks.register<Exec>("setupAndroidSdk") {
+    group = "setup"
+    description = "Downloads and configures the project-local Android SDK."
+    commandLine("./setup-android-sdk.sh")
+}
 
 tasks.register("test") {
-    dependsOn("macosArm64Test")
+    group = "verification"
+    description =
+        "Runs the host-portable test suite (macOS + JS + WasmJS + Android unit). " +
+        "Non-host native targets (mingwX64, linuxX64) only run on their own host."
+
+    val defaultTestTasks = listOf(
+        "macosArm64Test",
+        "jsNodeTest",
+        "wasmJsNodeTest",
+        "compileAndroidMain",
+        "assembleUnitTest",
+    )
+
+    dependsOn(defaultTestTasks.mapNotNull { taskName -> tasks.findByName(taskName) } )
 }

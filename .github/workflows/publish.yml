@@ -11,22 +11,14 @@ on:
         required: false
         default: false
 
-# Publishing targets Maven Central via Sonatype OSSRH using external secrets;
-# no GitHub-side write permissions are needed. Checkout only requires read.
-permissions:
-  contents: read
-
 jobs:
   publish:
     name: Publish to Maven Central
     runs-on: macos-latest
 
-    permissions:
-      contents: read
-
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
 
       - name: Set up JDK 21
         uses: actions/setup-java@v5.2.0
