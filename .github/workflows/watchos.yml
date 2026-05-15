@@ -1,4 +1,4 @@
-name: Build (Windows)
+name: Build (watchOS)
 
 on:
   workflow_call:
@@ -8,8 +8,8 @@ permissions:
 
 jobs:
   build:
-    name: Build and Test (Windows)
-    runs-on: windows-latest
+    name: Build and Test (watchOS)
+    runs-on: macos-latest
     permissions:
       contents: read
     steps:
@@ -25,14 +25,21 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6.1.0
 
-      - name: Build and test Windows target
-        run: ./gradlew mingwX64Test --no-configuration-cache
+      - name: Build and test watchOS targets
+        run: >
+          ./gradlew
+          compileKotlinWatchosArm32
+          compileKotlinWatchosArm64
+          compileKotlinWatchosDeviceArm64
+          compileKotlinWatchosSimulatorArm64
+          watchosSimulatorArm64Test
+          --no-configuration-cache
 
-      - name: Upload test reports (Windows)
+      - name: Upload test reports (watchOS)
         if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
-          name: test-reports-windows
+          name: test-reports-watchos
           path: |
             build/reports/tests/
             build/test-results/

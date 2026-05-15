@@ -50,3 +50,14 @@ jobs:
           jsBrowserTest
           jsNodeTest
           --no-configuration-cache
+
+      - name: Upload test reports (JS)
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-js
+          path: |
+            build/reports/tests/
+            build/test-results/
+          retention-days: 7
+          if-no-files-found: warn
