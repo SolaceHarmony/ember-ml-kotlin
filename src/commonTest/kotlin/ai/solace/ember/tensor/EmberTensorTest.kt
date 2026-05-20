@@ -314,6 +314,77 @@ class EmberTensorTest {
         assertEquals(3.0f, data[4], 0.0001f)
         assertEquals(6.0f, data[5], 0.0001f)
     }
+
+    @Test
+    fun testTranspose3DReversesAxesByDefault() {
+        val x = EmberTensor.fromFloatArray(
+            FloatArray(24) { it.toFloat() },
+            intArrayOf(2, 3, 4),
+        )
+        val y = x.transpose()
+
+        assertEquals(intArrayOf(4, 3, 2).contentToString(), y.shape.contentToString())
+        assertEquals(
+            floatArrayOf(
+                0f, 12f,
+                4f, 16f,
+                8f, 20f,
+                1f, 13f,
+                5f, 17f,
+                9f, 21f,
+                2f, 14f,
+                6f, 18f,
+                10f, 22f,
+                3f, 15f,
+                7f, 19f,
+                11f, 23f,
+            ).contentToString(),
+            y.toFloatArray().contentToString(),
+        )
+    }
+
+    @Test
+    fun testTranspose3DUsesExplicitAxes() {
+        val x = EmberTensor.fromFloatArray(
+            FloatArray(24) { it.toFloat() },
+            intArrayOf(2, 3, 4),
+        )
+        val y = x.transpose(intArrayOf(1, 2, 0))
+
+        assertEquals(intArrayOf(3, 4, 2).contentToString(), y.shape.contentToString())
+        assertEquals(
+            floatArrayOf(
+                0f, 12f,
+                1f, 13f,
+                2f, 14f,
+                3f, 15f,
+                4f, 16f,
+                5f, 17f,
+                6f, 18f,
+                7f, 19f,
+                8f, 20f,
+                9f, 21f,
+                10f, 22f,
+                11f, 23f,
+            ).contentToString(),
+            y.toFloatArray().contentToString(),
+        )
+    }
+
+    @Test
+    fun testTransposeRejectsInvalidAxes() {
+        val x = EmberTensor.fromFloatArray(FloatArray(24) { it.toFloat() }, intArrayOf(2, 3, 4))
+
+        assertFailsWith<IllegalArgumentException> {
+            x.transpose(intArrayOf(0, 1))
+        }
+        assertFailsWith<IllegalArgumentException> {
+            x.transpose(intArrayOf(0, 1, 1))
+        }
+        assertFailsWith<IllegalArgumentException> {
+            x.transpose(intArrayOf(0, 1, 3))
+        }
+    }
     
     @Test
     fun testMatmul() {

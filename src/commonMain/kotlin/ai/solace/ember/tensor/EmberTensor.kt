@@ -161,37 +161,45 @@ class EmberTensor private constructor(
         require(permutation.size == ndim) { 
             "Transpose axes must match number of dimensions" 
         }
-        
-        // For now, implement simple 2D transpose
-        if (ndim == 2 && permutation.contentEquals(intArrayOf(1, 0))) {
-            return transpose2D()
+        require(permutation.all { it in 0 until ndim }) {
+            "Transpose axes must be valid for ${ndim}D tensor"
         }
-        
-        // TODO: General transpose for N-dimensional tensors
-        // Current implementation only supports 2D transpose (matrix transpose).
-        // For higher dimensions, would need to implement generic permutation logic:
-        //   1. Compute new strides from permutation
-        //   2. Reorder data according to new layout
-        //   3. Handle edge cases (identity permutation, etc.)
-        // Priority: MEDIUM (needed for advanced tensor manipulation)
-        // Timeline: Next iteration after basic features are complete
-        throw NotImplementedError("General transpose not yet implemented. Only 2D transpose is supported.")
-    }
-    
-    private fun transpose2D(): EmberTensor {
-        require(ndim == 2) { "2D transpose requires 2D tensor" }
-        val rows = shape[0]
-        val cols = shape[1]
-        val data = storage.toFloatArray()
-        val transposed = FloatArray(size)
-        
-        for (i in 0 until rows) {
-            for (j in 0 until cols) {
-                transposed[j * rows + i] = data[i * cols + j]
+        require(permutation.toSet().size == ndim) {
+            "Transpose axes must be a permutation without duplicates"
+        }
+
+        val newShape = IntArray(ndim) { axis -> shape[permutation[axis]] }
+        val inputData = storage.toFloatArray()
+        val outputData = FloatArray(size)
+        val inputStrides = rowMajorStrides(shape)
+        val outputStrides = rowMajorStrides(newShape)
+
+        for (outputIndex in outputData.indices) {
+            var remaining = outputIndex
+            var inputIndex = 0
+
+            for (outputAxis in 0 until ndim) {
+                val stride = outputStrides[outputAxis]
+                val coordinate = if (stride == 0) 0 else remaining / stride
+                remaining = if (stride == 0) 0 else remaining % stride
+                val inputAxis = permutation[outputAxis]
+                inputIndex += coordinate * inputStrides[inputAxis]
             }
+
+            outputData[outputIndex] = inputData[inputIndex]
         }
         
-        return fromFloatArray(transposed, intArrayOf(cols, rows), dtype)
+        return fromFloatArray(outputData, newShape, dtype)
+    }
+
+    private fun rowMajorStrides(targetShape: IntArray): IntArray {
+        val strides = IntArray(targetShape.size)
+        var stride = 1
+        for (axis in targetShape.indices.reversed()) {
+            strides[axis] = stride
+            stride *= targetShape[axis]
+        }
+        return strides
     }
     
     fun matmul(other: EmberTensor): EmberTensor {
