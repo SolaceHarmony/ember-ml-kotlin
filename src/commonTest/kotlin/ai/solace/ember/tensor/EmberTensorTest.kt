@@ -2,7 +2,7 @@ package ai.solace.ember.tensor
 
 import ai.solace.ember.dtype.DType
 import ai.solace.ember.scalar.Scalar
-import ai.solace.klang.fp.CFloat32
+import io.github.kotlinmania.klang.fp.CFloat32
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

@@ -1,9 +1,9 @@
 package ai.solace.ember.scalar
 
 import ai.solace.ember.dtype.DType
-import ai.solace.klang.fp.CDouble
-import ai.solace.klang.fp.CFloat16
-import ai.solace.klang.fp.CFloat32
+import io.github.kotlinmania.klang.fp.CFloat64
+import io.github.kotlinmania.klang.fp.CFloat16
+import io.github.kotlinmania.klang.fp.CFloat32
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -26,15 +26,15 @@ class ScalarTest {
     
     @Test
     fun testFloat64Creation() {
-        val s = Scalar.Float64(CDouble.fromDouble(5.0))
+        val s = Scalar.Float64(CFloat64.fromDouble(5.0))
         assertEquals(DType.Float64, s.dtype)
         assertEquals(5.0, s.toDouble(), 0.0001)
     }
 
     @Test
     fun smokeFloat64Ops() {
-        val a = Scalar.Float64(CDouble.fromDouble(2.0))
-        val b = Scalar.Float64(CDouble.fromDouble(3.0))
+        val a = Scalar.Float64(CFloat64.fromDouble(2.0))
+        val b = Scalar.Float64(CFloat64.fromDouble(3.0))
 
         assertEquals(5.0, (a + b).toDouble(), 0.0)
         assertEquals(-1.0, (a - b).toDouble(), 0.0)
@@ -66,8 +66,8 @@ class ScalarTest {
         val b = Scalar.Float32(CFloat32.fromFloat(3.0f))
         assertTrue(a < b)
         assertTrue(b > a)
-        val c = Scalar.Float64(CDouble.fromDouble(4.0))
-        val d = Scalar.Float64(CDouble.fromDouble(4.0))
+        val c = Scalar.Float64(CFloat64.fromDouble(4.0))
+        val d = Scalar.Float64(CFloat64.fromDouble(4.0))
         assertTrue(c >= d)
         assertTrue(c <= d)
     }

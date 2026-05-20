@@ -2,8 +2,8 @@ package ai.solace.ember.bench
 
 import ai.solace.ember.backend.klang.LimbArray
 import ai.solace.ember.backend.klang.LimbEngine
-import ai.solace.klang.bitwise.BitShiftConfig
-import ai.solace.klang.bitwise.BitShiftMode
+import io.github.kotlinmania.klang.bitwise.BitShiftConfig
+import io.github.kotlinmania.klang.bitwise.BitShiftMode
 import kotlin.math.abs
 import kotlin.math.min
 import kotlin.random.Random

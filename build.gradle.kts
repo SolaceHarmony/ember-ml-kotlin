@@ -132,7 +132,7 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.4.0")
                 implementation("org.jetbrains.kotlinx:atomicfu:0.32.1")
-                implementation("ai.solace:klang:0.7.2")
+                implementation("io.github.kotlinmania:klang:0.8.0")
             }
         }
         val commonTest by getting {

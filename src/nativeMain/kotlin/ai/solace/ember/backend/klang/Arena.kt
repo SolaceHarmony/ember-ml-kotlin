@@ -1,6 +1,6 @@
 package ai.solace.ember.backend.klang
 
-import ai.solace.klang.mem.GlobalHeap
+import io.github.kotlinmania.klang.mem.GlobalHeap
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
