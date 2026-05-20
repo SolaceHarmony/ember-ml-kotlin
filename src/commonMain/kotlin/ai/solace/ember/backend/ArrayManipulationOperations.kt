@@ -15,7 +15,7 @@ class ArrayManipulationOperations(private val backend: OptimizedMegaTensorBacken
     /**
      * Stacks tensors vertically (row-wise).
      */
-    fun vstack(tensors: List<Any>): Any {
+    fun vstack(tensors: List<Any>): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         if (tensors.isEmpty()) {
             throw IllegalArgumentException("Cannot vstack empty list of tensors")
         }
@@ -68,7 +68,7 @@ class ArrayManipulationOperations(private val backend: OptimizedMegaTensorBacken
     /**
      * Stacks tensors horizontally (column-wise).
      */
-    fun hstack(tensors: List<Any>): Any {
+    fun hstack(tensors: List<Any>): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         if (tensors.isEmpty()) {
             throw IllegalArgumentException("Cannot hstack empty list of tensors")
         }
@@ -137,7 +137,7 @@ class ArrayManipulationOperations(private val backend: OptimizedMegaTensorBacken
     /**
      * Concatenates tensors along a specified axis.
      */
-    fun concatenate(tensors: List<Any>, axis: Int = 0): Any {
+    fun concatenate(tensors: List<Any>, axis: Int = 0): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         if (tensors.isEmpty()) {
             throw IllegalArgumentException("Cannot concatenate empty list of tensors")
         }
@@ -200,7 +200,7 @@ class ArrayManipulationOperations(private val backend: OptimizedMegaTensorBacken
     /**
      * Repeats elements of a tensor.
      */
-    fun repeat(tensor: Any, repeats: Int, axis: Int? = null): Any {
+    fun repeat(tensor: Any, repeats: Int, axis: Int? = null): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
         
         if (repeats < 0) {
@@ -256,7 +256,7 @@ class ArrayManipulationOperations(private val backend: OptimizedMegaTensorBacken
     /**
      * Tiles a tensor by repeating it along multiple axes.
      */
-    fun tile(tensor: Any, reps: IntArray): Any {
+    fun tile(tensor: Any, reps: IntArray): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
         
         if (reps.any { it < 0 }) {

@@ -595,7 +595,7 @@ class MegaTensorBackend : Backend {
                 megaNumber.shiftLeft(createMegaBinaryFromInt(shiftsValue))
             } else {
                 // Convert to MegaBinary, perform operation, convert back
-                val binaryNum = MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+                val binaryNum = megaNumberToBinary(megaNumber)
                 val result = binaryNum.shiftLeft(createMegaBinaryFromInt(shiftsValue))
                 convertBinaryToMegaNumber(result, x.dtype)
             }
@@ -618,7 +618,7 @@ class MegaTensorBackend : Backend {
             val binary = if (megaNumber is MegaBinary) {
                 megaNumber.shiftRight(createMegaBinaryFromInt(shiftsValue))
             } else {
-                val binaryNum = MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+                val binaryNum = megaNumberToBinary(megaNumber)
                 val result = binaryNum.shiftRight(createMegaBinaryFromInt(shiftsValue))
                 convertBinaryToMegaNumber(result, x.dtype)
             }
@@ -645,7 +645,7 @@ class MegaTensorBackend : Backend {
                 val rightPart = megaNumber.shiftRight(createMegaBinaryFromInt(bitWidth - normalizedShift))
                 leftPart.bitwiseOr(rightPart)
             } else {
-                val binaryNum = MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+                val binaryNum = megaNumberToBinary(megaNumber)
                 val normalizedShift = shiftsValue % bitWidth
                 val leftPart = binaryNum.shiftLeft(createMegaBinaryFromInt(normalizedShift))
                 val rightPart = binaryNum.shiftRight(createMegaBinaryFromInt(bitWidth - normalizedShift))
@@ -674,7 +674,7 @@ class MegaTensorBackend : Backend {
                 val leftPart = megaNumber.shiftLeft(createMegaBinaryFromInt(bitWidth - normalizedShift))
                 rightPart.bitwiseOr(leftPart)
             } else {
-                val binaryNum = MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+                val binaryNum = megaNumberToBinary(megaNumber)
                 val normalizedShift = shiftsValue % bitWidth
                 val rightPart = binaryNum.shiftRight(createMegaBinaryFromInt(normalizedShift))
                 val leftPart = binaryNum.shiftLeft(createMegaBinaryFromInt(bitWidth - normalizedShift))
@@ -696,7 +696,7 @@ class MegaTensorBackend : Backend {
         }
 
         val resultData = applyBitwiseOperation(x.data) { megaNumber ->
-            val binary = if (megaNumber is MegaBinary) megaNumber else MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+            val binary = megaNumberToBinary(megaNumber)
             val count = binary.toBits().count { it == 1 }
             MegaInteger.fromValue(count)
         }
@@ -713,7 +713,7 @@ class MegaTensorBackend : Backend {
         }
 
         val resultData = applyBitwiseOperation(x.data) { megaNumber ->
-            val binary = if (megaNumber is MegaBinary) megaNumber else MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+            val binary = megaNumberToBinary(megaNumber)
             val bits = binary.toBits()
             val bitWidth = when (x.dtype) {
                 DType.UINT8 -> 8
@@ -738,7 +738,7 @@ class MegaTensorBackend : Backend {
 
         val positionValue = convertToShiftValue(position)
         val resultData = applyBitwiseOperation(x.data) { megaNumber ->
-            val binary = if (megaNumber is MegaBinary) megaNumber else MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+            val binary = megaNumberToBinary(megaNumber)
             val bit = binary.getBit(createMegaBinaryFromInt(positionValue))
             MegaInteger.fromValue(if (bit) 1 else 0)
         }
@@ -757,7 +757,7 @@ class MegaTensorBackend : Backend {
         val positionValue = convertToShiftValue(position)
         val valueValue = convertToShiftValue(value) != 0
         val resultData = applyBitwiseOperation(x.data) { megaNumber ->
-            val binary = if (megaNumber is MegaBinary) megaNumber.copy() else MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+            val binary = megaNumberToBinary(megaNumber).copy()
             binary.setBit(createMegaBinaryFromInt(positionValue), valueValue)
             if (megaNumber is MegaBinary) binary else convertBinaryToMegaNumber(binary, x.dtype)
         }
@@ -775,7 +775,7 @@ class MegaTensorBackend : Backend {
 
         val positionValue = convertToShiftValue(position)
         val resultData = applyBitwiseOperation(x.data) { megaNumber ->
-            val binary = if (megaNumber is MegaBinary) megaNumber.copy() else MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+            val binary = megaNumberToBinary(megaNumber).copy()
             val currentBit = binary.getBit(createMegaBinaryFromInt(positionValue))
             binary.setBit(createMegaBinaryFromInt(positionValue), !currentBit)
             if (megaNumber is MegaBinary) binary else convertBinaryToMegaNumber(binary, x.dtype)
@@ -797,8 +797,8 @@ class MegaTensorBackend : Backend {
         }
 
         val resultData = applyBinaryBitwiseOperation(x.data, y.data) { a, b ->
-            val binaryA = if (a is MegaBinary) a else MegaBinary(DefaultConversionOperations.toDecimalString(a))
-            val binaryB = if (b is MegaBinary) b else MegaBinary(DefaultConversionOperations.toDecimalString(b))
+            val binaryA = megaNumberToBinary(a)
+            val binaryB = megaNumberToBinary(b)
             val result = binaryA.bitwiseAnd(binaryB)
             if (a is MegaBinary) result else convertBinaryToMegaNumber(result, x.dtype)
         }
@@ -820,8 +820,8 @@ class MegaTensorBackend : Backend {
         }
 
         val resultData = applyBinaryBitwiseOperation(x.data, y.data) { a, b ->
-            val binaryA = if (a is MegaBinary) a else MegaBinary(DefaultConversionOperations.toDecimalString(a))
-            val binaryB = if (b is MegaBinary) b else MegaBinary(DefaultConversionOperations.toDecimalString(b))
+            val binaryA = megaNumberToBinary(a)
+            val binaryB = megaNumberToBinary(b)
             val result = binaryA.bitwiseOr(binaryB)
             if (a is MegaBinary) result else convertBinaryToMegaNumber(result, x.dtype)
         }
@@ -843,8 +843,8 @@ class MegaTensorBackend : Backend {
         }
 
         val resultData = applyBinaryBitwiseOperation(x.data, y.data) { a, b ->
-            val binaryA = if (a is MegaBinary) a else MegaBinary(DefaultConversionOperations.toDecimalString(a))
-            val binaryB = if (b is MegaBinary) b else MegaBinary(DefaultConversionOperations.toDecimalString(b))
+            val binaryA = megaNumberToBinary(a)
+            val binaryB = megaNumberToBinary(b)
             val result = binaryA.bitwiseXor(binaryB)
             if (a is MegaBinary) result else convertBinaryToMegaNumber(result, x.dtype)
         }
@@ -862,7 +862,7 @@ class MegaTensorBackend : Backend {
         }
 
         val resultData = applyBitwiseOperation(x.data) { megaNumber ->
-            val binary = if (megaNumber is MegaBinary) megaNumber else MegaBinary(DefaultConversionOperations.toDecimalString(megaNumber))
+            val binary = megaNumberToBinary(megaNumber)
             val result = binary.bitwiseNot()
             if (megaNumber is MegaBinary) result else convertBinaryToMegaNumber(result, x.dtype)
         }
@@ -970,7 +970,8 @@ class MegaTensorBackend : Backend {
             is MegaTensor -> {
                 if (shifts.shape.contentEquals(intArrayOf())) {
                     // Scalar tensor
-                    val megaNumber = shifts.data as MegaNumber
+                    val megaNumber = shifts.data.firstOrNull() as? MegaNumber
+                        ?: throw IllegalArgumentException("Shift value tensor must contain a MegaNumber scalar")
                     when (megaNumber) {
                         is MegaInteger -> DefaultConversionOperations.toDecimalString(megaNumber).toInt()
                         is MegaFloat -> DefaultConversionOperations.toDecimalString(megaNumber).split("*")[0].trim().toDouble().toInt()
@@ -988,7 +989,22 @@ class MegaTensorBackend : Backend {
      * Create a MegaBinary from an integer value.
      */
     private fun createMegaBinaryFromInt(value: Int): MegaBinary {
-        return MegaBinary(value.toString())
+        return MegaBinary.fromInt(value)
+    }
+
+    private fun megaNumberToBinary(megaNumber: MegaNumber): MegaBinary {
+        if (megaNumber is MegaBinary) return megaNumber
+
+        val decimal = DefaultConversionOperations.toDecimalString(megaNumber)
+        val wholeNumber = decimal.substringBefore("*")
+            .substringBefore(".")
+            .trim()
+
+        if (wholeNumber.startsWith("-")) {
+            throw IllegalArgumentException("Bitwise operations do not support negative values: $decimal")
+        }
+
+        return MegaBinary.fromDecimalString(wholeNumber.ifEmpty { "0" })
     }
 
     /**

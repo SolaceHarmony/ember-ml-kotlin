@@ -63,13 +63,7 @@ interface MetalContext {
          * 
          * @return MetalContext instance or null if Metal is not available
          */
-        fun create(): MetalContext? {
-            return try {
-                StubMetalContext()
-            } catch (e: Exception) {
-                null
-            }
-        }
+        fun create(): MetalContext? = null
     }
 }
 

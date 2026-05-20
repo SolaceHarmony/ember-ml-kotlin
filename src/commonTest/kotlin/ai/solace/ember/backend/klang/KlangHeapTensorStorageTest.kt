@@ -3,7 +3,7 @@ package ai.solace.ember.backend.klang
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
-import kotlin.system.measureTimeMillis
+import kotlin.time.measureTime
 
 class KlangHeapTensorStorageTest {
 
@@ -64,7 +64,7 @@ class KlangHeapTensorStorageTest {
         val data = FloatArray(1024) { it.toFloat() * 0.5f }
         val iterations = 100
 
-        val heapMs = measureTimeMillis {
+        val heapMs = measureTime {
             val buf = KlangHeapTensorStorage.mallocFloat32(data.size)
             try {
                 repeat(iterations) {
@@ -74,9 +74,9 @@ class KlangHeapTensorStorageTest {
             } finally {
                 buf.free()
             }
-        }
+        }.inWholeMilliseconds
 
-        val heapBulkMs = measureTimeMillis {
+        val heapBulkMs = measureTime {
             val buf = KlangHeapTensorStorage.mallocFloat32(data.size)
             try {
                 repeat(iterations) {
@@ -86,15 +86,15 @@ class KlangHeapTensorStorageTest {
             } finally {
                 buf.free()
             }
-        }
+        }.inWholeMilliseconds
 
-        val arrayMs = measureTimeMillis {
+        val arrayMs = measureTime {
             repeat(iterations) {
                 val arr = FloatArray(data.size)
                 // copy with CFloat32 conversion to mirror per-element rounding
                 for (i in data.indices) arr[i] = io.github.kotlinmania.klang.fp.CFloat32.fromFloat(data[i]).toFloat()
             }
-        }
+        }.inWholeMilliseconds
 
         println(
             "heap roundtrip ${data.size}x$iterations -> scalar ${heapMs}ms; bulk ${heapBulkMs}ms; array copy ${arrayMs}ms"

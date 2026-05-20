@@ -20,11 +20,11 @@ class LinearAlgebraOperationsTest {
         val data2 = doubleArrayOf(4.0, 5.0, 6.0)
         
         val tensor1 = backend.createTensor(data1, intArrayOf(3), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         val tensor2 = backend.createTensor(data2, intArrayOf(3), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = linalgOps.dot(tensor1, tensor2) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = linalgOps.dot(tensor1, tensor2)
         
         assertEquals(DType.FLOAT64, result.dtype)
         assertEquals(1, result.size)
@@ -39,11 +39,11 @@ class LinearAlgebraOperationsTest {
         val data2 = doubleArrayOf(5.0, 6.0, 7.0, 8.0) // [[5,6], [7,8]]
         
         val matrix1 = backend.createTensor(data1, intArrayOf(2, 2), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         val matrix2 = backend.createTensor(data2, intArrayOf(2, 2), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = linalgOps.matmul(matrix1, matrix2) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = linalgOps.matmul(matrix1, matrix2)
         
         assertEquals(DType.FLOAT64, result.dtype)
         assertEquals(4, result.size)
@@ -56,9 +56,9 @@ class LinearAlgebraOperationsTest {
         // Test 2x3 matrix transpose
         val data = doubleArrayOf(1.0, 2.0, 3.0, 4.0, 5.0, 6.0) // [[1,2,3], [4,5,6]]
         val matrix = backend.createTensor(data, intArrayOf(2, 3), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = linalgOps.transpose(matrix) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = linalgOps.transpose(matrix)
         
         assertEquals(DType.FLOAT64, result.dtype)
         assertEquals(6, result.size)
@@ -71,9 +71,9 @@ class LinearAlgebraOperationsTest {
         // Test 1D vector transpose (should be unchanged)
         val data = doubleArrayOf(1.0, 2.0, 3.0)
         val vector = backend.createTensor(data, intArrayOf(3), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = linalgOps.transpose(vector) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = linalgOps.transpose(vector)
         
         assertEquals(DType.FLOAT64, result.dtype)
         assertEquals(3, result.size)
@@ -85,9 +85,9 @@ class LinearAlgebraOperationsTest {
     fun testDeterminant1x1() {
         val data = doubleArrayOf(5.0)
         val matrix = backend.createTensor(data, intArrayOf(1, 1), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = linalgOps.determinant(matrix) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = linalgOps.determinant(matrix)
         
         assertEquals(DType.FLOAT64, result.dtype)
         assertEquals(1, result.size)
@@ -99,9 +99,9 @@ class LinearAlgebraOperationsTest {
     fun testDeterminant2x2() {
         val data = doubleArrayOf(1.0, 2.0, 3.0, 4.0) // [[1,2], [3,4]]
         val matrix = backend.createTensor(data, intArrayOf(2, 2), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = linalgOps.determinant(matrix) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = linalgOps.determinant(matrix)
         
         assertEquals(DType.FLOAT64, result.dtype)
         assertEquals(1, result.size)
@@ -118,9 +118,9 @@ class LinearAlgebraOperationsTest {
             0.0, 0.0, 1.0
         )
         val matrix = backend.createTensor(data, intArrayOf(3, 3), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = linalgOps.determinant(matrix) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = linalgOps.determinant(matrix)
         
         assertEquals(DType.FLOAT64, result.dtype)
         assertEquals(1, result.size)
@@ -133,9 +133,9 @@ class LinearAlgebraOperationsTest {
         // Test square matrix trace
         val data = doubleArrayOf(1.0, 2.0, 3.0, 4.0) // [[1,2], [3,4]]
         val matrix = backend.createTensor(data, intArrayOf(2, 2), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = linalgOps.trace(matrix) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = linalgOps.trace(matrix)
         
         assertEquals(DType.FLOAT64, result.dtype)
         assertEquals(1, result.size)
@@ -148,9 +148,9 @@ class LinearAlgebraOperationsTest {
         // Test rectangular matrix trace (should sum diagonal up to min dimension)
         val data = doubleArrayOf(1.0, 2.0, 3.0, 4.0, 5.0, 6.0) // [[1,2,3], [4,5,6]]
         val matrix = backend.createTensor(data, intArrayOf(2, 3), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = linalgOps.trace(matrix) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = linalgOps.trace(matrix)
         
         assertEquals(DType.FLOAT64, result.dtype)
         assertEquals(1, result.size)
@@ -162,9 +162,9 @@ class LinearAlgebraOperationsTest {
     fun testFrobeniusNorm() {
         val data = doubleArrayOf(3.0, 4.0) // Vector with norm 5
         val tensor = backend.createTensor(data, intArrayOf(2), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = linalgOps.norm(tensor, "fro") as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = linalgOps.norm(tensor, "fro")
         
         assertEquals(DType.FLOAT64, result.dtype)
         assertEquals(1, result.size)
@@ -176,9 +176,9 @@ class LinearAlgebraOperationsTest {
     fun testMatrixInverse1x1() {
         val data = doubleArrayOf(4.0)
         val matrix = backend.createTensor(data, intArrayOf(1, 1), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = linalgOps.inverse(matrix) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = linalgOps.inverse(matrix)
         
         assertEquals(DType.FLOAT64, result.dtype)
         assertEquals(1, result.size)
@@ -190,9 +190,9 @@ class LinearAlgebraOperationsTest {
     fun testMatrixInverse2x2() {
         val data = doubleArrayOf(1.0, 2.0, 3.0, 4.0) // [[1,2], [3,4]]
         val matrix = backend.createTensor(data, intArrayOf(2, 2), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = linalgOps.inverse(matrix) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = linalgOps.inverse(matrix)
         
         assertEquals(DType.FLOAT64, result.dtype)
         assertEquals(4, result.size)
@@ -269,11 +269,11 @@ class LinearAlgebraOperationsTest {
         val doubleData = doubleArrayOf(4.0, 5.0, 6.0)
         
         val floatTensor = backend.createTensor(floatData, intArrayOf(3), DType.FLOAT32) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         val doubleTensor = backend.createTensor(doubleData, intArrayOf(3), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = linalgOps.dot(floatTensor, doubleTensor) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = linalgOps.dot(floatTensor, doubleTensor)
         
         // Result should be promoted to FLOAT64
         assertEquals(DType.FLOAT64, result.dtype)

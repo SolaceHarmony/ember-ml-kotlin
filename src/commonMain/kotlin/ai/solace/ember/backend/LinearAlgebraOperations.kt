@@ -16,7 +16,7 @@ class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes the dot product of two vectors or matrix multiplication.
      */
-    fun dot(tensor1: Any, tensor2: Any): Any {
+    fun dot(tensor1: Any, tensor2: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t1 = tensor1 as OptimizedMegaTensorBackend.OptimizedMegaTensor
         val t2 = tensor2 as OptimizedMegaTensorBackend.OptimizedMegaTensor
         
@@ -53,7 +53,7 @@ class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes the matrix multiplication of two tensors.
      */
-    fun matmul(tensor1: Any, tensor2: Any): Any {
+    fun matmul(tensor1: Any, tensor2: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t1 = tensor1 as OptimizedMegaTensorBackend.OptimizedMegaTensor
         val t2 = tensor2 as OptimizedMegaTensorBackend.OptimizedMegaTensor
         
@@ -97,7 +97,7 @@ class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes the transpose of a matrix.
      */
-    fun transpose(tensor: Any, axes: IntArray? = null): Any {
+    fun transpose(tensor: Any, axes: IntArray? = null): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
         
         if (axes != null) {
@@ -134,7 +134,7 @@ class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes the determinant of a square matrix.
      */
-    fun determinant(tensor: Any): Any {
+    fun determinant(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
         
         if (t.shape.size != 2) {
@@ -185,7 +185,7 @@ class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes the trace (sum of diagonal elements) of a matrix.
      */
-    fun trace(tensor: Any): Any {
+    fun trace(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
         
         if (t.shape.size != 2) {
@@ -213,7 +213,7 @@ class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes the Frobenius norm of a matrix.
      */
-    fun norm(tensor: Any, ord: String = "fro"): Any {
+    fun norm(tensor: Any, ord: String = "fro"): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
         
         when (ord) {
@@ -243,7 +243,7 @@ class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes the inverse of a square matrix (basic implementation for small matrices).
      */
-    fun inverse(tensor: Any): Any {
+    fun inverse(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
         
         if (t.shape.size != 2) {

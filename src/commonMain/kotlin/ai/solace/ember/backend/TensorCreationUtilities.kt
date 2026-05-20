@@ -18,7 +18,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
      * @param dtype The data type of the tensor
      * @return A tensor filled with zeros
      */
-    fun zeros(shape: IntArray, dtype: DType = DType.FLOAT32): Any {
+    fun zeros(shape: IntArray, dtype: DType = DType.FLOAT32): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val totalSize = shape.fold(1) { acc, dim -> acc * dim }
         val storage = TensorStorage.createOptimalStorage(dtype, totalSize)
         
@@ -33,7 +33,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
      * @param dtype The data type of the tensor
      * @return A tensor filled with ones
      */
-    fun ones(shape: IntArray, dtype: DType = DType.FLOAT32): Any {
+    fun ones(shape: IntArray, dtype: DType = DType.FLOAT32): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val totalSize = shape.fold(1) { acc, dim -> acc * dim }
         val storage = TensorStorage.createOptimalStorage(dtype, totalSize)
         
@@ -53,7 +53,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
      * @param dtype The data type of the tensor
      * @return A tensor filled with the specified value
      */
-    fun full(shape: IntArray, value: Any, dtype: DType = DType.FLOAT32): Any {
+    fun full(shape: IntArray, value: Any, dtype: DType = DType.FLOAT32): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val totalSize = shape.fold(1) { acc, dim -> acc * dim }
         val storage = TensorStorage.createOptimalStorage(dtype, totalSize)
         
@@ -74,7 +74,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
      * @param dtype The data type of the tensor
      * @return A 1D tensor with evenly spaced values
      */
-    fun arange(start: Double, stop: Double, step: Double = 1.0, dtype: DType = DType.FLOAT64): Any {
+    fun arange(start: Double, stop: Double, step: Double = 1.0, dtype: DType = DType.FLOAT64): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         if (step == 0.0) {
             throw IllegalArgumentException("Step cannot be zero")
         }
@@ -108,7 +108,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
      * @param dtype The data type of the tensor
      * @return A 1D tensor with evenly spaced values
      */
-    fun linspace(start: Double, stop: Double, num: Int, dtype: DType = DType.FLOAT64): Any {
+    fun linspace(start: Double, stop: Double, num: Int, dtype: DType = DType.FLOAT64): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         if (num <= 0) {
             throw IllegalArgumentException("Number of samples must be positive")
         }
@@ -135,7 +135,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
      * @param dtype The data type of the tensor
      * @return An identity matrix
      */
-    fun eye(n: Int, dtype: DType = DType.FLOAT32): Any {
+    fun eye(n: Int, dtype: DType = DType.FLOAT32): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         if (n <= 0) {
             throw IllegalArgumentException("Matrix size must be positive")
         }
@@ -161,7 +161,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
      * @param dtype The data type of the tensor
      * @return A tensor with random values
      */
-    fun randomUniform(shape: IntArray, low: Double = 0.0, high: Double = 1.0, dtype: DType = DType.FLOAT32): Any {
+    fun randomUniform(shape: IntArray, low: Double = 0.0, high: Double = 1.0, dtype: DType = DType.FLOAT32): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val totalSize = shape.fold(1) { acc, dim -> acc * dim }
         val storage = TensorStorage.createOptimalStorage(dtype, totalSize)
         
@@ -185,7 +185,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
      * @param dtype The data type of the tensor
      * @return A tensor with normally distributed random values
      */
-    fun randomNormal(shape: IntArray, mean: Double = 0.0, std: Double = 1.0, dtype: DType = DType.FLOAT32): Any {
+    fun randomNormal(shape: IntArray, mean: Double = 0.0, std: Double = 1.0, dtype: DType = DType.FLOAT32): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val totalSize = shape.fold(1) { acc, dim -> acc * dim }
         val storage = TensorStorage.createOptimalStorage(dtype, totalSize)
         
@@ -212,7 +212,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
      * @param dtype The data type of the tensor (should be an integer type)
      * @return A tensor with random integer values
      */
-    fun randomInt(shape: IntArray, low: Int, high: Int, dtype: DType = DType.INT32): Any {
+    fun randomInt(shape: IntArray, low: Int, high: Int, dtype: DType = DType.INT32): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         if (low >= high) {
             throw IllegalArgumentException("Low must be less than high")
         }
@@ -234,7 +234,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Creates a tensor like another tensor (same shape) but filled with zeros.
      */
-    fun zerosLike(tensor: Any): Any {
+    fun zerosLike(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
         return zeros(t.shape, t.dtype)
     }
@@ -242,7 +242,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Creates a tensor like another tensor (same shape) but filled with ones.
      */
-    fun onesLike(tensor: Any): Any {
+    fun onesLike(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
         return ones(t.shape, t.dtype)
     }
@@ -250,7 +250,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Creates a tensor like another tensor (same shape) but filled with a specific value.
      */
-    fun fullLike(tensor: Any, value: Any): Any {
+    fun fullLike(tensor: Any, value: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
         return full(t.shape, value, t.dtype)
     }
@@ -297,6 +297,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
     private fun convertToBoolean(value: Any): Boolean {
         return when (value) {
             is Boolean -> value
+            is UByte -> value.toInt() != 0
             is Number -> value.toDouble() != 0.0
             else -> false
         }
@@ -304,40 +305,45 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
     
     private fun convertToUByte(value: Any): UByte {
         return when (value) {
-            is Number -> value.toInt().coerceIn(0, 255).toUByte()
+            is UByte -> value
             is Boolean -> if (value) 1u else 0u
+            is Number -> value.toInt().coerceIn(0, 255).toUByte()
             else -> 0u
         }
     }
     
     private fun convertToInt(value: Any): Int {
         return when (value) {
-            is Number -> value.toInt()
+            is UByte -> value.toInt()
             is Boolean -> if (value) 1 else 0
+            is Number -> value.toInt()
             else -> 0
         }
     }
     
     private fun convertToLong(value: Any): Long {
         return when (value) {
-            is Number -> value.toLong()
+            is UByte -> value.toLong()
             is Boolean -> if (value) 1L else 0L
+            is Number -> value.toLong()
             else -> 0L
         }
     }
     
     private fun convertToFloat(value: Any): Float {
         return when (value) {
-            is Number -> value.toFloat()
+            is UByte -> value.toFloat()
             is Boolean -> if (value) 1f else 0f
+            is Number -> value.toFloat()
             else -> 0f
         }
     }
     
     private fun convertToDouble(value: Any): Double {
         return when (value) {
-            is Number -> value.toDouble()
+            is UByte -> value.toDouble()
             is Boolean -> if (value) 1.0 else 0.0
+            is Number -> value.toDouble()
             else -> 0.0
         }
     }

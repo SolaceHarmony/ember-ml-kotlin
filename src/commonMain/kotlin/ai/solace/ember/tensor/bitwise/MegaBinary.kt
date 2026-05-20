@@ -53,31 +53,13 @@ class MegaBinary : MegaNumber {
         // Empty ⇒ zero
         if (raw.isEmpty()) raw = "0"
 
-        val isAllBinaryDigits = raw.all { it == '0' || it == '1' }
-        val containsOtherDigits = raw.any { it in '2'..'9' }
-
         val binStr: String = when {
-            // Case A: explicit binary (only 0/1 *and* length > 2)
-            isAllBinaryDigits && raw.length > 2 -> raw
-
-            // Case B: single‑ or double‑digit strings (“0” … “11”) are
-            // treated as *decimal* (needed for test‑suite inputs "3", "8", "10", …)
-            !containsOtherDigits && raw.length <= 2 -> raw.toInt().toString(2)
-
-            // Case C: pure decimal consisting entirely of ’2’–’9’ → convert
-            raw.all { it in '2'..'9' }           -> raw.toInt().toString(2)
-
-            // Anything else mixes binary & non‑binary digits → invalid
+            raw.all { it == '0' || it == '1' } -> raw
+            raw.all { it in '2'..'9' } -> decimalStringToBinaryString(raw)
             else -> throw IllegalArgumentException("Invalid binary/decimal literal: $value")
         }
 
-        // Build byteData from binary string
-        byteData = ByteArray((binStr.length + 7) / 8)
-        val paddedBinStr = binStr.padStart((binStr.length + 7) / 8 * 8, '0')
-        for (i in paddedBinStr.indices step 8) {
-            val chunk = paddedBinStr.substring(i, minOf(i + 8, paddedBinStr.length))
-            byteData[i / 8] = chunk.toInt(2).toByte()
-        }
+        byteData = binaryStringToBytes(binStr)
 
         // Parse binary string into mantissa
         parseBinaryString(binStr)
@@ -155,16 +137,8 @@ class MegaBinary : MegaNumber {
         isFloat = false,
         keepLeadingZeros = keepLeadingZeros
     ) {
-        // Convert mantissa to binary string
-        val binStr = toBinaryString()
-
-        // Build byteData from binary string
-        byteData = ByteArray((binStr.length + 7) / 8)
-        val paddedBinStr = binStr.padStart((binStr.length + 7) / 8 * 8, '0')
-        for (i in paddedBinStr.indices step 8) {
-            val chunk = paddedBinStr.substring(i, minOf(i + 8, paddedBinStr.length))
-            byteData[i / 8] = chunk.toInt(2).toByte()
-        }
+        val binStr = limbsToBinaryString(this.mantissa)
+        byteData = binaryStringToBytes(binStr)
 
         // Store bit length and normalize
         bitLength = binStr.length
@@ -183,11 +157,7 @@ class MegaBinary : MegaNumber {
             return
         }
 
-        // Convert to integer (already validated, so won't throw)
-        val value : Int = binStr.toInt(2)
-
-        // Set mantissa directly (no need for chunksToInt conversion here)
-        mantissa = intArrayOf(value)
+        mantissa = binaryStringToLimbs(binStr)
         exponent = MegaNumber(intArrayOf(0))
         isFloat = false
         negative = false
@@ -229,8 +199,9 @@ class MegaBinary : MegaNumber {
         val result = MegaBinary(mantissa = resultArr, keepLeadingZeros = keepLeadingZeros)
         result.normalize()
 
-        // Preserve the wider of the two original bit‑lengths
-        result.bitLength = maxLen
+        // Preserve the wider of the two original bit-lengths.
+        result.bitLength = maxOf(bitLength, other.bitLength)
+        result.refreshByteData()
 
         return result
     }
@@ -277,6 +248,8 @@ class MegaBinary : MegaNumber {
 
         val result = MegaBinary(mantissa = resultArr, keepLeadingZeros = keepLeadingZeros)
         result.normalize()
+        result.bitLength = bitLength
+        result.refreshByteData()
 
         return result
     }
@@ -329,6 +302,7 @@ class MegaBinary : MegaNumber {
 
         // Normalize to clean up
         result.normalize()
+        result.refreshByteData()
 
         return result
     }
@@ -384,6 +358,7 @@ class MegaBinary : MegaNumber {
 
         // Normalize to clean up
         result.normalize()
+        result.refreshByteData()
 
         return result
     }
@@ -431,7 +406,9 @@ class MegaBinary : MegaNumber {
         }
 
         mantissa = intArrayOf(newVal)
+        bitLength = maxOf(bitLength, posVal + 1)
         normalize()
+        refreshByteData()
     }
 
     /**
@@ -481,26 +458,20 @@ class MegaBinary : MegaNumber {
      */
     fun toBinaryString(): String {
         if (mantissa.size == 1 && mantissa[0] == 0) {
-            return "0"
+            return if (keepLeadingZeros && bitLength > 1) "0".repeat(bitLength) else "0"
         }
 
-        // Use byteData directly to avoid chunksToInt limitations
-        val binStr = buildString {
-            for (byte in byteData) {
-                append(byte.toUByte().toString(2).padStart(8, '0'))
-            }
-        }.trimStart('0')
-
-        // Handle empty string case (all zeros)
-        if (binStr.isEmpty()) {
-            return "0"
-        }
+        val binStr = limbsToBinaryString(mantissa)
 
         return if (keepLeadingZeros && bitLength > 0) {
             binStr.padStart(bitLength, '0')
         } else {
             binStr
         }
+    }
+
+    private fun refreshByteData() {
+        byteData = binaryStringToBytes(toBinaryString())
     }
 
     /**
@@ -558,6 +529,79 @@ class MegaBinary : MegaNumber {
     }
 
     companion object {
+        private fun binaryStringToLimbs(binStr: String): IntArray {
+            val trimmed = binStr.trimStart('0')
+            if (trimmed.isEmpty()) return intArrayOf(0)
+
+            val chunks = mutableListOf<Int>()
+            var end = trimmed.length
+            while (end > 0) {
+                val start = maxOf(0, end - MegaNumberConstants.GLOBAL_CHUNK_SIZE)
+                val chunk = trimmed.substring(start, end)
+                chunks.add(chunk.toLong(2).toInt())
+                end = start
+            }
+            return chunks.toIntArray()
+        }
+
+        private fun decimalStringToBinaryString(decimal: String): String {
+            var digits = decimal.trimStart('0')
+            if (digits.isEmpty()) return "0"
+            require(digits.all { it in '0'..'9' }) { "Invalid decimal literal: $decimal" }
+
+            val bits = StringBuilder()
+            while (digits != "0") {
+                var carry = 0
+                val quotient = StringBuilder()
+                for (digit in digits) {
+                    val value = carry * 10 + (digit - '0')
+                    val q = value / 2
+                    carry = value % 2
+                    if (quotient.isNotEmpty() || q != 0) {
+                        quotient.append(q)
+                    }
+                }
+                bits.append(if (carry == 0) '0' else '1')
+                digits = if (quotient.isEmpty()) "0" else quotient.toString()
+            }
+            return bits.reverse().toString()
+        }
+
+        fun fromDecimalString(value: String, keepLeadingZeros: Boolean = false): MegaBinary {
+            val raw = value.trim()
+            require(raw.isNotEmpty()) { "Decimal literal cannot be empty" }
+            require(raw.all { it in '0'..'9' }) { "Invalid decimal literal: $value" }
+            return MegaBinary(decimalStringToBinaryString(raw), keepLeadingZeros)
+        }
+
+        fun fromInt(value: Int): MegaBinary {
+            require(value >= 0) { "MegaBinary cannot represent negative shift values: $value" }
+            return fromDecimalString(value.toString())
+        }
+
+        private fun limbsToBinaryString(limbs: IntArray): String {
+            var last = limbs.lastIndex
+            while (last > 0 && limbs[last] == 0) last--
+            if (last < 0 || (last == 0 && limbs[0] == 0)) return "0"
+
+            return buildString {
+                append((limbs[last].toLong() and MegaNumberConstants.MASK).toString(2))
+                for (i in last - 1 downTo 0) {
+                    append((limbs[i].toLong() and MegaNumberConstants.MASK).toString(2).padStart(32, '0'))
+                }
+            }
+        }
+
+        private fun binaryStringToBytes(binStr: String): ByteArray {
+            val paddedBinStr = binStr.padStart((binStr.length + 7) / 8 * 8, '0')
+            val bytes = ByteArray(paddedBinStr.length / 8)
+            for (i in paddedBinStr.indices step 8) {
+                val chunk = paddedBinStr.substring(i, minOf(i + 8, paddedBinStr.length))
+                bytes[i / 8] = chunk.toInt(2).toByte()
+            }
+            return bytes
+        }
+
         /**
          * Combine multiple waves bitwise (XOR, AND, OR).
          *

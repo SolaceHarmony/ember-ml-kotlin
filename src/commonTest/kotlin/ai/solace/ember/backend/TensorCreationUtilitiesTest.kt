@@ -21,7 +21,7 @@ class TensorCreationUtilitiesTest {
     @Test
     fun testZerosCreation() {
         val shape = intArrayOf(2, 3)
-        val tensor = tensorUtils.zeros(shape, DType.FLOAT32) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val tensor = tensorUtils.zeros(shape, DType.FLOAT32)
         
         // Verify tensor properties
         assertEquals(6, tensor.size)
@@ -30,7 +30,7 @@ class TensorCreationUtilitiesTest {
         assertTrue(tensor.storage is TensorStorage.NativeFloatStorage)
         
         // Verify all values are zero
-        val storage = tensor.storage as TensorStorage.NativeFloatStorage
+        val storage = tensor.storage
         for (i in 0 until tensor.size) {
             assertEquals(0.0f, storage.get(i))
         }
@@ -39,7 +39,7 @@ class TensorCreationUtilitiesTest {
     @Test
     fun testZerosCreationBoolean() {
         val shape = intArrayOf(4)
-        val tensor = tensorUtils.zeros(shape, DType.BOOL) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val tensor = tensorUtils.zeros(shape, DType.BOOL)
         
         // Verify tensor properties
         assertEquals(4, tensor.size)
@@ -47,7 +47,7 @@ class TensorCreationUtilitiesTest {
         assertTrue(tensor.storage is TensorStorage.PackedBooleanStorage)
         
         // Verify all values are false (zero for boolean)
-        val storage = tensor.storage as TensorStorage.PackedBooleanStorage
+        val storage = tensor.storage
         for (i in 0 until tensor.size) {
             assertEquals(false, storage.get(i))
         }
@@ -56,7 +56,7 @@ class TensorCreationUtilitiesTest {
     @Test
     fun testOnesCreation() {
         val shape = intArrayOf(3, 2)
-        val tensor = tensorUtils.ones(shape, DType.INT32) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val tensor = tensorUtils.ones(shape, DType.INT32)
         
         // Verify tensor properties
         assertEquals(6, tensor.size)
@@ -65,7 +65,7 @@ class TensorCreationUtilitiesTest {
         assertTrue(tensor.storage is TensorStorage.NativeIntStorage)
         
         // Verify all values are one
-        val storage = tensor.storage as TensorStorage.NativeIntStorage
+        val storage = tensor.storage
         for (i in 0 until tensor.size) {
             assertEquals(1, storage.get(i))
         }
@@ -74,7 +74,7 @@ class TensorCreationUtilitiesTest {
     @Test
     fun testOnesCreationBoolean() {
         val shape = intArrayOf(3)
-        val tensor = tensorUtils.ones(shape, DType.BOOL) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val tensor = tensorUtils.ones(shape, DType.BOOL)
         
         // Verify tensor properties
         assertEquals(3, tensor.size)
@@ -82,7 +82,7 @@ class TensorCreationUtilitiesTest {
         assertTrue(tensor.storage is TensorStorage.PackedBooleanStorage)
         
         // Verify all values are true (one for boolean)
-        val storage = tensor.storage as TensorStorage.PackedBooleanStorage
+        val storage = tensor.storage
         for (i in 0 until tensor.size) {
             assertEquals(true, storage.get(i))
         }
@@ -92,7 +92,7 @@ class TensorCreationUtilitiesTest {
     fun testFullCreation() {
         val shape = intArrayOf(2, 2)
         val fillValue = 42.0
-        val tensor = tensorUtils.full(shape, fillValue, DType.FLOAT64) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val tensor = tensorUtils.full(shape, fillValue, DType.FLOAT64)
         
         // Verify tensor properties
         assertEquals(4, tensor.size)
@@ -101,7 +101,7 @@ class TensorCreationUtilitiesTest {
         assertTrue(tensor.storage is TensorStorage.NativeDoubleStorage)
         
         // Verify all values are the fill value
-        val storage = tensor.storage as TensorStorage.NativeDoubleStorage
+        val storage = tensor.storage
         for (i in 0 until tensor.size) {
             assertEquals(fillValue, storage.get(i))
         }
@@ -109,7 +109,7 @@ class TensorCreationUtilitiesTest {
 
     @Test
     fun testArangeCreation() {
-        val tensor = tensorUtils.arange(0.0, 10.0, 2.0, DType.FLOAT64) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val tensor = tensorUtils.arange(0.0, 10.0, 2.0, DType.FLOAT64)
         
         // Verify tensor properties
         assertEquals(5, tensor.size) // [0, 2, 4, 6, 8]
@@ -118,7 +118,7 @@ class TensorCreationUtilitiesTest {
         assertTrue(tensor.storage is TensorStorage.NativeDoubleStorage)
         
         // Verify values
-        val storage = tensor.storage as TensorStorage.NativeDoubleStorage
+        val storage = tensor.storage
         assertEquals(0.0, storage.get(0))
         assertEquals(2.0, storage.get(1))
         assertEquals(4.0, storage.get(2))
@@ -128,7 +128,7 @@ class TensorCreationUtilitiesTest {
 
     @Test
     fun testArangeCreationNegativeStep() {
-        val tensor = tensorUtils.arange(10.0, 0.0, -2.0, DType.FLOAT64) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val tensor = tensorUtils.arange(10.0, 0.0, -2.0, DType.FLOAT64)
         
         // Verify tensor properties
         assertEquals(5, tensor.size) // [10, 8, 6, 4, 2]
@@ -145,7 +145,7 @@ class TensorCreationUtilitiesTest {
 
     @Test
     fun testArangeEmptyRange() {
-        val tensor = tensorUtils.arange(5.0, 5.0, 1.0, DType.FLOAT64) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val tensor = tensorUtils.arange(5.0, 5.0, 1.0, DType.FLOAT64)
         
         // Should create empty tensor
         assertEquals(0, tensor.size)
@@ -154,7 +154,7 @@ class TensorCreationUtilitiesTest {
 
     @Test
     fun testLinspaceCreation() {
-        val tensor = tensorUtils.linspace(0.0, 10.0, 5, DType.FLOAT64) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val tensor = tensorUtils.linspace(0.0, 10.0, 5, DType.FLOAT64)
         
         // Verify tensor properties
         assertEquals(5, tensor.size)
@@ -172,7 +172,7 @@ class TensorCreationUtilitiesTest {
 
     @Test
     fun testLinspaceOneElement() {
-        val tensor = tensorUtils.linspace(5.0, 10.0, 1, DType.FLOAT64) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val tensor = tensorUtils.linspace(5.0, 10.0, 1, DType.FLOAT64)
         
         // Should contain only the start value
         assertEquals(1, tensor.size)
@@ -182,7 +182,7 @@ class TensorCreationUtilitiesTest {
 
     @Test
     fun testEyeCreation() {
-        val tensor = tensorUtils.eye(3, DType.FLOAT32) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val tensor = tensorUtils.eye(3, DType.FLOAT32)
         
         // Verify tensor properties
         assertEquals(9, tensor.size) // 3x3 matrix
@@ -191,7 +191,7 @@ class TensorCreationUtilitiesTest {
         assertTrue(tensor.storage is TensorStorage.NativeFloatStorage)
         
         // Verify identity matrix pattern
-        val storage = tensor.storage as TensorStorage.NativeFloatStorage
+        val storage = tensor.storage
         val expected = floatArrayOf(
             1.0f, 0.0f, 0.0f,  // Row 0
             0.0f, 1.0f, 0.0f,  // Row 1
@@ -208,7 +208,7 @@ class TensorCreationUtilitiesTest {
         val shape = intArrayOf(100) // Use enough samples for statistical testing
         val low = 0.0
         val high = 1.0
-        val tensor = tensorUtils.randomUniform(shape, low, high, DType.FLOAT64) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val tensor = tensorUtils.randomUniform(shape, low, high, DType.FLOAT64)
         
         // Verify tensor properties
         assertEquals(100, tensor.size)
@@ -217,7 +217,7 @@ class TensorCreationUtilitiesTest {
         assertTrue(tensor.storage is TensorStorage.NativeDoubleStorage)
         
         // Verify all values are in range and not all the same
-        val storage = tensor.storage as TensorStorage.NativeDoubleStorage
+        val storage = tensor.storage
         var allSame = true
         val firstValue = storage.get(0)
         
@@ -237,7 +237,7 @@ class TensorCreationUtilitiesTest {
         val shape = intArrayOf(1000) // Use many samples for statistical testing
         val mean = 5.0
         val std = 2.0
-        val tensor = tensorUtils.randomNormal(shape, mean, std, DType.FLOAT64) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val tensor = tensorUtils.randomNormal(shape, mean, std, DType.FLOAT64)
         
         // Verify tensor properties
         assertEquals(1000, tensor.size)
@@ -245,7 +245,7 @@ class TensorCreationUtilitiesTest {
         assertTrue(tensor.storage is TensorStorage.NativeDoubleStorage)
         
         // Calculate sample mean and standard deviation
-        val storage = tensor.storage as TensorStorage.NativeDoubleStorage
+        val storage = tensor.storage
         var sum = 0.0
         for (i in 0 until tensor.size) {
             sum += storage.get(i)
@@ -270,7 +270,7 @@ class TensorCreationUtilitiesTest {
         val shape = intArrayOf(50)
         val low = 10
         val high = 20
-        val tensor = tensorUtils.randomInt(shape, low, high, DType.INT32) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val tensor = tensorUtils.randomInt(shape, low, high, DType.INT32)
         
         // Verify tensor properties
         assertEquals(50, tensor.size)
@@ -278,7 +278,7 @@ class TensorCreationUtilitiesTest {
         assertTrue(tensor.storage is TensorStorage.NativeIntStorage)
         
         // Verify all values are in range
-        val storage = tensor.storage as TensorStorage.NativeIntStorage
+        val storage = tensor.storage
         var allSame = true
         val firstValue = storage.get(0)
         
@@ -301,7 +301,7 @@ class TensorCreationUtilitiesTest {
         val refTensor = backend.createTensor(refData, refShape, DType.INT32)
         
         // Create zeros like the reference
-        val tensor = tensorUtils.zerosLike(refTensor) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val tensor = tensorUtils.zerosLike(refTensor)
         
         // Verify tensor properties match reference
         assertEquals(4, tensor.size)
@@ -323,7 +323,7 @@ class TensorCreationUtilitiesTest {
         val refTensor = backend.createTensor(refData, refShape, DType.FLOAT64)
         
         // Create ones like the reference
-        val tensor = tensorUtils.onesLike(refTensor) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val tensor = tensorUtils.onesLike(refTensor)
         
         // Verify tensor properties match reference
         assertEquals(2, tensor.size)
@@ -346,7 +346,7 @@ class TensorCreationUtilitiesTest {
         
         // Create full like the reference with a specific value
         val fillValue = false
-        val tensor = tensorUtils.fullLike(refTensor, fillValue) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val tensor = tensorUtils.fullLike(refTensor, fillValue)
         
         // Verify tensor properties match reference
         assertEquals(3, tensor.size)
@@ -363,7 +363,7 @@ class TensorCreationUtilitiesTest {
     @Test
     fun testTensorCreationWithUByteType() {
         val shape = intArrayOf(4)
-        val tensor = tensorUtils.ones(shape, DType.UINT8) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val tensor = tensorUtils.ones(shape, DType.UINT8)
         
         // Verify tensor properties
         assertEquals(4, tensor.size)
@@ -371,7 +371,7 @@ class TensorCreationUtilitiesTest {
         assertTrue(tensor.storage is TensorStorage.NativeUByteStorage)
         
         // Verify all values are one (as UByte)
-        val storage = tensor.storage as TensorStorage.NativeUByteStorage
+        val storage = tensor.storage
         for (i in 0 until tensor.size) {
             assertEquals(1u.toUByte(), storage.get(i))
         }

@@ -75,7 +75,7 @@ class ActorSystemTest {
         actorRef.stop()
         
         // Verify the actor is stopped by trying to get it from the system
-        val stoppedActor = system.getActor<TestMessage>("test-actor")
+        val stoppedActor = system.getActor("test-actor")
         // Note: The actor might still be in the system until cleanup, so this test is basic
         
         system.shutdown()
