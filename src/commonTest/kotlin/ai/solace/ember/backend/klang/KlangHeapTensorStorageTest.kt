@@ -92,7 +92,7 @@ class KlangHeapTensorStorageTest {
             repeat(iterations) {
                 val arr = FloatArray(data.size)
                 // copy with CFloat32 conversion to mirror per-element rounding
-                for (i in data.indices) arr[i] = ai.solace.klang.fp.CFloat32.fromFloat(data[i]).toFloat()
+                for (i in data.indices) arr[i] = io.github.kotlinmania.klang.fp.CFloat32.fromFloat(data[i]).toFloat()
             }
         }
 

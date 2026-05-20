@@ -1,9 +1,9 @@
 package ai.solace.ember.backend.klang
 
-import ai.solace.klang.fp.CFloat32
-import ai.solace.klang.mem.CIntVar
-import ai.solace.klang.mem.GlobalHeap
-import ai.solace.klang.mem.KAligned
+import io.github.kotlinmania.klang.fp.CFloat32
+import io.github.kotlinmania.klang.mem.CIntVar
+import io.github.kotlinmania.klang.mem.GlobalHeap
+import io.github.kotlinmania.klang.mem.KAligned
 import kotlin.math.max
 
 /**
@@ -57,13 +57,12 @@ object KlangHeapTensorStorage {
     }
 
     /**
-     * Bulk copy variant that avoids per-element heap writes by packing to an IntArray
-     * and using KLang's `memcpy`‑style helpers. This is much faster for large tensors.
+     * Bulk copy variant that packs to an IntArray once and writes the heap word-by-word.
      */
     fun writeFloat32Bulk(buffer: Buffer, data: FloatArray) {
         require(data.size * 4 <= buffer.sizeBytes) { "buffer too small" }
         val packed = IntArray(data.size) { idx -> CFloat32.fromFloat(data[idx]).toBits() }
-        GlobalHeap.copyFromIntArray(buffer.ptr, packed, packed.size)
+        writeIntArrayWords(buffer.ptr, packed)
     }
 
     /**
@@ -72,7 +71,7 @@ object KlangHeapTensorStorage {
     fun readFloat32Bulk(buffer: Buffer, count: Int): FloatArray {
         require(count * 4 <= buffer.sizeBytes) { "buffer too small" }
         val ints = IntArray(count)
-        GlobalHeap.copyToIntArray(buffer.ptr, ints, count)
+        readIntArrayWords(buffer.ptr, ints, count)
         return FloatArray(count) { i -> Float.fromBits(ints[i]) }
     }
 
@@ -82,7 +81,7 @@ object KlangHeapTensorStorage {
      */
     fun writeFloat32Packed(buffer: Buffer, packedBits: IntArray) {
         require(packedBits.size * 4 <= buffer.sizeBytes) { "buffer too small" }
-        GlobalHeap.copyFromIntArray(buffer.ptr, packedBits, packedBits.size)
+        writeIntArrayWords(buffer.ptr, packedBits)
     }
 
     /**
@@ -91,7 +90,23 @@ object KlangHeapTensorStorage {
     fun readFloat32Packed(buffer: Buffer, count: Int): IntArray {
         require(count * 4 <= buffer.sizeBytes) { "buffer too small" }
         val ints = IntArray(count)
-        GlobalHeap.copyToIntArray(buffer.ptr, ints, count)
+        readIntArrayWords(buffer.ptr, ints, count)
         return ints
+    }
+
+    private fun writeIntArrayWords(ptr: Int, words: IntArray) {
+        var offset = ptr
+        for (i in words.indices) {
+            GlobalHeap.sw(offset, words[i])
+            offset += 4
+        }
+    }
+
+    private fun readIntArrayWords(ptr: Int, out: IntArray, count: Int) {
+        var offset = ptr
+        for (i in 0 until count) {
+            out[i] = GlobalHeap.lw(offset)
+            offset += 4
+        }
     }
 }
