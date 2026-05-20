@@ -7,35 +7,16 @@ name: "CodeQL Advanced"
 # from those names produces orphan configuration cards in the UI that
 # can't be cleaned up via API (PR-merge analyses are non-deletable).
 #
-# Three matrix entries cover the languages CodeQL detects in this repo:
+# Two matrix entries cover the languages CodeQL detects in this repo:
 #   - actions             (source-only)
-#   - java-kotlin         (manual build via compileAndroidMain — see note)
 #   - javascript-typescript (source-only)
 #
-# For java-kotlin, the matrix-shared `Initialize CodeQL -> Perform CodeQL
-# Analysis` flow is augmented with two conditional steps that run ONLY
-# for that language:
-#
-#   1. JDK + Gradle setup (the other two languages need no toolchain).
-#   2. A `./gradlew setupAndroidSdk compileAndroidMain compileKotlinJs compileKotlinWasmJs`
-#      invocation under the CodeQL build tracer.
-#
-# This is a strict-KMP project with no JVM target, so the autobuild
-# default for java-kotlin (`./gradlew testClasses`) has no task to run
-# and `build-mode: none` extracts nothing. The
-# `com.android.kotlin.multiplatform.library` plugin, however, runs the
-# JVM `kotlinc` for the android target and emits real `.class` files
-# under `build/classes/kotlin/android/main` -- exactly what the
-# extractor's LD_PRELOAD tracer (installed by `Initialize CodeQL`)
-# hooks. `compileAndroidMain` therefore carries the java-kotlin
-# analysis; `compileKotlinJs`/`compileKotlinWasmJs` are added on the
-# chance the tracer also matches the JS/WASM `kotlinc` execs.
-# `--rerun-tasks --no-build-cache` defeat Gradle's up-to-date check so
-# kotlinc actually runs; `-Pkotlin.compiler.execution.strategy=out-of-process`
-# plus `--no-configuration-cache --no-daemon` force a fresh traceable
-# `kotlinc` exec per compilation. That is why this file uses
-# `build-mode: manual` for java-kotlin even though autobuild is the
-# template default.
+# This repo dropped its Android target (and every other JVM-class-emitting
+# target) when ember-ml-kotlin was switched to the published klang surface.
+# Without compileAndroidMain there is no JVM-class output for CodeQL's
+# java-kotlin extractor to trace, so java-kotlin is not part of the matrix.
+# Kotlin sources still live in the repo; reintroducing java-kotlin scanning
+# would require adding a JVM-class-producing target back to build.gradle.kts.
 
 on:
   schedule:
@@ -64,27 +45,12 @@ jobs:
         include:
           - language: actions
             build-mode: none
-          - language: java-kotlin
-            build-mode: manual
           - language: javascript-typescript
             build-mode: none
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-
-      # JDK + Gradle setup only for java-kotlin; the source-only languages
-      # don't run any build at all.
-      - name: Set up JDK 21
-        if: matrix.language == 'java-kotlin'
-        uses: actions/setup-java@v5.2.0
-        with:
-          distribution: zulu
-          java-version: '21'
-
-      - name: Setup Gradle
-        if: matrix.language == 'java-kotlin'
-        uses: gradle/actions/setup-gradle@v6.1.0
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
@@ -96,26 +62,6 @@ jobs:
           # runs. Default off in Advanced Setup; turning on cuts ~30-60s
           # off the init step on warm cache.
           dependency-caching: true
-
-      # Manual build: only java-kotlin gates this. `Initialize CodeQL`
-      # above installs the LD_PRELOAD build tracer into the environment;
-      # the Gradle invocation below runs the android (and JS/WASM)
-      # `kotlinc` compilers as fresh out-of-process execs that the
-      # tracer intercepts, writing per-source `*.kt.trap.gz` extractor
-      # output under ${CODEQL_EXTRACTOR_JAVA_TRAP_DIR}.
-      - name: Run manual build steps
-        if: matrix.build-mode == 'manual'
-        run: |
-          ./gradlew \
-            setupAndroidSdk \
-            compileAndroidMain \
-            compileKotlinJs \
-            compileKotlinWasmJs \
-            --rerun-tasks \
-            --no-build-cache \
-            -Pkotlin.compiler.execution.strategy=out-of-process \
-            --no-configuration-cache \
-            --no-daemon
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
