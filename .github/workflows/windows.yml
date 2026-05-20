@@ -24,13 +24,15 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6.1.0
+        with:
+          cache-provider: basic
 
       - name: Build and test Windows target
         run: ./gradlew mingwX64Test --no-configuration-cache
 
       - name: Upload test reports (Windows)
         if: success() || failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-reports-windows
           path: |

@@ -14,24 +14,36 @@
 # The .android-sdk/ tree is gitignored. Re-run this script after a clean clone
 # or when the SDK layout drifts. It is idempotent - completed steps are skipped.
 #
-# Override defaults via env vars:
-#   CMDLINETOOLS_REV - Google's commandlinetools build number (default below).
-#   COMPILE_SDK       - Android API level to install (default: read from build.gradle.kts).
-#   BUILD_TOOLS       - Build-tools version to install (default below).
+# All version pins (cmdline-tools revision, compileSdk, build-tools) are baked
+# in by the build_surface generator from scaffold/android-sdk.json - the single
+# workspace-level source of truth. There are no environment-variable overrides
+# and nothing to edit here: to change a version, edit that JSON and re-scaffold.
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
 SDK_DIR="$REPO_ROOT/.android-sdk"
 
-# Pin a known-good cmdline-tools revision. Bump when Google rotates.
-# Source: https://developer.android.com/studio (look for "Command line tools only").
-CMDLINETOOLS_REV="${CMDLINETOOLS_REV:-14742923}"
+# Idempotency fast-path. A completed run drops .install-complete inside the
+# (gitignored) SDK tree. On a marked SDK, refresh local.properties so it always
+# points at this repo's own SDK - never a sibling's - then exit. This is the
+# installer declining to redo finished work, not the build skipping Android:
+# the Android compile still runs in full afterwards. build.gradle.kts invokes
+# this script at configuration time on every build, so the fast path keeps that
+# invocation cheap once the SDK is installed.
+INSTALL_MARKER="$SDK_DIR/.install-complete"
+if [ -f "$INSTALL_MARKER" ] && [ -x "$SDK_DIR/cmdline-tools/latest/bin/sdkmanager" ]; then
+    echo "sdk.dir=$SDK_DIR" > "$REPO_ROOT/local.properties"
+    echo "setup-android-sdk: SDK already installed at $SDK_DIR"
+    exit 0
+fi
 
-# compileSdk + minSdk live in build.gradle.kts. Default to compileSdk = 34
-# (matches the existing kotlinmania convention); operator can override.
-COMPILE_SDK="${COMPILE_SDK:-34}"
-BUILD_TOOLS="${BUILD_TOOLS:-34.0.0}"
+# Version pins, baked in from scaffold/android-sdk.json by the build_surface
+# generator. These values are uniform across every *-kotlin repo; the JSON is
+# the one place they are defined.
+CMDLINETOOLS_REV="14742923"
+COMPILE_SDK="34"
+BUILD_TOOLS="36.0.0"
 
 case "$(uname -s)" in
     Darwin*) OS="mac" ;;
@@ -98,6 +110,9 @@ echo "setup-android-sdk: install log at $LOGFILE"
 # Step 4: point local.properties at the project-local SDK
 # ---------------------------------------------------------------------------
 echo "sdk.dir=$SDK_DIR" > "$REPO_ROOT/local.properties"
+
+# Mark the install complete so future runs take the fast path above.
+touch "$INSTALL_MARKER"
 
 echo
 echo "setup-android-sdk: done"
