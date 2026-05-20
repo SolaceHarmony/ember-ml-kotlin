@@ -1,8 +1,10 @@
-import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.ClasspathNormalizer
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.testing.AbstractTestTask
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.gradle.kotlin.dsl.support.serviceOf
+import org.gradle.process.ExecOperations
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
@@ -22,17 +24,15 @@ plugins {
 group = "io.github.kotlinmania"
 version = "0.1.1"
 
-val androidSdkDir: String? =
-    providers.environmentVariable("ANDROID_SDK_ROOT").orNull
-        ?: providers.environmentVariable("ANDROID_HOME").orNull
-
-if (androidSdkDir != null && file(androidSdkDir).exists()) {
-    val localProperties = rootProject.file("local.properties")
-    if (!localProperties.exists()) {
-        val sdkDirPropertyValue = file(androidSdkDir).absolutePath.replace("\\", "/")
-        localProperties.writeText("sdk.dir=$sdkDirPropertyValue")
-    }
-}
+// The Android Gradle plugin resolves the SDK location while Gradle builds the
+// task graph — before any task executes — so a project-local Android SDK must
+// already be installed by the time configuration runs. setup-android-sdk.sh
+// installs the SDK into this repo's own .android-sdk/ and writes
+// local.properties to point there. It runs unconditionally on every
+// configuration: the script itself is idempotent (an already-installed SDK is
+// a fast no-op), but there is deliberately no Gradle-side condition that could
+// skip the install, and no fallback to a sibling repo's SDK.
+serviceOf<ExecOperations>().exec { commandLine("bash", "./setup-android-sdk.sh") }
 
 kotlin {
     applyDefaultHierarchyTemplate()
@@ -40,6 +40,7 @@ kotlin {
     sourceSets.all {
         languageSettings.optIn("kotlin.time.ExperimentalTime")
         languageSettings.optIn("kotlin.concurrent.atomics.ExperimentalAtomicApi")
+        languageSettings.optIn("kotlin.ExperimentalUnsignedTypes")
     }
 
     compilerOptions {
@@ -50,12 +51,7 @@ kotlin {
     val xcf = XCFramework("EmberML")
 
     macosArm64 {
-        binaries {
-            framework { baseName = "EmberML"; xcf.add(this) }
-            executable("poc") { entryPoint = "ai.solace.klang.poc.main" }
-            executable("limbBench") { entryPoint = "ai.solace.ember.bench.main" }
-            executable("heapBench") { entryPoint = "ai.solace.ember.bench.heapBenchMain" }
-        }
+        binaries.framework { baseName = "EmberML"; xcf.add(this) }
     }
     iosArm64 {
         binaries.framework { baseName = "EmberML"; xcf.add(this) }
@@ -125,6 +121,8 @@ kotlin {
         }
     }
 
+    jvm()
+
     sourceSets {
         val commonMain by getting {
             dependencies {
@@ -136,42 +134,37 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:atomicfu:0.32.1")
                 implementation("ai.solace:klang:0.7.2")
             }
-            kotlin.exclude(
-                "ai/solace/ember/backend/metal/**",
-                "ai/solace/ember/backend/storage/**",
-                "ai/solace/ember/actors/**",
-                "ai/solace/ember/nn/**",
-                "ai/solace/ember/ops/**",
-                "ai/solace/ember/tensor/**",
-                "ai/solace/ember/training/**",
-                "ai/solace/ember/utils/**",
-                "ai/solace/ember/examples/**",
-                "ai/solace/ember/Ember.kt",
-                "ai/solace/emberml/**",
-            )
         }
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
             }
-            kotlin.setSrcDirs(listOf("src/commonTest/kotlin/ai/solace/limbengine"))
         }
-        val nativeMain by creating {
+        val nativeMain by getting {
             dependsOn(commonMain)
         }
-        val nativeTest by creating {
-            dependsOn(commonTest)
+        val linuxX64Main by getting {
+            dependsOn(nativeMain)
         }
-        val linuxX64Main by getting { dependsOn(nativeMain) }
-        val linuxX64Test by getting { dependsOn(nativeTest) }
         val macosArm64Main by getting {
             dependsOn(nativeMain)
-            kotlin.setSrcDirs(emptyList<File>())
         }
-        val macosArm64Test by getting { dependsOn(nativeTest) }
-        val mingwX64Main by getting { dependsOn(nativeMain) }
-        val mingwX64Test by getting { dependsOn(nativeTest) }
+        val mingwX64Main by getting {
+            dependsOn(nativeMain)
+        }
+        val nativeTest by getting {
+            dependsOn(commonTest)
+        }
+        val linuxX64Test by getting {
+            dependsOn(nativeTest)
+        }
+        val macosArm64Test by getting {
+            dependsOn(nativeTest)
+        }
+        val mingwX64Test by getting {
+            dependsOn(nativeTest)
+        }
     }
     jvmToolchain(21)
 }
@@ -213,6 +206,8 @@ rootProject.extensions.configure<WasmYarnRootEnvSpec>("kotlinWasmYarnSpec") {
 rootProject.extensions.configure<YarnRootExtension>("kotlinYarn") {
     resolution("diff", "8.0.3")
     resolution("**/diff", "8.0.3")
+    resolution("fast-uri", "3.1.1")
+    resolution("**/fast-uri", "3.1.1")
     resolution("serialize-javascript", "7.0.5")
     resolution("**/serialize-javascript", "7.0.5")
     resolution("webpack", "5.106.2")
@@ -286,77 +281,6 @@ mavenPublishing {
     }
 }
 
-val codeqlKotlinc: Configuration by configurations.creating {
-    description = "Kotlin compiler (CodeQL extraction target only — not published)"
-    isCanBeResolved = true
-    isCanBeConsumed = false
-}
-
-val codeqlSourceClasspath: Configuration by configurations.creating {
-    description = "Runtime classpath for CodeQL extraction of commonMain sources"
-    isCanBeResolved = true
-    isCanBeConsumed = false
-}
-
-dependencies {
-    codeqlKotlinc("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.3.21")
-    codeqlSourceClasspath("org.jetbrains.kotlin:kotlin-stdlib:2.3.21")
-    codeqlSourceClasspath("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.11.0")
-    codeqlSourceClasspath("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.11.0")
-    codeqlSourceClasspath("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.11.0")
-    codeqlSourceClasspath("org.jetbrains.kotlinx:kotlinx-datetime-jvm:0.8.0")
-    codeqlSourceClasspath("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.4.0")
-}
-
-val codeqlCompileJvm = tasks.register<JavaExec>("codeqlCompileJvm") {
-    description =
-        "Compile commonMain Kotlin sources with kotlinc 2.3.21 for CodeQL Java/Kotlin extraction."
-    group = "verification"
-
-    classpath(codeqlKotlinc)
-    mainClass.set("org.jetbrains.kotlin.cli.jvm.K2JVMCompiler")
-
-    val outDir = layout.buildDirectory.dir("classes/kotlin/codeql-jvm")
-    val sources = fileTree("src/commonMain/kotlin") { include("**/*.kt") }
-    val sentinelDir = layout.buildDirectory.dir("generated/codeql-empty-source")
-    inputs.files(sources).withPathSensitivity(PathSensitivity.RELATIVE)
-    inputs.files(codeqlSourceClasspath).withNormalizer(ClasspathNormalizer::class.java)
-    outputs.dir(outDir)
-    outputs.dir(sentinelDir)
-
-    doFirst {
-        outDir.get().asFile.mkdirs()
-        val sourceFiles = sources.files.toMutableList()
-        if (sourceFiles.isEmpty()) {
-            val sentinelFile = sentinelDir.get().asFile.resolve("io/github/kotlinmania/codeql/_CodeqlEmptySource.kt")
-            sentinelFile.parentFile.mkdirs()
-            sentinelFile.writeText(
-                """
-                // Auto-generated. Present so codeqlCompileJvm has at least
-                // one Kotlin source to feed kotlinc; replaced by real
-                // commonMain content once porting begins.
-                package io.github.kotlinmania.codeql
-
-                private object _CodeqlEmptySource
-                """.trimIndent(),
-            )
-            sourceFiles += sentinelFile
-        }
-        args = listOf(
-            "-d", outDir.get().asFile.absolutePath,
-            "-classpath", codeqlSourceClasspath.asPath,
-            "-jvm-target", "21",
-            "-no-stdlib",
-            "-no-reflect",
-            "-language-version", "2.3",
-            "-api-version", "2.3",
-            "-Xexpect-actual-classes",
-            "-opt-in", "kotlin.time.ExperimentalTime",
-            "-opt-in", "kotlin.concurrent.atomics.ExperimentalAtomicApi",
-        ) + sourceFiles.map { it.absolutePath }
-    }
-}
-
 tasks.register<Exec>("setupAndroidSdk") {
     group = "setup"
     description = "Downloads and configures the project-local Android SDK."
@@ -371,11 +295,46 @@ tasks.register("test") {
 
     val defaultTestTasks = listOf(
         "macosArm64Test",
+        "jvmTest",
         "jsNodeTest",
         "wasmJsNodeTest",
         "compileAndroidMain",
         "assembleUnitTest",
     )
 
-    dependsOn(defaultTestTasks.mapNotNull { taskName -> tasks.findByName(taskName) } )
+    dependsOn(defaultTestTasks.mapNotNull { taskName -> tasks.findByName(taskName) })
+}
+
+// The generated Wasm-WASI Node test runner cannot see the filesystem unless
+// the project directory is preopened. Patch the runner before wasmWasiNodeTest.
+val patchWasmWasiNodePreopens = tasks.register("patchWasmWasiNodePreopens") {
+    description = "Preopen the project directory for the generated Wasm-WASI Node test runner."
+    group = "verification"
+    dependsOn("compileTestDevelopmentExecutableKotlinWasmWasi")
+    outputs.upToDateWhen { false }
+
+    doLast {
+        val runnerFile = layout.buildDirectory.file(
+            "compileSync/wasmWasi/test/testDevelopmentExecutable/kotlin/${rootProject.name}-test.mjs",
+        ).get().asFile
+        if (!runnerFile.exists()) {
+            // No Wasm-WASI test runner was generated (the repo has no
+            // wasmWasi test sources), so there is nothing to preopen.
+            return@doLast
+        }
+        val text = runnerFile.readText()
+        val withCwdImport = text.replace(
+            "import { argv, env } from 'node:process';",
+            "import { argv, env, cwd } from 'node:process';",
+        )
+        val patched = withCwdImport.replace(
+            "const wasi = new WASI({ version: 'preview1', args: argv, env, });",
+            "const wasi = new WASI({ version: 'preview1', args: argv, env, preopens: { '/': cwd() }, });",
+        )
+        runnerFile.writeText(patched)
+    }
+}
+
+tasks.named("wasmWasiNodeTest") {
+    dependsOn(patchWasmWasiNodePreopens)
 }
