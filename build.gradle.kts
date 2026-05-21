@@ -1,6 +1,7 @@
 import org.gradle.api.tasks.testing.AbstractTestTask
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsEnvSpec
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension
@@ -63,6 +64,23 @@ kotlin {
     }
     jvmToolchain(21)
 }
+
+// Kotlin 2.3.21 publishes the stdlib KLIB with three internal facets
+// (commonMain, commonNonJvmMain, webMain) that all carry the same
+// `unique_name=kotlin-stdlib-common`. The KLIB resolver emits a warning
+// during intermediate-source-set metadata compilation, which `-Werror`
+// then turns into a build failure. The strategy flag
+// `-Xklib-duplicated-unique-name-strategy` only chooses deny vs
+// allow-with-warning, so the warning is unavoidable until the upstream
+// stdlib publishes without duplicates. Keep `-Werror` for every real
+// per-target compile (commonMain, macosArm64Main, linuxX64Main, ...,
+// and their tests) and scope the relaxation to KotlinCompileCommon,
+// which only runs the intermediate metadata pass.
+tasks.matching { it.name.endsWith("KotlinMetadata") }
+    .withType<KotlinCompilationTask<*>>()
+    .configureEach {
+        compilerOptions.allWarningsAsErrors.set(false)
+    }
 
 tasks.withType<AbstractTestTask>().configureEach {
     testLogging {

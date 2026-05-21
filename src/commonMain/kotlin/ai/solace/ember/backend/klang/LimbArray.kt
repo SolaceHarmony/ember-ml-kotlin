@@ -87,7 +87,6 @@ class LimbArray private constructor(
                         is Operation.Sub -> eng = eng.sub(op.rhs)
                         is Operation.Mul -> eng = eng.mul(op.rhs)
                         is Operation.Div -> eng = eng.div(op.rhs)
-                        else -> {}
                     }
                 }
                 eng.flush()
@@ -109,7 +108,6 @@ class LimbArray private constructor(
                         is Operation.Sub -> eng = eng.sub(op.rhs)
                         is Operation.Mul -> eng = eng.mul(op.rhs)
                         is Operation.Div -> eng = eng.div(op.rhs)
-                        else -> {}
                     }
                 }
                 eng.flush() // no-op when dag disabled
@@ -142,7 +140,6 @@ class LimbArray private constructor(
                         is Operation.Sub -> copy = copy.sub(op.rhs)
                         is Operation.Mul -> copy = copy.mul(op.rhs)
                         is Operation.Div -> copy = copy.div(op.rhs)
-                        else -> {}
                     }
                 }
                 copy.flush()
@@ -164,7 +161,6 @@ class LimbArray private constructor(
                         is Operation.Sub -> copy = copy.sub(op.rhs)
                         is Operation.Mul -> copy = copy.mul(op.rhs)
                         is Operation.Div -> copy = copy.div(op.rhs)
-                        else -> {}
                     }
                 }
                 copy.flush() // no-op
@@ -207,7 +203,6 @@ class LimbArray private constructor(
                 is Operation.Sub -> for (i in items.indices) items[i] = items[i].sub(op.rhs)
                 is Operation.Mul -> for (i in items.indices) items[i] = items[i].mul(op.rhs)
                 is Operation.Div -> for (i in items.indices) items[i] = items[i].div(op.rhs)
-                else -> {}
             }
         }
     }

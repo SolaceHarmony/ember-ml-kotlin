@@ -243,7 +243,6 @@ class Adam(
             val beta2Data = when (param.dtype) {
                 DType.FLOAT32 -> FloatArray(1) { beta2 }
                 DType.FLOAT64 -> DoubleArray(1) { beta2.toDouble() }
-                else -> throw IllegalArgumentException("Adam only supports floating point types")
             }
             
             val beta2BackendTensor = backend.createTensor(beta2Data, intArrayOf(1), param.dtype)
@@ -260,7 +259,6 @@ class Adam(
             val oneMinusBeta1Data = when (param.dtype) {
                 DType.FLOAT32 -> FloatArray(1) { 1.0f - beta1 }
                 DType.FLOAT64 -> DoubleArray(1) { 1.0 - beta1.toDouble() }
-                else -> throw IllegalArgumentException("Adam only supports floating point types")
             }
             
             val oneMinusBeta1BackendTensor = backend.createTensor(oneMinusBeta1Data, intArrayOf(1), param.dtype)
@@ -279,7 +277,6 @@ class Adam(
             val oneMinusBeta2Data = when (param.dtype) {
                 DType.FLOAT32 -> FloatArray(1) { 1.0f - beta2 }
                 DType.FLOAT64 -> DoubleArray(1) { 1.0 - beta2.toDouble() }
-                else -> throw IllegalArgumentException("Adam only supports floating point types")
             }
             
             val oneMinusBeta2BackendTensor = backend.createTensor(oneMinusBeta2Data, intArrayOf(1), param.dtype)
