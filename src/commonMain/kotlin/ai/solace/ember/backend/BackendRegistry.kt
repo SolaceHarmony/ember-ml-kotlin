@@ -1,7 +1,5 @@
 package ai.solace.ember.backend
 
-import ai.solace.ember.backend.metal.MetalBackend
-
 /**
  * Registry for backend implementations.
  * This class manages the available backends and allows switching between them.
@@ -52,6 +50,7 @@ object BackendRegistry {
      * @throws IllegalStateException if no backend is set.
      */
     fun getCurrentBackend(): Backend {
+        ensureBackendsInitialized()
         return currentBackend ?: throw IllegalStateException("No backend is set")
     }
 
@@ -61,25 +60,25 @@ object BackendRegistry {
      * @return A list of available backend names.
      */
     fun getAvailableBackends(): List<String> {
+        ensureBackendsInitialized()
         return backends.keys.toList()
     }
 
-    /**
-     * Initializes the registry with the default backends.
-     */
-    fun initialize() {
-        // Register the MegaTensorBackend
-        registerBackend("mega", MegaTensorBackend())
+    private var initialized = false
 
-        // Register Metal backend
-        registerBackend("metal", MetalBackend())
-
-        // Set the MegaTensorBackend as the default if no backend is set
-        if (currentBackend == null) {
-            setBackend("mega")
-        }
+    internal fun ensureBackendsInitialized() {
+        if (initialized) return
+        initialized = true
+        initializePlatformBackends()
     }
 }
+
+/**
+ * Platform-specific backend registration. Each target registers the concrete
+ * backends it ships (e.g. macOS registers Metal and MegaTensor) and, when
+ * appropriate, sets a default current backend.
+ */
+expect fun initializePlatformBackends()
 
 /**
  * Gets the current backend.
@@ -100,6 +99,7 @@ fun getBackend(): String {
  * @return True if the backend was set, false if the backend was not found.
  */
 fun setBackend(name: String): Boolean {
+    BackendRegistry.ensureBackendsInitialized()
     return BackendRegistry.setBackend(name)
 }
 
@@ -108,18 +108,7 @@ fun setBackend(name: String): Boolean {
  *
  * @return The name of the selected backend.
  */
-fun autoSelectBackend(): String {
-    // Try Metal backend first (highest performance on Apple platforms)
-    val metalBackend = BackendRegistry.getBackend("metal") as? MetalBackend
-    if (metalBackend?.isAvailable() == true) {
-        BackendRegistry.setBackend("metal")
-        return "metal"
-    }
-
-    // Fall back to MegaTensorBackend
-    BackendRegistry.setBackend("mega")
-    return "mega"
-}
+expect fun autoSelectBackend(): String
 
 /**
  * Checks if a backend is available.
@@ -128,6 +117,7 @@ fun autoSelectBackend(): String {
  * @return True if the backend is available, false otherwise.
  */
 fun isBackendAvailable(name: String): Boolean {
+    BackendRegistry.ensureBackendsInitialized()
     return BackendRegistry.getBackend(name) != null
 }
 
@@ -139,6 +129,3 @@ fun isBackendAvailable(name: String): Boolean {
 fun getAvailableBackends(): List<String> {
     return BackendRegistry.getAvailableBackends()
 }
-
-// Initialize the registry
-private val initializeRegistry = BackendRegistry.initialize()
