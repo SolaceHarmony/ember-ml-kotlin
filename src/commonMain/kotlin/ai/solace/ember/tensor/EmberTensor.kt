@@ -5,6 +5,7 @@ import ai.solace.ember.scalar.Scalar
 import io.github.kotlinmania.klang.fp.CFloat16
 import io.github.kotlinmania.klang.fp.CFloat32
 import io.github.kotlinmania.klang.fp.CFloat64
+import kotlin.math.pow
 
 /**
  * EmberTensor - the core tensor class for Ember ML.
@@ -98,7 +99,7 @@ class EmberTensor private constructor(
     fun square(): EmberTensor = elementWiseBinaryOp(this, this) { a, _ -> a * a }
     fun power(exponent: Number): EmberTensor {
         val exp = exponent.toDouble()
-        return elementWiseUnaryOp(this) { kotlin.math.pow(it.toDouble(), exp).toFloat() }
+        return elementWiseUnaryOp(this) { it.toDouble().pow(exp).toFloat() }
     }
     
     // ============================================

@@ -112,7 +112,6 @@ class Linear(
         val biasData = when (input.dtype) {
             DType.FLOAT32 -> FloatArray(1) { bias }
             DType.FLOAT64 -> DoubleArray(1) { bias.toDouble() }
-            else -> throw IllegalArgumentException("Linear activation only supports floating point types")
         }
         
         val biasBackendTensor = backend.createTensor(biasData, intArrayOf(1), input.dtype)

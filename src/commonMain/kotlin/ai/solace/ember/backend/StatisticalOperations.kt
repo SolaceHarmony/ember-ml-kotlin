@@ -16,11 +16,10 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes the mean (average) of tensor elements.
      */
-    fun mean(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): Any {
+    fun mean(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
         
         if (axis != null) {
-            // TODO: Implement axis-specific mean for multi-dimensional tensors
             throw UnsupportedOperationException("Axis-specific mean not yet implemented")
         }
         
@@ -51,7 +50,7 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes the variance of tensor elements.
      */
-    fun variance(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false, ddof: Int = 0): Any {
+    fun variance(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false, ddof: Int = 0): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
         
         if (axis != null) {
@@ -59,7 +58,7 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
         }
         
         // First compute mean
-        val meanTensor = mean(tensor, axis, false) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val meanTensor = mean(tensor, axis, false)
         val meanValue = convertToDouble(getStorageValue(meanTensor.storage, 0))
         
         // Compute variance
@@ -90,8 +89,8 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes the standard deviation of tensor elements.
      */
-    fun std(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false, ddof: Int = 0): Any {
-        val varianceTensor = variance(tensor, axis, keepDims, ddof) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun std(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false, ddof: Int = 0): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+        val varianceTensor = variance(tensor, axis, keepDims, ddof)
         val varianceValue = convertToDouble(getStorageValue(varianceTensor.storage, 0))
         
         val stdValue = sqrt(varianceValue)
@@ -105,7 +104,7 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes the median of tensor elements.
      */
-    fun median(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): Any {
+    fun median(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
         
         if (axis != null) {
@@ -146,7 +145,7 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes the minimum value of tensor elements.
      */
-    fun min(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): Any {
+    fun min(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
         
         if (axis != null) {
@@ -178,7 +177,7 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes the maximum value of tensor elements.
      */
-    fun max(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): Any {
+    fun max(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
         
         if (axis != null) {
@@ -210,7 +209,7 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes the sum of tensor elements.
      */
-    fun sum(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): Any {
+    fun sum(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
         
         if (axis != null) {
@@ -242,7 +241,7 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes the cumulative sum of tensor elements.
      */
-    fun cumSum(tensor: Any, axis: Int? = null): Any {
+    fun cumSum(tensor: Any, axis: Int? = null): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
         
         if (axis != null) {
@@ -272,7 +271,7 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Finds the indices of the maximum values along an axis.
      */
-    fun argMax(tensor: Any, axis: Int? = null): Any {
+    fun argMax(tensor: Any, axis: Int? = null): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
         
         if (axis != null) {
@@ -305,7 +304,7 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes specified percentile of tensor elements.
      */
-    fun percentile(tensor: Any, q: Double, axis: IntArray? = null, keepDims: Boolean = false): Any {
+    fun percentile(tensor: Any, q: Double, axis: IntArray? = null, keepDims: Boolean = false): OptimizedMegaTensorBackend.OptimizedMegaTensor {
         val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
         
         if (axis != null) {

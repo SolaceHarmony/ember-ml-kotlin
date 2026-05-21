@@ -24,7 +24,7 @@ class MathematicalOperationsTest {
         val shape = intArrayOf(4)
         
         val tensor = backend.createTensor(data, shape, DType.FLOAT64)
-        val result = mathOps.sin(tensor) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = mathOps.sin(tensor)
         
         // Verify result properties
         assertEquals(4, result.size)
@@ -32,7 +32,7 @@ class MathematicalOperationsTest {
         assertTrue(result.storage is TensorStorage.NativeDoubleStorage)
         
         // Verify mathematical results (with tolerance for floating point)
-        val storage = result.storage as TensorStorage.NativeDoubleStorage
+        val storage = result.storage
         assertEquals(0.0, storage.get(0), 1e-10)      // sin(0) = 0
         assertEquals(1.0, storage.get(1), 1e-10)      // sin(π/2) = 1
         assertEquals(0.0, storage.get(2), 1e-10)      // sin(π) = 0
@@ -45,7 +45,7 @@ class MathematicalOperationsTest {
         val shape = intArrayOf(4)
         
         val tensor = backend.createTensor(data, shape, DType.FLOAT64)
-        val result = mathOps.cos(tensor) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = mathOps.cos(tensor)
         
         // Verify result properties
         assertEquals(4, result.size)
@@ -53,7 +53,7 @@ class MathematicalOperationsTest {
         assertTrue(result.storage is TensorStorage.NativeDoubleStorage)
         
         // Verify mathematical results (with tolerance for floating point)
-        val storage = result.storage as TensorStorage.NativeDoubleStorage
+        val storage = result.storage
         assertEquals(1.0, storage.get(0), 1e-10)      // cos(0) = 1
         assertEquals(0.0, storage.get(1), 1e-10)      // cos(π/2) = 0
         assertEquals(-1.0, storage.get(2), 1e-10)     // cos(π) = -1
@@ -66,7 +66,7 @@ class MathematicalOperationsTest {
         val shape = intArrayOf(4)
         
         val tensor = backend.createTensor(data, shape, DType.FLOAT64)
-        val result = mathOps.exp(tensor) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = mathOps.exp(tensor)
         
         // Verify result properties
         assertEquals(4, result.size)
@@ -74,7 +74,7 @@ class MathematicalOperationsTest {
         assertTrue(result.storage is TensorStorage.NativeDoubleStorage)
         
         // Verify mathematical results
-        val storage = result.storage as TensorStorage.NativeDoubleStorage
+        val storage = result.storage
         assertEquals(1.0, storage.get(0), 1e-10)           // exp(0) = 1
         assertEquals(E, storage.get(1), 1e-10)             // exp(1) = e
         assertEquals(E * E, storage.get(2), 1e-10)         // exp(2) = e²
@@ -87,7 +87,7 @@ class MathematicalOperationsTest {
         val shape = intArrayOf(4)
         
         val tensor = backend.createTensor(data, shape, DType.FLOAT64)
-        val result = mathOps.log(tensor) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = mathOps.log(tensor)
         
         // Verify result properties
         assertEquals(4, result.size)
@@ -95,7 +95,7 @@ class MathematicalOperationsTest {
         assertTrue(result.storage is TensorStorage.NativeDoubleStorage)
         
         // Verify mathematical results
-        val storage = result.storage as TensorStorage.NativeDoubleStorage
+        val storage = result.storage
         assertEquals(0.0, storage.get(0), 1e-10)      // ln(1) = 0
         assertEquals(1.0, storage.get(1), 1e-10)      // ln(e) = 1
         assertEquals(2.0, storage.get(2), 1e-10)      // ln(e²) = 2
@@ -108,7 +108,7 @@ class MathematicalOperationsTest {
         val shape = intArrayOf(5)
         
         val tensor = backend.createTensor(data, shape, DType.FLOAT64)
-        val result = mathOps.sqrt(tensor) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = mathOps.sqrt(tensor)
         
         // Verify result properties
         assertEquals(5, result.size)
@@ -116,7 +116,7 @@ class MathematicalOperationsTest {
         assertTrue(result.storage is TensorStorage.NativeDoubleStorage)
         
         // Verify mathematical results
-        val storage = result.storage as TensorStorage.NativeDoubleStorage
+        val storage = result.storage
         assertEquals(0.0, storage.get(0), 1e-10)      // sqrt(0) = 0
         assertEquals(1.0, storage.get(1), 1e-10)      // sqrt(1) = 1
         assertEquals(2.0, storage.get(2), 1e-10)      // sqrt(4) = 2
@@ -131,7 +131,7 @@ class MathematicalOperationsTest {
         val exponent = 3.0
         
         val tensor = backend.createTensor(data, shape, DType.FLOAT64)
-        val result = mathOps.pow(tensor, exponent) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = mathOps.pow(tensor, exponent)
         
         // Verify result properties
         assertEquals(4, result.size)
@@ -139,7 +139,7 @@ class MathematicalOperationsTest {
         assertTrue(result.storage is TensorStorage.NativeDoubleStorage)
         
         // Verify mathematical results
-        val storage = result.storage as TensorStorage.NativeDoubleStorage
+        val storage = result.storage
         assertEquals(8.0, storage.get(0), 1e-10)      // 2³ = 8
         assertEquals(27.0, storage.get(1), 1e-10)     // 3³ = 27
         assertEquals(64.0, storage.get(2), 1e-10)     // 4³ = 64
@@ -152,7 +152,7 @@ class MathematicalOperationsTest {
         val shape = intArrayOf(5)
         
         val tensor = backend.createTensor(data, shape, DType.INT32)
-        val result = mathOps.abs(tensor) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = mathOps.abs(tensor)
         
         // Verify result properties
         assertEquals(5, result.size)
@@ -160,7 +160,7 @@ class MathematicalOperationsTest {
         assertTrue(result.storage is TensorStorage.NativeDoubleStorage)
         
         // Verify mathematical results
-        val storage = result.storage as TensorStorage.NativeDoubleStorage
+        val storage = result.storage
         assertEquals(5.0, storage.get(0), 1e-10)      // abs(-5) = 5
         assertEquals(3.0, storage.get(1), 1e-10)      // abs(-3) = 3
         assertEquals(0.0, storage.get(2), 1e-10)      // abs(0) = 0
@@ -177,7 +177,7 @@ class MathematicalOperationsTest {
         val tensor1 = backend.createTensor(data1, shape, DType.INT32)
         val tensor2 = backend.createTensor(data2, shape, DType.INT32)
         
-        val result = mathOps.greaterThan(tensor1, tensor2) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = mathOps.greaterThan(tensor1, tensor2)
         
         // Verify result properties
         assertEquals(4, result.size)
@@ -185,7 +185,7 @@ class MathematicalOperationsTest {
         assertTrue(result.storage is TensorStorage.PackedBooleanStorage)
         
         // Verify comparison results
-        val storage = result.storage as TensorStorage.PackedBooleanStorage
+        val storage = result.storage
         assertEquals(false, storage.get(0))    // 1 > 2 = false
         assertEquals(false, storage.get(1))    // 3 > 3 = false
         assertEquals(true, storage.get(2))     // 5 > 4 = true
@@ -201,7 +201,7 @@ class MathematicalOperationsTest {
         val tensor1 = backend.createTensor(data1, shape, DType.INT32)
         val tensor2 = backend.createTensor(data2, shape, DType.INT32)
         
-        val result = mathOps.lessThan(tensor1, tensor2) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = mathOps.lessThan(tensor1, tensor2)
         
         // Verify result properties
         assertEquals(4, result.size)
@@ -209,7 +209,7 @@ class MathematicalOperationsTest {
         assertTrue(result.storage is TensorStorage.PackedBooleanStorage)
         
         // Verify comparison results
-        val storage = result.storage as TensorStorage.PackedBooleanStorage
+        val storage = result.storage
         assertEquals(true, storage.get(0))     // 1 < 2 = true
         assertEquals(false, storage.get(1))    // 3 < 3 = false
         assertEquals(false, storage.get(2))    // 5 < 4 = false
@@ -225,7 +225,7 @@ class MathematicalOperationsTest {
         val tensor1 = backend.createTensor(data1, shape, DType.INT32)
         val tensor2 = backend.createTensor(data2, shape, DType.INT32)
         
-        val result = mathOps.equal(tensor1, tensor2) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = mathOps.equal(tensor1, tensor2)
         
         // Verify result properties
         assertEquals(4, result.size)
@@ -233,7 +233,7 @@ class MathematicalOperationsTest {
         assertTrue(result.storage is TensorStorage.PackedBooleanStorage)
         
         // Verify comparison results
-        val storage = result.storage as TensorStorage.PackedBooleanStorage
+        val storage = result.storage
         assertEquals(false, storage.get(0))    // 1 == 2 = false
         assertEquals(true, storage.get(1))     // 3 == 3 = true
         assertEquals(false, storage.get(2))    // 5 == 4 = false
@@ -250,8 +250,8 @@ class MathematicalOperationsTest {
         val intTensor = backend.createTensor(intData, shape, DType.INT32)
         val floatTensor = backend.createTensor(floatData, shape, DType.FLOAT32)
         
-        val intResult = mathOps.sin(intTensor) as OptimizedMegaTensorBackend.OptimizedMegaTensor
-        val floatResult = mathOps.sin(floatTensor) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val intResult = mathOps.sin(intTensor)
+        val floatResult = mathOps.sin(floatTensor)
         
         // Integer tensor should be promoted to FLOAT64
         assertEquals(DType.FLOAT64, intResult.dtype)
@@ -268,14 +268,14 @@ class MathematicalOperationsTest {
         val shape = intArrayOf(4)
         
         val tensor = backend.createTensor(data, shape, DType.BOOL)
-        val result = mathOps.abs(tensor) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = mathOps.abs(tensor)
         
         // Boolean tensor should be promoted to FLOAT64
         assertEquals(DType.FLOAT64, result.dtype)
         assertTrue(result.storage is TensorStorage.NativeDoubleStorage)
         
         // Verify boolean conversion results
-        val storage = result.storage as TensorStorage.NativeDoubleStorage
+        val storage = result.storage
         assertEquals(1.0, storage.get(0), 1e-10)      // abs(true) = 1
         assertEquals(0.0, storage.get(1), 1e-10)      // abs(false) = 0
         assertEquals(1.0, storage.get(2), 1e-10)      // abs(true) = 1

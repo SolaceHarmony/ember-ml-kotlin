@@ -1,6 +1,7 @@
 package ai.solace.ember.backend.metal
 
 import ai.solace.ember.backend.BackendRegistry
+import ai.solace.ember.backend.initializePlatformBackends
 import ai.solace.ember.tensor.common.DType
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -16,7 +17,7 @@ class MetalBackendTest {
     @Test
     fun testMetalBackendRegistration() {
         // Initialize registry to ensure Metal backend is registered
-        BackendRegistry.initialize()
+        initializePlatformBackends()
         
         // Check that Metal backend is registered
         val metalBackend = BackendRegistry.getBackend("metal")
@@ -124,7 +125,7 @@ class MetalBackendTest {
 
     @Test
     fun testAutoSelectBackend() {
-        BackendRegistry.initialize()
+        initializePlatformBackends()
         
         val selectedBackend = ai.solace.ember.backend.autoSelectBackend()
         

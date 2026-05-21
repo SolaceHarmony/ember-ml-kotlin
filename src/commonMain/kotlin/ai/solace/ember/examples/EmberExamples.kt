@@ -73,11 +73,11 @@ object EmberExamples {
         
         // Trigonometric functions
         val sinX = Ember.sin(x)
-        println("sin(x) = [${sinX.toFloatArray().joinToString(", ") { "%.4f".format(it) }}]")
-        
+        println("sin(x) = [${sinX.toFloatArray().joinToString(", ")}]")
+
         // Exponential and logarithm
         val expX = Ember.exp(x)
-        println("exp(x) = [${expX.toFloatArray().joinToString(", ") { "%.4f".format(it) }}]")
+        println("exp(x) = [${expX.toFloatArray().joinToString(", ")}]")
         
         // Power functions
         val sqrtX = Ember.sqrt(Ember.array(listOf(1.0f, 4.0f, 9.0f)))

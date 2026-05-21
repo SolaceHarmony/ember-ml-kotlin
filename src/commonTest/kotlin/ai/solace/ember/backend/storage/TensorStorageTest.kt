@@ -1,6 +1,6 @@
 package ai.solace.ember.backend.storage
 
-import ai.solace.ember.dtype.DType
+import ai.solace.ember.tensor.common.DType
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

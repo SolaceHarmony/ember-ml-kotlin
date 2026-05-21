@@ -21,13 +21,13 @@ class ArrayManipulationOperationsTest {
         val data3 = doubleArrayOf(5.0, 6.0)
         
         val tensor1 = backend.createTensor(data1, intArrayOf(1, 2), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         val tensor2 = backend.createTensor(data2, intArrayOf(1, 2), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         val tensor3 = backend.createTensor(data3, intArrayOf(1, 2), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = arrayOps.vstack(listOf(tensor1, tensor2, tensor3)) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = arrayOps.vstack(listOf(tensor1, tensor2, tensor3))
         
         assertEquals(DType.FLOAT64, result.dtype)
         assertEquals(6, result.size)
@@ -41,11 +41,11 @@ class ArrayManipulationOperationsTest {
         val data2 = doubleArrayOf(3.0, 4.0)
         
         val tensor1 = backend.createTensor(data1, intArrayOf(2), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         val tensor2 = backend.createTensor(data2, intArrayOf(2), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = arrayOps.hstack(listOf(tensor1, tensor2)) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = arrayOps.hstack(listOf(tensor1, tensor2))
         
         assertEquals(DType.FLOAT64, result.dtype)
         assertEquals(4, result.size)
@@ -59,11 +59,11 @@ class ArrayManipulationOperationsTest {
         val data2 = doubleArrayOf(5.0, 6.0, 7.0, 8.0) // [[5,6], [7,8]]
         
         val tensor1 = backend.createTensor(data1, intArrayOf(2, 2), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         val tensor2 = backend.createTensor(data2, intArrayOf(2, 2), DType.FLOAT64) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = arrayOps.hstack(listOf(tensor1, tensor2)) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = arrayOps.hstack(listOf(tensor1, tensor2))
         
         assertEquals(DType.FLOAT64, result.dtype)
         assertEquals(8, result.size)
@@ -78,14 +78,14 @@ class ArrayManipulationOperationsTest {
         val data3 = intArrayOf(6, 7, 8, 9)
         
         val tensor1 = backend.createTensor(data1, intArrayOf(3), DType.INT32) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         val tensor2 = backend.createTensor(data2, intArrayOf(2), DType.INT32) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         val tensor3 = backend.createTensor(data3, intArrayOf(4), DType.INT32) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
         val result = arrayOps.concatenate(listOf(tensor1, tensor2, tensor3), axis = 0) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
         assertEquals(DType.INT32, result.dtype)
         assertEquals(9, result.size)
@@ -97,9 +97,9 @@ class ArrayManipulationOperationsTest {
     fun testRepeatFlattened() {
         val data = intArrayOf(1, 2, 3)
         val tensor = backend.createTensor(data, intArrayOf(3), DType.INT32) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = arrayOps.repeat(tensor, 3) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = arrayOps.repeat(tensor, 3)
         
         assertEquals(DType.INT32, result.dtype)
         assertEquals(9, result.size)
@@ -111,9 +111,9 @@ class ArrayManipulationOperationsTest {
     fun testRepeatAlongAxis() {
         val data = intArrayOf(1, 2, 3)
         val tensor = backend.createTensor(data, intArrayOf(3), DType.INT32) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = arrayOps.repeat(tensor, 2, axis = 0) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = arrayOps.repeat(tensor, 2, axis = 0)
         
         assertEquals(DType.INT32, result.dtype)
         assertEquals(6, result.size)
@@ -125,9 +125,9 @@ class ArrayManipulationOperationsTest {
     fun testRepeatZero() {
         val data = intArrayOf(1, 2, 3)
         val tensor = backend.createTensor(data, intArrayOf(3), DType.INT32) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = arrayOps.repeat(tensor, 0) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = arrayOps.repeat(tensor, 0)
         
         assertEquals(DType.INT32, result.dtype)
         assertEquals(0, result.size)
@@ -138,9 +138,9 @@ class ArrayManipulationOperationsTest {
     fun testTile1D() {
         val data = intArrayOf(1, 2)
         val tensor = backend.createTensor(data, intArrayOf(2), DType.INT32) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = arrayOps.tile(tensor, intArrayOf(3)) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = arrayOps.tile(tensor, intArrayOf(3))
         
         assertEquals(DType.INT32, result.dtype)
         assertEquals(6, result.size)
@@ -152,9 +152,9 @@ class ArrayManipulationOperationsTest {
     fun testTileZeroReps() {
         val data = intArrayOf(1, 2, 3)
         val tensor = backend.createTensor(data, intArrayOf(3), DType.INT32) 
-            as OptimizedMegaTensorBackend.OptimizedMegaTensor
+           
         
-        val result = arrayOps.tile(tensor, intArrayOf(0)) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = arrayOps.tile(tensor, intArrayOf(0))
         
         assertEquals(DType.INT32, result.dtype)
         assertEquals(0, result.size)
@@ -239,7 +239,7 @@ class ArrayManipulationOperationsTest {
         val boolTensor1 = backend.createTensor(boolData1, intArrayOf(2), DType.BOOL)
         val boolTensor2 = backend.createTensor(boolData2, intArrayOf(2), DType.BOOL)
         
-        val result = arrayOps.concatenate(listOf(boolTensor1, boolTensor2)) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val result = arrayOps.concatenate(listOf(boolTensor1, boolTensor2))
         
         assertEquals(DType.BOOL, result.dtype)
         assertEquals(4, result.size)
@@ -260,11 +260,11 @@ class ArrayManipulationOperationsTest {
         val singleData = doubleArrayOf(1.0, 2.0)
         val singleTensor = backend.createTensor(singleData, intArrayOf(1, 2), DType.FLOAT64)
         
-        val vstackResult = arrayOps.vstack(listOf(singleTensor)) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val vstackResult = arrayOps.vstack(listOf(singleTensor))
         assertEquals(2, vstackResult.size)
         assertTrue(vstackResult.shape.contentEquals(intArrayOf(1, 2)))
         
-        val hstackResult = arrayOps.hstack(listOf(singleTensor)) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val hstackResult = arrayOps.hstack(listOf(singleTensor))
         assertEquals(2, hstackResult.size)
         assertTrue(hstackResult.shape.contentEquals(intArrayOf(1, 2)))
         
@@ -272,7 +272,7 @@ class ArrayManipulationOperationsTest {
         val scalarData = doubleArrayOf(5.0)
         val scalarTensor = backend.createTensor(scalarData, intArrayOf(1), DType.FLOAT64)
         
-        val repeatResult = arrayOps.repeat(scalarTensor, 4) as OptimizedMegaTensorBackend.OptimizedMegaTensor
+        val repeatResult = arrayOps.repeat(scalarTensor, 4)
         assertEquals(4, repeatResult.size)
         assertTrue(repeatResult.shape.contentEquals(intArrayOf(4)))
     }

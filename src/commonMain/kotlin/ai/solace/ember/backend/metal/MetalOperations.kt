@@ -216,72 +216,75 @@ object MetalOperations {
         }
     }
     
-    // Bitwise operations - placeholder implementations for Metal
+    // Bitwise operations require kernels that are not part of the portable Metal surface yet.
     fun leftShift(x: Any, shifts: Any): Any {
-        throw NotImplementedError("Metal bitwise operations not yet implemented")
+        unsupportedMetalBitwise()
     }
     
     fun rightShift(x: Any, shifts: Any): Any {
-        throw NotImplementedError("Metal bitwise operations not yet implemented")
+        unsupportedMetalBitwise()
     }
     
     fun rotateLeft(x: Any, shifts: Any, bitWidth: Int): Any {
-        throw NotImplementedError("Metal bitwise operations not yet implemented")
+        unsupportedMetalBitwise()
     }
     
     fun rotateRight(x: Any, shifts: Any, bitWidth: Int): Any {
-        throw NotImplementedError("Metal bitwise operations not yet implemented")
+        unsupportedMetalBitwise()
     }
     
     fun countOnes(x: Any): Any {
-        throw NotImplementedError("Metal bitwise operations not yet implemented")
+        unsupportedMetalBitwise()
     }
     
     fun countZeros(x: Any): Any {
-        throw NotImplementedError("Metal bitwise operations not yet implemented")
+        unsupportedMetalBitwise()
     }
     
     fun getBit(x: Any, position: Any): Any {
-        throw NotImplementedError("Metal bitwise operations not yet implemented")
+        unsupportedMetalBitwise()
     }
     
     fun setBit(x: Any, position: Any, value: Any): Any {
-        throw NotImplementedError("Metal bitwise operations not yet implemented")
+        unsupportedMetalBitwise()
     }
     
     fun toggleBit(x: Any, position: Any): Any {
-        throw NotImplementedError("Metal bitwise operations not yet implemented")
+        unsupportedMetalBitwise()
     }
     
     fun bitwiseAnd(x: Any, y: Any): Any {
-        throw NotImplementedError("Metal bitwise operations not yet implemented")
+        unsupportedMetalBitwise()
     }
     
     fun bitwiseOr(x: Any, y: Any): Any {
-        throw NotImplementedError("Metal bitwise operations not yet implemented")
+        unsupportedMetalBitwise()
     }
     
     fun bitwiseXor(x: Any, y: Any): Any {
-        throw NotImplementedError("Metal bitwise operations not yet implemented")
+        unsupportedMetalBitwise()
     }
     
     fun bitwiseNot(x: Any): Any {
-        throw NotImplementedError("Metal bitwise operations not yet implemented")
+        unsupportedMetalBitwise()
     }
     
     fun binaryWaveInterference(waves: List<Any>, mode: String): Any {
-        throw NotImplementedError("Metal binary wave operations not yet implemented")
+        unsupportedMetalBitwise()
     }
     
     fun binaryWavePropagate(wave: Any, shift: Any): Any {
-        throw NotImplementedError("Metal binary wave operations not yet implemented")
+        unsupportedMetalBitwise()
     }
     
     fun createDutyCycle(length: Int, dutyCycle: Float, dtype: DType): Any {
-        throw NotImplementedError("Metal duty cycle generation not yet implemented")
+        unsupportedMetalBitwise()
     }
     
     fun generateBlockySin(length: Int, halfPeriod: Int, dtype: DType): Any {
-        throw NotImplementedError("Metal blocky sin generation not yet implemented")
+        unsupportedMetalBitwise()
     }
+
+    private fun unsupportedMetalBitwise(): Nothing =
+        throw UnsupportedOperationException("Metal bitwise kernels are not available in this backend")
 }
