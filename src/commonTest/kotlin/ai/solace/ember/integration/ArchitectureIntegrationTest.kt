@@ -6,6 +6,7 @@ import ai.solace.ember.tensor.common.EmberTensor
 import ai.solace.ember.tensor.common.EmberShape
 import ai.solace.ember.tensor.common.DType
 import ai.solace.ember.backend.BackendRegistry
+import ai.solace.ember.backend.initializePlatformBackends
 import kotlin.test.*
 
 /**
@@ -15,7 +16,7 @@ class ArchitectureIntegrationTest {
 
     @BeforeTest
     fun setup() {
-        BackendRegistry.initialize()
+        initializePlatformBackends()
     }
 
     @Test
