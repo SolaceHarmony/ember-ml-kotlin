@@ -11,7 +11,7 @@ import kotlin.test.*
  */
 class LinearAlgebraOperationsTest {
     
-    private val backend = OptimizedMegaTensorBackend()
+    private val backend = DefaultCpuBackend()
     private val linalgOps = LinearAlgebraOperations(backend)
     
     @Test

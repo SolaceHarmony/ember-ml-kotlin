@@ -5,18 +5,18 @@ import ai.solace.ember.backend.storage.TensorStorage
 import kotlin.math.*
 
 /**
- * Mathematical functions for the OptimizedMegaTensorBackend.
+ * Mathematical functions for the DefaultCpuBackend.
  * 
  * This class provides element-wise mathematical operations that were missing
  * in the original implementation, including trigonometric, exponential, 
  * and other mathematical functions.
  */
-class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
+class MathematicalOperations(private val backend: DefaultCpuBackend) {
     
     /**
      * Applies sine function element-wise.
      */
-    fun sin(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun sin(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyUnaryMathFunction(tensor) { value ->
             when (value) {
                 is Float -> kotlin.math.sin(value)
@@ -32,7 +32,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Applies cosine function element-wise.
      */
-    fun cos(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun cos(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyUnaryMathFunction(tensor) { value ->
             when (value) {
                 is Float -> kotlin.math.cos(value)
@@ -48,7 +48,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Applies tangent function element-wise.
      */
-    fun tan(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun tan(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyUnaryMathFunction(tensor) { value ->
             when (value) {
                 is Float -> kotlin.math.tan(value)
@@ -64,7 +64,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Applies exponential function element-wise.
      */
-    fun exp(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun exp(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyUnaryMathFunction(tensor) { value ->
             when (value) {
                 is Float -> kotlin.math.exp(value)
@@ -80,7 +80,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Applies natural logarithm function element-wise.
      */
-    fun log(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun log(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyUnaryMathFunction(tensor) { value ->
             when (value) {
                 is Float -> {
@@ -111,7 +111,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Applies square root function element-wise.
      */
-    fun sqrt(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun sqrt(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyUnaryMathFunction(tensor) { value ->
             when (value) {
                 is Float -> {
@@ -139,7 +139,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Applies power function element-wise.
      */
-    fun pow(tensor: Any, exponent: Double): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun pow(tensor: Any, exponent: Double): DefaultCpuBackend.DefaultCpuTensor {
         return applyUnaryMathFunction(tensor) { value ->
             when (value) {
                 is Float -> value.pow(exponent.toFloat())
@@ -155,7 +155,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Applies absolute value function element-wise.
      */
-    fun abs(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun abs(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyUnaryMathFunction(tensor) { value ->
             when (value) {
                 is Float -> kotlin.math.abs(value)
@@ -172,7 +172,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Applies base-10 logarithm function element-wise.
      */
-    fun log10(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun log10(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyUnaryMathFunction(tensor) { value ->
             when (value) {
                 is Float -> {
@@ -203,7 +203,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Applies base-2 logarithm function element-wise.
      */
-    fun log2(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun log2(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyUnaryMathFunction(tensor) { value ->
             when (value) {
                 is Float -> {
@@ -234,7 +234,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Applies hyperbolic sine function element-wise.
      */
-    fun sinh(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun sinh(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyUnaryMathFunction(tensor) { value ->
             when (value) {
                 is Float -> kotlin.math.sinh(value)
@@ -250,7 +250,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Applies hyperbolic cosine function element-wise.
      */
-    fun cosh(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun cosh(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyUnaryMathFunction(tensor) { value ->
             when (value) {
                 is Float -> kotlin.math.cosh(value)
@@ -266,7 +266,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Applies floor function element-wise.
      */
-    fun floor(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun floor(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyUnaryMathFunction(tensor) { value ->
             when (value) {
                 is Float -> kotlin.math.floor(value)
@@ -282,7 +282,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Applies ceiling function element-wise.
      */
-    fun ceil(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun ceil(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyUnaryMathFunction(tensor) { value ->
             when (value) {
                 is Float -> kotlin.math.ceil(value)
@@ -298,7 +298,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Applies modulo operation element-wise.
      */
-    fun mod(tensor1: Any, tensor2: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun mod(tensor1: Any, tensor2: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyBinaryMathFunction(tensor1, tensor2) { a, b ->
             when {
                 a is Float && b is Float -> a % b
@@ -319,7 +319,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Applies clipping function element-wise.
      */
-    fun clip(tensor: Any, minVal: Double, maxVal: Double): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun clip(tensor: Any, minVal: Double, maxVal: Double): DefaultCpuBackend.DefaultCpuTensor {
         if (minVal > maxVal) {
             throw IllegalArgumentException("minVal ($minVal) must be <= maxVal ($maxVal)")
         }
@@ -337,7 +337,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Applies negation function element-wise.
      */
-    fun negative(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun negative(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyUnaryMathFunction(tensor) { value ->
             when (value) {
                 is Float -> -value
@@ -354,7 +354,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Applies sign function element-wise.
      */
-    fun sign(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun sign(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyUnaryMathFunction(tensor) { value ->
             when (value) {
                 is Float -> kotlin.math.sign(value)
@@ -371,8 +371,8 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes gradient along specified axis.
      */
-    fun gradient(tensor: Any, axis: Int? = null): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun gradient(tensor: Any, axis: Int? = null): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         
         // For now, implement 1D gradient (discrete difference)
         if (axis != null && (axis < 0 || axis >= t.shape.size)) {
@@ -417,13 +417,13 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
             setStorageValue(resultStorage, i, gradient, outputDType)
         }
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, t.shape, t.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, t.shape, t.device)
     }
     
     /**
      * Element-wise greater than comparison.
      */
-    fun greaterThan(tensor1: Any, tensor2: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun greaterThan(tensor1: Any, tensor2: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyBinaryComparisonFunction(tensor1, tensor2) { a, b ->
             when {
                 a is Float && b is Float -> a > b
@@ -445,7 +445,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Element-wise less than comparison.
      */
-    fun lessThan(tensor1: Any, tensor2: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun lessThan(tensor1: Any, tensor2: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyBinaryComparisonFunction(tensor1, tensor2) { a, b ->
             when {
                 a is Float && b is Float -> a < b
@@ -467,7 +467,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Element-wise equality comparison.
      */
-    fun equal(tensor1: Any, tensor2: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun equal(tensor1: Any, tensor2: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyBinaryComparisonFunction(tensor1, tensor2) { a, b ->
             when {
                 a is Float && b is Float -> a == b
@@ -489,7 +489,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Element-wise not equal comparison.
      */
-    fun notEqual(tensor1: Any, tensor2: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun notEqual(tensor1: Any, tensor2: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyBinaryComparisonFunction(tensor1, tensor2) { a, b ->
             when {
                 a is Float && b is Float -> a != b
@@ -510,7 +510,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Element-wise less than or equal comparison.
      */
-    fun lessEqual(tensor1: Any, tensor2: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun lessEqual(tensor1: Any, tensor2: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyBinaryComparisonFunction(tensor1, tensor2) { a, b ->
             when {
                 a is Float && b is Float -> a <= b
@@ -531,7 +531,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Element-wise greater than or equal comparison.
      */
-    fun greaterEqual(tensor1: Any, tensor2: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun greaterEqual(tensor1: Any, tensor2: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyBinaryComparisonFunction(tensor1, tensor2) { a, b ->
             when {
                 a is Float && b is Float -> a >= b
@@ -552,7 +552,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Element-wise logical AND operation.
      */
-    fun logicalAnd(tensor1: Any, tensor2: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun logicalAnd(tensor1: Any, tensor2: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyBinaryComparisonFunction(tensor1, tensor2) { a, b ->
             convertToBoolean(a) && convertToBoolean(b)
         }
@@ -561,7 +561,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Element-wise logical OR operation.
      */
-    fun logicalOr(tensor1: Any, tensor2: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun logicalOr(tensor1: Any, tensor2: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyBinaryComparisonFunction(tensor1, tensor2) { a, b ->
             convertToBoolean(a) || convertToBoolean(b)
         }
@@ -570,7 +570,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Element-wise logical NOT operation.
      */
-    fun logicalNot(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun logicalNot(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyUnaryMathFunction(tensor) { value ->
             !convertToBoolean(value)
         }
@@ -579,7 +579,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Element-wise logical XOR operation.
      */
-    fun logicalXor(tensor1: Any, tensor2: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun logicalXor(tensor1: Any, tensor2: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyBinaryComparisonFunction(tensor1, tensor2) { a, b ->
             val aBool = convertToBoolean(a)
             val bBool = convertToBoolean(b)
@@ -590,7 +590,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Check if values are NaN (Not a Number).
      */
-    fun isNaN(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun isNaN(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
         return applyUnaryMathFunction(tensor) { value ->
             when (value) {
                 is Float -> value.isNaN()
@@ -603,7 +603,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Element-wise close comparison within tolerance.
      */
-    fun isClose(tensor1: Any, tensor2: Any, rtol: Double = 1e-05, atol: Double = 1e-08): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun isClose(tensor1: Any, tensor2: Any, rtol: Double = 1e-05, atol: Double = 1e-08): DefaultCpuBackend.DefaultCpuTensor {
         return applyBinaryComparisonFunction(tensor1, tensor2) { a, b ->
             val aVal = convertToDouble(a)
             val bVal = convertToDouble(b)
@@ -631,10 +631,10 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Select elements from tensors based on condition.
      */
-    fun where(condition: Any, x: Any, y: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val condTensor = condition as OptimizedMegaTensorBackend.OptimizedMegaTensor
-        val xTensor = x as OptimizedMegaTensorBackend.OptimizedMegaTensor
-        val yTensor = y as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun where(condition: Any, x: Any, y: Any): DefaultCpuBackend.DefaultCpuTensor {
+        val condTensor = condition as DefaultCpuBackend.DefaultCpuTensor
+        val xTensor = x as DefaultCpuBackend.DefaultCpuTensor
+        val yTensor = y as DefaultCpuBackend.DefaultCpuTensor
         
         if (!condTensor.shape.contentEquals(xTensor.shape) || !condTensor.shape.contentEquals(yTensor.shape)) {
             throw IllegalArgumentException("All tensors must have the same shape")
@@ -661,13 +661,13 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
             setStorageValue(resultStorage, i, selectedValue, outputDType)
         }
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, condTensor.shape, condTensor.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, condTensor.shape, condTensor.device)
     }
     
     // Helper functions
     
-    private fun applyUnaryMathFunction(tensor: Any, operation: (Any) -> Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    private fun applyUnaryMathFunction(tensor: Any, operation: (Any) -> Any): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         
         // Determine output data type (usually promote to float/double for math operations)
         val outputDType = when (t.dtype) {
@@ -685,12 +685,12 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
             setStorageValue(resultStorage, i, outputValue, outputDType)
         }
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, t.shape, t.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, t.shape, t.device)
     }
     
-    private fun applyBinaryMathFunction(tensor1: Any, tensor2: Any, operation: (Any, Any) -> Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t1 = tensor1 as OptimizedMegaTensorBackend.OptimizedMegaTensor
-        val t2 = tensor2 as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    private fun applyBinaryMathFunction(tensor1: Any, tensor2: Any, operation: (Any, Any) -> Any): DefaultCpuBackend.DefaultCpuTensor {
+        val t1 = tensor1 as DefaultCpuBackend.DefaultCpuTensor
+        val t2 = tensor2 as DefaultCpuBackend.DefaultCpuTensor
         
         if (!t1.shape.contentEquals(t2.shape)) {
             throw IllegalArgumentException("Shape mismatch: ${t1.shape.contentToString()} vs ${t2.shape.contentToString()}")
@@ -713,12 +713,12 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
             setStorageValue(resultStorage, i, result, outputDType)
         }
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, t1.shape, t1.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, t1.shape, t1.device)
     }
     
-    private fun applyBinaryComparisonFunction(tensor1: Any, tensor2: Any, operation: (Any, Any) -> Boolean): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t1 = tensor1 as OptimizedMegaTensorBackend.OptimizedMegaTensor
-        val t2 = tensor2 as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    private fun applyBinaryComparisonFunction(tensor1: Any, tensor2: Any, operation: (Any, Any) -> Boolean): DefaultCpuBackend.DefaultCpuTensor {
+        val t1 = tensor1 as DefaultCpuBackend.DefaultCpuTensor
+        val t2 = tensor2 as DefaultCpuBackend.DefaultCpuTensor
         
         if (!t1.shape.contentEquals(t2.shape)) {
             throw IllegalArgumentException("Shape mismatch: ${t1.shape.contentToString()} vs ${t2.shape.contentToString()}")
@@ -733,7 +733,7 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
             setStorageValue(resultStorage, i, result, DType.BOOL)
         }
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, t1.shape, t1.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, t1.shape, t1.device)
     }
     
     private fun getStorageValue(storage: TensorStorage, index: Int): Any {
@@ -744,7 +744,6 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
             is TensorStorage.NativeLongStorage -> storage.get(index)
             is TensorStorage.NativeFloatStorage -> storage.get(index)
             is TensorStorage.NativeDoubleStorage -> storage.get(index)
-            is TensorStorage.MegaNumberStorage -> storage.get(index)
         }
     }
     
@@ -767,10 +766,6 @@ class MathematicalOperations(private val backend: OptimizedMegaTensorBackend) {
             }
             is TensorStorage.NativeDoubleStorage -> {
                 storage.set(index, convertToDouble(value))
-            }
-            is TensorStorage.MegaNumberStorage -> {
-                // For MegaNumber storage, we would need to convert appropriately
-                throw UnsupportedOperationException("MegaNumber storage not yet implemented for math operations")
             }
         }
     }

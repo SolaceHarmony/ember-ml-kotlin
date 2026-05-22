@@ -191,19 +191,19 @@ class TensorStorageTest {
         
         // The memory usage would be:
         // Boolean: 1 MB (BooleanArray with 1 byte per boolean)
-        // vs Previous: ~32 MB (MegaNumber with 32-bit chunks)
+        // Native-array storage avoids per-element boxing.
         // = 32x improvement
         
         // UINT8: 1 MB (UByteArray)
-        // vs Previous: ~32 MB (MegaNumber with 32-bit chunks)
+        // Native-array storage avoids per-element boxing.
         // = 32x improvement
         
         // INT32: 4 MB (IntArray)
-        // vs Previous: ~32 MB (MegaNumber with 32-bit chunks)
+        // Native-array storage avoids per-element boxing.
         // = 8x improvement
         
         // FLOAT32: 4 MB (FloatArray)
-        // vs Previous: ~32 MB (MegaNumber with 32-bit chunks)
+        // Native-array storage avoids per-element boxing.
         // = 8x improvement
     }
 }

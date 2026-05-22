@@ -6,13 +6,13 @@ import ai.solace.ember.tensor.common.DType
 /**
  * Backend implementation backed by compact per-dtype tensor storage.
  */
-class OptimizedMegaTensorBackend : Backend {
+class DefaultCpuBackend : Backend {
     private var defaultDevice: String = "cpu"
     private val mathOps = MathematicalOperations(this)
     private val statsOps = StatisticalOperations(this)
     private val linalgOps = LinearAlgebraOperations(this)
 
-    data class OptimizedMegaTensor(
+    data class DefaultCpuTensor(
         val storage: TensorStorage,
         val shape: IntArray,
         val device: String,
@@ -22,7 +22,7 @@ class OptimizedMegaTensorBackend : Backend {
 
         override fun equals(other: Any?): Boolean =
             this === other ||
-                other is OptimizedMegaTensor &&
+                other is DefaultCpuTensor &&
                 storage == other.storage &&
                 shape.contentEquals(other.shape) &&
                 device == other.device
@@ -35,7 +35,7 @@ class OptimizedMegaTensorBackend : Backend {
         }
     }
 
-    override fun createTensor(data: Any, shape: IntArray, dtype: DType): OptimizedMegaTensor {
+    override fun createTensor(data: Any, shape: IntArray, dtype: DType): DefaultCpuTensor {
         val size = shape.fold(1) { acc, dim -> acc * dim }
         val values = flattenValues(data)
         require(values.size == size) {
@@ -45,7 +45,7 @@ class OptimizedMegaTensorBackend : Backend {
         for (i in values.indices) {
             setStorageValue(storage, i, values[i])
         }
-        return OptimizedMegaTensor(storage, shape.copyOf(), defaultDevice)
+        return DefaultCpuTensor(storage, shape.copyOf(), defaultDevice)
     }
 
     override fun getTensorShape(tensor: Any): IntArray = asTensor(tensor).shape.copyOf()
@@ -54,7 +54,7 @@ class OptimizedMegaTensorBackend : Backend {
 
     override fun getTensorDevice(tensor: Any): String = asTensor(tensor).device
 
-    override fun add(a: Any, b: Any): OptimizedMegaTensor = binaryTensorOp(a, b) { left, right ->
+    override fun add(a: Any, b: Any): DefaultCpuTensor = binaryTensorOp(a, b) { left, right ->
         when (left) {
             is Boolean -> left || right.toBooleanValue()
             is UByte -> (left.toInt() + right.toIntValue()).coerceIn(0, 255).toUByte()
@@ -66,7 +66,7 @@ class OptimizedMegaTensorBackend : Backend {
         }
     }
 
-    override fun subtract(a: Any, b: Any): OptimizedMegaTensor = binaryTensorOp(a, b) { left, right ->
+    override fun subtract(a: Any, b: Any): DefaultCpuTensor = binaryTensorOp(a, b) { left, right ->
         when (left) {
             is Boolean -> left && !right.toBooleanValue()
             is UByte -> (left.toInt() - right.toIntValue()).coerceIn(0, 255).toUByte()
@@ -78,7 +78,7 @@ class OptimizedMegaTensorBackend : Backend {
         }
     }
 
-    override fun multiply(a: Any, b: Any): OptimizedMegaTensor = binaryTensorOp(a, b) { left, right ->
+    override fun multiply(a: Any, b: Any): DefaultCpuTensor = binaryTensorOp(a, b) { left, right ->
         when (left) {
             is Boolean -> left && right.toBooleanValue()
             is UByte -> (left.toInt() * right.toIntValue()).coerceIn(0, 255).toUByte()
@@ -90,7 +90,7 @@ class OptimizedMegaTensorBackend : Backend {
         }
     }
 
-    override fun divide(a: Any, b: Any): OptimizedMegaTensor = binaryTensorOp(a, b) { left, right ->
+    override fun divide(a: Any, b: Any): DefaultCpuTensor = binaryTensorOp(a, b) { left, right ->
         when (left) {
             is Boolean -> left
             is UByte -> (left.toInt() / right.toIntValue().requireNonZero()).coerceIn(0, 255).toUByte()
@@ -102,33 +102,33 @@ class OptimizedMegaTensorBackend : Backend {
         }
     }
 
-    override fun matmul(a: Any, b: Any): OptimizedMegaTensor =
+    override fun matmul(a: Any, b: Any): DefaultCpuTensor =
         linalgOps.matmul(a, b)
 
-    override fun cast(tensor: Any, dtype: DType): OptimizedMegaTensor {
+    override fun cast(tensor: Any, dtype: DType): DefaultCpuTensor {
         val source = asTensor(tensor)
         val storage = TensorStorage.createOptimalStorage(dtype, source.size)
         for (i in 0 until source.size) {
             setStorageValue(storage, i, getStorageValue(source.storage, i))
         }
-        return OptimizedMegaTensor(storage, source.shape.copyOf(), source.device)
+        return DefaultCpuTensor(storage, source.shape.copyOf(), source.device)
     }
 
-    override fun reshape(tensor: Any, newShape: IntArray): OptimizedMegaTensor {
+    override fun reshape(tensor: Any, newShape: IntArray): DefaultCpuTensor {
         val source = asTensor(tensor)
         val newSize = newShape.fold(1) { acc, dim -> acc * dim }
         require(newSize == source.size) {
             "Cannot reshape ${source.shape.contentToString()} to ${newShape.contentToString()}"
         }
-        return OptimizedMegaTensor(copyStorage(source.storage), newShape.copyOf(), source.device)
+        return DefaultCpuTensor(copyStorage(source.storage), newShape.copyOf(), source.device)
     }
 
-    override fun transpose(tensor: Any, axes: IntArray?): OptimizedMegaTensor =
+    override fun transpose(tensor: Any, axes: IntArray?): DefaultCpuTensor =
         linalgOps.transpose(tensor, axes)
 
-    override fun toDevice(tensor: Any, device: String): OptimizedMegaTensor {
+    override fun toDevice(tensor: Any, device: String): DefaultCpuTensor {
         val source = asTensor(tensor)
-        return OptimizedMegaTensor(copyStorage(source.storage), source.shape.copyOf(), device)
+        return DefaultCpuTensor(copyStorage(source.storage), source.shape.copyOf(), device)
     }
 
     override fun getAvailableDevices(): List<String> = listOf(defaultDevice)
@@ -139,13 +139,13 @@ class OptimizedMegaTensorBackend : Backend {
 
     override fun getDefaultDevice(): String = defaultDevice
 
-    fun sum(tensor: Any): OptimizedMegaTensor = statsOps.sum(tensor)
+    fun sum(tensor: Any): DefaultCpuTensor = statsOps.sum(tensor)
 
-    fun mean(tensor: Any): OptimizedMegaTensor = statsOps.mean(tensor)
+    fun mean(tensor: Any): DefaultCpuTensor = statsOps.mean(tensor)
 
-    fun min(tensor: Any): OptimizedMegaTensor = statsOps.min(tensor)
+    fun min(tensor: Any): DefaultCpuTensor = statsOps.min(tensor)
 
-    fun max(tensor: Any): OptimizedMegaTensor = statsOps.max(tensor)
+    fun max(tensor: Any): DefaultCpuTensor = statsOps.max(tensor)
 
     fun getElement(tensor: Any, index: Int): Any {
         val source = asTensor(tensor)
@@ -153,24 +153,24 @@ class OptimizedMegaTensorBackend : Backend {
         return getStorageValue(source.storage, index)
     }
 
-    fun setElement(tensor: Any, index: Int, value: Any): OptimizedMegaTensor {
+    fun setElement(tensor: Any, index: Int, value: Any): DefaultCpuTensor {
         val source = asTensor(tensor)
         require(index in 0 until source.size) { "Index $index out of bounds for size ${source.size}" }
         val storage = copyStorage(source.storage)
         setStorageValue(storage, index, value)
-        return OptimizedMegaTensor(storage, source.shape.copyOf(), source.device)
+        return DefaultCpuTensor(storage, source.shape.copyOf(), source.device)
     }
 
-    fun sin(tensor: Any): OptimizedMegaTensor = mathOps.sin(tensor)
-    fun cos(tensor: Any): OptimizedMegaTensor = mathOps.cos(tensor)
-    fun exp(tensor: Any): OptimizedMegaTensor = mathOps.exp(tensor)
-    fun log(tensor: Any): OptimizedMegaTensor = mathOps.log(tensor)
-    fun sqrt(tensor: Any): OptimizedMegaTensor = mathOps.sqrt(tensor)
-    fun pow(tensor: Any, exponent: Any): OptimizedMegaTensor = mathOps.pow(tensor, exponent.toDoubleValue())
-    fun abs(tensor: Any): OptimizedMegaTensor = mathOps.abs(tensor)
-    fun greaterThan(a: Any, b: Any): OptimizedMegaTensor = mathOps.greaterThan(a, b)
-    fun lessThan(a: Any, b: Any): OptimizedMegaTensor = mathOps.lessThan(a, b)
-    fun equal(a: Any, b: Any): OptimizedMegaTensor = mathOps.equal(a, b)
+    fun sin(tensor: Any): DefaultCpuTensor = mathOps.sin(tensor)
+    fun cos(tensor: Any): DefaultCpuTensor = mathOps.cos(tensor)
+    fun exp(tensor: Any): DefaultCpuTensor = mathOps.exp(tensor)
+    fun log(tensor: Any): DefaultCpuTensor = mathOps.log(tensor)
+    fun sqrt(tensor: Any): DefaultCpuTensor = mathOps.sqrt(tensor)
+    fun pow(tensor: Any, exponent: Any): DefaultCpuTensor = mathOps.pow(tensor, exponent.toDoubleValue())
+    fun abs(tensor: Any): DefaultCpuTensor = mathOps.abs(tensor)
+    fun greaterThan(a: Any, b: Any): DefaultCpuTensor = mathOps.greaterThan(a, b)
+    fun lessThan(a: Any, b: Any): DefaultCpuTensor = mathOps.lessThan(a, b)
+    fun equal(a: Any, b: Any): DefaultCpuTensor = mathOps.equal(a, b)
 
     override fun leftShift(x: Any, shifts: Any): Any = integerTensorOp(x) { it shl shiftValue(shifts) }
     override fun rightShift(x: Any, shifts: Any): Any = integerTensorOp(x) { it shr shiftValue(shifts) }
@@ -231,7 +231,7 @@ class OptimizedMegaTensorBackend : Backend {
         return createTensor(IntArray(length) { if (it % period < halfPeriod) 1 else 0 }, intArrayOf(length), dtype)
     }
 
-    private fun binaryTensorOp(a: Any, b: Any, operation: (Any, Any) -> Any): OptimizedMegaTensor {
+    private fun binaryTensorOp(a: Any, b: Any, operation: (Any, Any) -> Any): DefaultCpuTensor {
         val left = asTensor(a)
         val right = asTensor(b)
         require(left.shape.contentEquals(right.shape)) {
@@ -242,19 +242,19 @@ class OptimizedMegaTensorBackend : Backend {
         for (i in 0 until left.size) {
             setStorageValue(storage, i, operation(getStorageValue(left.storage, i), getStorageValue(right.storage, i)))
         }
-        return OptimizedMegaTensor(storage, left.shape.copyOf(), left.device)
+        return DefaultCpuTensor(storage, left.shape.copyOf(), left.device)
     }
 
-    private fun integerBinaryTensorOp(a: Any, b: Any, operation: (Long, Long) -> Long): OptimizedMegaTensor =
+    private fun integerBinaryTensorOp(a: Any, b: Any, operation: (Long, Long) -> Long): DefaultCpuTensor =
         binaryTensorOp(a, b) { left, right -> operation(left.toLongValue(), right.toLongValue()) }
 
-    private fun integerTensorOp(tensor: Any, resultDType: DType = asTensor(tensor).dtype, operation: (Long) -> Long): OptimizedMegaTensor {
+    private fun integerTensorOp(tensor: Any, resultDType: DType = asTensor(tensor).dtype, operation: (Long) -> Long): DefaultCpuTensor {
         val source = asTensor(tensor)
         val storage = TensorStorage.createOptimalStorage(resultDType, source.size)
         for (i in 0 until source.size) {
             setStorageValue(storage, i, operation(getStorageValue(source.storage, i).toLongValue()))
         }
-        return OptimizedMegaTensor(storage, source.shape.copyOf(), source.device)
+        return DefaultCpuTensor(storage, source.shape.copyOf(), source.device)
     }
 
     private fun copyStorage(storage: TensorStorage): TensorStorage {
@@ -265,9 +265,9 @@ class OptimizedMegaTensorBackend : Backend {
         return copy
     }
 
-    private fun asTensor(tensor: Any): OptimizedMegaTensor =
-        tensor as? OptimizedMegaTensor
-            ?: throw IllegalArgumentException("Expected OptimizedMegaTensor, got ${tensor::class.simpleName}")
+    private fun asTensor(tensor: Any): DefaultCpuTensor =
+        tensor as? DefaultCpuTensor
+            ?: throw IllegalArgumentException("Expected DefaultCpuTensor, got ${tensor::class.simpleName}")
 
     private fun flattenValues(data: Any): List<Any> = when (data) {
         is List<*> -> data.flatMap { if (it is List<*>) flattenValues(it) else listOf(it ?: 0) }
@@ -289,7 +289,6 @@ class OptimizedMegaTensorBackend : Backend {
         is TensorStorage.NativeLongStorage -> storage.get(index)
         is TensorStorage.NativeFloatStorage -> storage.get(index)
         is TensorStorage.NativeDoubleStorage -> storage.get(index)
-        is TensorStorage.MegaNumberStorage -> storage.get(index)
     }
 
     private fun setStorageValue(storage: TensorStorage, index: Int, value: Any) {
@@ -300,7 +299,6 @@ class OptimizedMegaTensorBackend : Backend {
             is TensorStorage.NativeLongStorage -> storage.set(index, value.toLongValue())
             is TensorStorage.NativeFloatStorage -> storage.set(index, value.toFloatValue())
             is TensorStorage.NativeDoubleStorage -> storage.set(index, value.toDoubleValue())
-            is TensorStorage.MegaNumberStorage -> throw UnsupportedOperationException("MegaNumber storage writes are not supported here")
         }
     }
 
@@ -360,7 +358,7 @@ class OptimizedMegaTensorBackend : Backend {
     }
 
     private fun shiftValue(value: Any): Int = when (value) {
-        is OptimizedMegaTensor -> getStorageValue(value.storage, 0).toIntValue()
+        is DefaultCpuTensor -> getStorageValue(value.storage, 0).toIntValue()
         else -> value.toIntValue()
     }
 

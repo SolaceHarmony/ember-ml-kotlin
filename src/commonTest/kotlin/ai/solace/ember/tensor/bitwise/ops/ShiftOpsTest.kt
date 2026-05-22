@@ -2,7 +2,6 @@ package ai.solace.ember.tensor.bitwise.ops
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class ShiftOpsTest {
     
@@ -41,9 +40,9 @@ class ShiftOpsTest {
         assertEquals(0b01000000u, rotateRight(0b00000001u, 2, 8))
         assertEquals(0b00000001u, rotateRight(0b00000001u, 8, 8)) // Full rotation
         
-        // Simpler 32-bit test - just verify function works
-        val result = rotateRight(0x8u, 1, 32)
-        // 0x8 = 1000 -> rotate right 1 -> should move high bit to position 31
-        assertTrue(result > 0x80000000u)
+        // 32-bit wrap-around: bit 0 set, rotate right by 1 wraps to bit 31.
+        // (The previous test wrote `rotateRight(0x8u, 1, 32) > 0x80000000u`,
+        // which can never be true — `0x8u` rotated right by 1 is `0x4u`.)
+        assertEquals(0x80000000u, rotateRight(0x1u, 1, 32))
     }
 }

@@ -1,25 +1,23 @@
 package ai.solace.ember.backend.storage
 
 import ai.solace.ember.tensor.common.DType
-import ai.solace.ember.tensor.bitwise.MegaNumber
 
 /**
  * Hybrid storage system for tensors to optimize memory usage.
- * 
- * This sealed class provides different storage strategies depending on the data type:
- * - Efficient native storage for common types (Boolean, UINT8, INT32, etc.)
- * - MegaNumber storage for arbitrary precision when needed
- * 
- * This addresses the 32-bit limb inefficiency where all data types were forced
- * into expensive MegaNumber storage regardless of their natural size.
+ *
+ * This sealed class provides native storage strategies sized to the dtype:
+ * packed booleans, native byte/int/long/float/double arrays. Numeric
+ * precision above 64 bits is delegated to the Klang fixed-precision types
+ * (`io.github.kotlinmania.klang.fp.CFloat{16,32,64}`, `CLongDouble`,
+ * `klang.int.C_Int128`, `C_UInt128`) at the call site, not modeled as a
+ * storage variant here.
  */
 sealed class TensorStorage {
     abstract val size: Int
     abstract val dtype: DType
-    
+
     /**
      * Efficient boolean storage using bit packing.
-     * Provides ~256x memory reduction compared to MegaNumber storage.
      */
     data class PackedBooleanStorage(
         val data: BooleanArray,
@@ -50,7 +48,7 @@ sealed class TensorStorage {
     
     /**
      * Native UINT8 storage using UByteArray.
-     * Provides ~32x memory reduction compared to MegaNumber storage.
+     * Native bit-packed storage.
      */
     data class NativeUByteStorage(
         val data: UByteArray,
@@ -75,7 +73,7 @@ sealed class TensorStorage {
     
     /**
      * Native INT32 storage using IntArray.
-     * Provides ~8x memory reduction compared to MegaNumber storage.
+     * Native primitive-array storage.
      */
     data class NativeIntStorage(
         val data: IntArray,
@@ -100,7 +98,7 @@ sealed class TensorStorage {
     
     /**
      * Native INT64 storage using LongArray.
-     * Provides ~4x memory reduction compared to MegaNumber storage.
+     * Native primitive-array storage.
      */
     data class NativeLongStorage(
         val data: LongArray,
@@ -125,7 +123,7 @@ sealed class TensorStorage {
     
     /**
      * Native FLOAT32 storage using FloatArray.
-     * Provides ~8x memory reduction compared to MegaNumber storage.
+     * Native primitive-array storage.
      */
     data class NativeFloatStorage(
         val data: FloatArray,
@@ -150,7 +148,7 @@ sealed class TensorStorage {
     
     /**
      * Native FLOAT64 storage using DoubleArray.
-     * Provides ~4x memory reduction compared to MegaNumber storage.
+     * Native primitive-array storage.
      */
     data class NativeDoubleStorage(
         val data: DoubleArray,
@@ -173,53 +171,10 @@ sealed class TensorStorage {
         }
     }
     
-    /**
-     * MegaNumber storage for arbitrary precision arithmetic.
-     * Falls back to this when arbitrary precision is needed.
-     */
-    data class MegaNumberStorage(
-        val data: Array<MegaNumber>,
-        override val size: Int,
-        override val dtype: DType
-    ) : TensorStorage() {
-        
-        fun get(index: Int): MegaNumber {
-            if (index < 0 || index >= size) {
-                throw IndexOutOfBoundsException("Index $index out of bounds for size $size")
-            }
-            return data[index]
-        }
-        
-        fun set(index: Int, value: MegaNumber) {
-            if (index < 0 || index >= size) {
-                throw IndexOutOfBoundsException("Index $index out of bounds for size $size")
-            }
-            data[index] = value
-        }
-        
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is MegaNumberStorage) return false
-            
-            if (!data.contentEquals(other.data)) return false
-            if (size != other.size) return false
-            if (dtype != other.dtype) return false
-            
-            return true
-        }
-        
-        override fun hashCode(): Int {
-            var result = data.contentHashCode()
-            result = 31 * result + size
-            result = 31 * result + dtype.hashCode()
-            return result
-        }
-    }
-    
     companion object {
         /**
          * Creates the most efficient storage type for the given data type.
-         * 
+         *
          * @param dtype The data type to create storage for
          * @param size The number of elements to store
          * @return The most efficient storage implementation
@@ -232,8 +187,6 @@ sealed class TensorStorage {
                 DType.INT64 -> NativeLongStorage(LongArray(size), size, dtype)
                 DType.FLOAT32 -> NativeFloatStorage(FloatArray(size), size, dtype)
                 DType.FLOAT64 -> NativeDoubleStorage(DoubleArray(size), size, dtype)
-                // For future expansion: could fall back to MegaNumber for arbitrary precision
-                // else -> MegaNumberStorage(Array(size) { MegaNumber() }, size, dtype)
             }
         }
     }

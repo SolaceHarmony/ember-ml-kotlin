@@ -75,7 +75,7 @@ object BackendRegistry {
 
 /**
  * Platform-specific backend registration. Each target registers the concrete
- * backends it ships (e.g. macOS registers Metal and MegaTensor) and, when
+ * backends it ships (e.g. macOS registers Metal and a default CPU backend) and, when
  * appropriate, sets a default current backend.
  */
 expect fun initializePlatformBackends()

@@ -4,23 +4,23 @@ import ai.solace.ember.tensor.common.DType
 import ai.solace.ember.backend.storage.TensorStorage
 
 /**
- * Array manipulation functions for the OptimizedMegaTensorBackend.
+ * Array manipulation functions for the DefaultCpuBackend.
  * 
  * This class provides array manipulation operations including stacking,
  * concatenation, splitting, and reshaping operations that are essential
  * for tensor data manipulation.
  */
-class ArrayManipulationOperations(private val backend: OptimizedMegaTensorBackend) {
+class ArrayManipulationOperations(private val backend: DefaultCpuBackend) {
     
     /**
      * Stacks tensors vertically (row-wise).
      */
-    fun vstack(tensors: List<Any>): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun vstack(tensors: List<Any>): DefaultCpuBackend.DefaultCpuTensor {
         if (tensors.isEmpty()) {
             throw IllegalArgumentException("Cannot vstack empty list of tensors")
         }
         
-        val tensorList = tensors.map { it as OptimizedMegaTensorBackend.OptimizedMegaTensor }
+        val tensorList = tensors.map { it as DefaultCpuBackend.DefaultCpuTensor }
         
         // Validate that all tensors have compatible shapes for vertical stacking
         val firstTensor = tensorList[0]
@@ -62,18 +62,18 @@ class ArrayManipulationOperations(private val backend: OptimizedMegaTensorBacken
             currentOffset += tensor.size
         }
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, resultShape, firstTensor.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, resultShape, firstTensor.device)
     }
     
     /**
      * Stacks tensors horizontally (column-wise).
      */
-    fun hstack(tensors: List<Any>): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun hstack(tensors: List<Any>): DefaultCpuBackend.DefaultCpuTensor {
         if (tensors.isEmpty()) {
             throw IllegalArgumentException("Cannot hstack empty list of tensors")
         }
         
-        val tensorList = tensors.map { it as OptimizedMegaTensorBackend.OptimizedMegaTensor }
+        val tensorList = tensors.map { it as DefaultCpuBackend.DefaultCpuTensor }
         
         // Handle 1D tensors (concatenate them)
         if (tensorList[0].shape.size == 1) {
@@ -131,18 +131,18 @@ class ArrayManipulationOperations(private val backend: OptimizedMegaTensorBacken
             colOffset += cols
         }
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, resultShape, firstTensor.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, resultShape, firstTensor.device)
     }
     
     /**
      * Concatenates tensors along a specified axis.
      */
-    fun concatenate(tensors: List<Any>, axis: Int = 0): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun concatenate(tensors: List<Any>, axis: Int = 0): DefaultCpuBackend.DefaultCpuTensor {
         if (tensors.isEmpty()) {
             throw IllegalArgumentException("Cannot concatenate empty list of tensors")
         }
         
-        val tensorList = tensors.map { it as OptimizedMegaTensorBackend.OptimizedMegaTensor }
+        val tensorList = tensors.map { it as DefaultCpuBackend.DefaultCpuTensor }
         val firstTensor = tensorList[0]
         
         if (axis < 0 || axis >= firstTensor.shape.size) {
@@ -194,14 +194,14 @@ class ArrayManipulationOperations(private val backend: OptimizedMegaTensorBacken
             throw UnsupportedOperationException("Multi-dimensional concatenation not yet fully implemented")
         }
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, resultShape, firstTensor.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, resultShape, firstTensor.device)
     }
     
     /**
      * Repeats elements of a tensor.
      */
-    fun repeat(tensor: Any, repeats: Int, axis: Int? = null): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun repeat(tensor: Any, repeats: Int, axis: Int? = null): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         
         if (repeats < 0) {
             throw IllegalArgumentException("Repeats must be non-negative, got: $repeats")
@@ -215,7 +215,7 @@ class ArrayManipulationOperations(private val backend: OptimizedMegaTensorBacken
                 newShape[axis] = 0
                 newShape
             }
-            return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, resultShape, t.device)
+            return DefaultCpuBackend.DefaultCpuTensor(resultStorage, resultShape, t.device)
         }
         
         if (axis == null) {
@@ -229,7 +229,7 @@ class ArrayManipulationOperations(private val backend: OptimizedMegaTensorBacken
                 }
             }
             
-            return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, intArrayOf(t.size * repeats), t.device)
+            return DefaultCpuBackend.DefaultCpuTensor(resultStorage, intArrayOf(t.size * repeats), t.device)
         } else {
             if (axis < 0 || axis >= t.shape.size) {
                 throw IllegalArgumentException("Axis $axis is out of bounds for tensor with ${t.shape.size} dimensions")
@@ -246,7 +246,7 @@ class ArrayManipulationOperations(private val backend: OptimizedMegaTensorBacken
                     }
                 }
                 
-                return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, intArrayOf(t.size * repeats), t.device)
+                return DefaultCpuBackend.DefaultCpuTensor(resultStorage, intArrayOf(t.size * repeats), t.device)
             } else {
                 throw UnsupportedOperationException("Repeat along axis for multi-dimensional tensors not yet implemented")
             }
@@ -256,8 +256,8 @@ class ArrayManipulationOperations(private val backend: OptimizedMegaTensorBacken
     /**
      * Tiles a tensor by repeating it along multiple axes.
      */
-    fun tile(tensor: Any, reps: IntArray): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun tile(tensor: Any, reps: IntArray): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         
         if (reps.any { it < 0 }) {
             throw IllegalArgumentException("All repetition counts must be non-negative")
@@ -268,7 +268,7 @@ class ArrayManipulationOperations(private val backend: OptimizedMegaTensorBacken
             val repeats = reps[0]
             if (repeats == 0) {
                 val resultStorage = TensorStorage.createOptimalStorage(t.dtype, 0)
-                return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, intArrayOf(0), t.device)
+                return DefaultCpuBackend.DefaultCpuTensor(resultStorage, intArrayOf(0), t.device)
             }
             
             val resultStorage = TensorStorage.createOptimalStorage(t.dtype, t.size * repeats)
@@ -280,7 +280,7 @@ class ArrayManipulationOperations(private val backend: OptimizedMegaTensorBacken
                 }
             }
             
-            return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, intArrayOf(t.size * repeats), t.device)
+            return DefaultCpuBackend.DefaultCpuTensor(resultStorage, intArrayOf(t.size * repeats), t.device)
         } else {
             throw UnsupportedOperationException("Multi-dimensional tiling not yet implemented")
         }
@@ -296,7 +296,6 @@ class ArrayManipulationOperations(private val backend: OptimizedMegaTensorBacken
             is TensorStorage.NativeLongStorage -> storage.get(index)
             is TensorStorage.NativeFloatStorage -> storage.get(index)
             is TensorStorage.NativeDoubleStorage -> storage.get(index)
-            is TensorStorage.MegaNumberStorage -> storage.get(index)
         }
     }
     
@@ -319,9 +318,6 @@ class ArrayManipulationOperations(private val backend: OptimizedMegaTensorBacken
             }
             is TensorStorage.NativeDoubleStorage -> {
                 storage.set(index, convertToDouble(value))
-            }
-            is TensorStorage.MegaNumberStorage -> {
-                throw UnsupportedOperationException("MegaNumber storage not yet implemented for array manipulation operations")
             }
         }
     }

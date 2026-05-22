@@ -11,4 +11,4 @@ This package contains implementations of bitwise operations ported from the Pyth
 
 ## Usage
 
-These operations work with MegaBinary and MegaNumber classes as well as standard Kotlin integer types.
+These operations work on standard Kotlin integer types (UInt, ULong, UByte, UShort).

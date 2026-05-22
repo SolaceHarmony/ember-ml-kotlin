@@ -11,7 +11,7 @@ import kotlin.test.*
  */
 class ArrayManipulationOperationsTest {
     
-    private val backend = OptimizedMegaTensorBackend()
+    private val backend = DefaultCpuBackend()
     private val arrayOps = ArrayManipulationOperations(backend)
     
     @Test

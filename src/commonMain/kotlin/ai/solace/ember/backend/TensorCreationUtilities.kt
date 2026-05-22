@@ -4,12 +4,12 @@ import ai.solace.ember.tensor.common.DType
 import ai.solace.ember.backend.storage.TensorStorage
 
 /**
- * Tensor creation utilities for the OptimizedMegaTensorBackend.
+ * Tensor creation utilities for the DefaultCpuBackend.
  * 
  * This class provides factory methods for creating common tensor types,
  * similar to NumPy's array creation functions.
  */
-class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
+class TensorCreationUtilities(private val backend: DefaultCpuBackend) {
     
     /**
      * Creates a tensor filled with zeros.
@@ -18,12 +18,12 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
      * @param dtype The data type of the tensor
      * @return A tensor filled with zeros
      */
-    fun zeros(shape: IntArray, dtype: DType = DType.FLOAT32): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun zeros(shape: IntArray, dtype: DType = DType.FLOAT32): DefaultCpuBackend.DefaultCpuTensor {
         val totalSize = shape.fold(1) { acc, dim -> acc * dim }
         val storage = TensorStorage.createOptimalStorage(dtype, totalSize)
         
         // Fill with zeros (arrays are already zero-initialized in Kotlin)
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(storage, shape, "cpu")
+        return DefaultCpuBackend.DefaultCpuTensor(storage, shape, "cpu")
     }
     
     /**
@@ -33,7 +33,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
      * @param dtype The data type of the tensor
      * @return A tensor filled with ones
      */
-    fun ones(shape: IntArray, dtype: DType = DType.FLOAT32): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun ones(shape: IntArray, dtype: DType = DType.FLOAT32): DefaultCpuBackend.DefaultCpuTensor {
         val totalSize = shape.fold(1) { acc, dim -> acc * dim }
         val storage = TensorStorage.createOptimalStorage(dtype, totalSize)
         
@@ -42,7 +42,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
             setStorageValue(storage, i, getOneValue(dtype), dtype)
         }
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(storage, shape, "cpu")
+        return DefaultCpuBackend.DefaultCpuTensor(storage, shape, "cpu")
     }
     
     /**
@@ -53,7 +53,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
      * @param dtype The data type of the tensor
      * @return A tensor filled with the specified value
      */
-    fun full(shape: IntArray, value: Any, dtype: DType = DType.FLOAT32): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun full(shape: IntArray, value: Any, dtype: DType = DType.FLOAT32): DefaultCpuBackend.DefaultCpuTensor {
         val totalSize = shape.fold(1) { acc, dim -> acc * dim }
         val storage = TensorStorage.createOptimalStorage(dtype, totalSize)
         
@@ -62,7 +62,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
             setStorageValue(storage, i, value, dtype)
         }
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(storage, shape, "cpu")
+        return DefaultCpuBackend.DefaultCpuTensor(storage, shape, "cpu")
     }
     
     /**
@@ -74,14 +74,14 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
      * @param dtype The data type of the tensor
      * @return A 1D tensor with evenly spaced values
      */
-    fun arange(start: Double, stop: Double, step: Double = 1.0, dtype: DType = DType.FLOAT64): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun arange(start: Double, stop: Double, step: Double = 1.0, dtype: DType = DType.FLOAT64): DefaultCpuBackend.DefaultCpuTensor {
         if (step == 0.0) {
             throw IllegalArgumentException("Step cannot be zero")
         }
         
         if ((step > 0 && start >= stop) || (step < 0 && start <= stop)) {
             // Empty range
-            return OptimizedMegaTensorBackend.OptimizedMegaTensor(
+            return DefaultCpuBackend.DefaultCpuTensor(
                 TensorStorage.createOptimalStorage(dtype, 0),
                 intArrayOf(0),
                 "cpu"
@@ -96,7 +96,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
             setStorageValue(storage, i, value, dtype)
         }
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(storage, intArrayOf(size), "cpu")
+        return DefaultCpuBackend.DefaultCpuTensor(storage, intArrayOf(size), "cpu")
     }
     
     /**
@@ -108,7 +108,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
      * @param dtype The data type of the tensor
      * @return A 1D tensor with evenly spaced values
      */
-    fun linspace(start: Double, stop: Double, num: Int, dtype: DType = DType.FLOAT64): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun linspace(start: Double, stop: Double, num: Int, dtype: DType = DType.FLOAT64): DefaultCpuBackend.DefaultCpuTensor {
         if (num <= 0) {
             throw IllegalArgumentException("Number of samples must be positive")
         }
@@ -125,7 +125,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
             setStorageValue(storage, i, value, dtype)
         }
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(storage, intArrayOf(num), "cpu")
+        return DefaultCpuBackend.DefaultCpuTensor(storage, intArrayOf(num), "cpu")
     }
     
     /**
@@ -135,7 +135,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
      * @param dtype The data type of the tensor
      * @return An identity matrix
      */
-    fun eye(n: Int, dtype: DType = DType.FLOAT32): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun eye(n: Int, dtype: DType = DType.FLOAT32): DefaultCpuBackend.DefaultCpuTensor {
         if (n <= 0) {
             throw IllegalArgumentException("Matrix size must be positive")
         }
@@ -149,7 +149,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
             setStorageValue(storage, diagonalIndex, getOneValue(dtype), dtype)
         }
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(storage, intArrayOf(n, n), "cpu")
+        return DefaultCpuBackend.DefaultCpuTensor(storage, intArrayOf(n, n), "cpu")
     }
     
     /**
@@ -161,7 +161,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
      * @param dtype The data type of the tensor
      * @return A tensor with random values
      */
-    fun randomUniform(shape: IntArray, low: Double = 0.0, high: Double = 1.0, dtype: DType = DType.FLOAT32): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun randomUniform(shape: IntArray, low: Double = 0.0, high: Double = 1.0, dtype: DType = DType.FLOAT32): DefaultCpuBackend.DefaultCpuTensor {
         val totalSize = shape.fold(1) { acc, dim -> acc * dim }
         val storage = TensorStorage.createOptimalStorage(dtype, totalSize)
         
@@ -173,7 +173,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
             setStorageValue(storage, i, value, dtype)
         }
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(storage, shape, "cpu")
+        return DefaultCpuBackend.DefaultCpuTensor(storage, shape, "cpu")
     }
     
     /**
@@ -185,7 +185,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
      * @param dtype The data type of the tensor
      * @return A tensor with normally distributed random values
      */
-    fun randomNormal(shape: IntArray, mean: Double = 0.0, std: Double = 1.0, dtype: DType = DType.FLOAT32): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun randomNormal(shape: IntArray, mean: Double = 0.0, std: Double = 1.0, dtype: DType = DType.FLOAT32): DefaultCpuBackend.DefaultCpuTensor {
         val totalSize = shape.fold(1) { acc, dim -> acc * dim }
         val storage = TensorStorage.createOptimalStorage(dtype, totalSize)
         
@@ -200,7 +200,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
             setStorageValue(storage, i, value, dtype)
         }
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(storage, shape, "cpu")
+        return DefaultCpuBackend.DefaultCpuTensor(storage, shape, "cpu")
     }
     
     /**
@@ -212,7 +212,7 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
      * @param dtype The data type of the tensor (should be an integer type)
      * @return A tensor with random integer values
      */
-    fun randomInt(shape: IntArray, low: Int, high: Int, dtype: DType = DType.INT32): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun randomInt(shape: IntArray, low: Int, high: Int, dtype: DType = DType.INT32): DefaultCpuBackend.DefaultCpuTensor {
         if (low >= high) {
             throw IllegalArgumentException("Low must be less than high")
         }
@@ -228,30 +228,30 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
             setStorageValue(storage, i, value, dtype)
         }
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(storage, shape, "cpu")
+        return DefaultCpuBackend.DefaultCpuTensor(storage, shape, "cpu")
     }
     
     /**
      * Creates a tensor like another tensor (same shape) but filled with zeros.
      */
-    fun zerosLike(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun zerosLike(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         return zeros(t.shape, t.dtype)
     }
     
     /**
      * Creates a tensor like another tensor (same shape) but filled with ones.
      */
-    fun onesLike(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun onesLike(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         return ones(t.shape, t.dtype)
     }
     
     /**
      * Creates a tensor like another tensor (same shape) but filled with a specific value.
      */
-    fun fullLike(tensor: Any, value: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun fullLike(tensor: Any, value: Any): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         return full(t.shape, value, t.dtype)
     }
     
@@ -287,9 +287,6 @@ class TensorCreationUtilities(private val backend: OptimizedMegaTensorBackend) {
             }
             is TensorStorage.NativeDoubleStorage -> {
                 storage.set(index, convertToDouble(value))
-            }
-            is TensorStorage.MegaNumberStorage -> {
-                throw UnsupportedOperationException("MegaNumber storage not yet implemented for tensor creation")
             }
         }
     }

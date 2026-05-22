@@ -81,7 +81,7 @@ class ArchitectureIntegrationTest {
         assertTrue(availableBackends.contains("metal"))
 
         // We should also have the mega backend
-        assertTrue(availableBackends.contains("mega"))
+        assertTrue(availableBackends.contains("cpu"))
 
         // Test current backend
         val currentBackend = BackendRegistry.getCurrentBackend()
