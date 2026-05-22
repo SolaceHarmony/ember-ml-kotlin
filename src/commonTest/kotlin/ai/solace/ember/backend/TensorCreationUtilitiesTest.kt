@@ -15,7 +15,7 @@ import kotlin.math.*
  */
 class TensorCreationUtilitiesTest {
 
-    private val backend = OptimizedMegaTensorBackend()
+    private val backend = DefaultCpuBackend()
     private val tensorUtils = TensorCreationUtilities(backend)
 
     @Test

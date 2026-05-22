@@ -41,23 +41,25 @@ fun rightShift(x: ULong, shifts: Int): ULong = x shr shifts
  */
 fun rotateLeft(x: UInt, shifts: Int, bitWidth: Int = 32): UInt {
     val normalizedShifts = shifts % bitWidth
-    return (x shl normalizedShifts) or (x shr (bitWidth - normalizedShifts))
+    val mask: UInt = if (bitWidth >= UInt.SIZE_BITS) UInt.MAX_VALUE else (1u shl bitWidth) - 1u
+    val value = x and mask
+    if (normalizedShifts == 0) return value
+    return ((value shl normalizedShifts) or (value shr (bitWidth - normalizedShifts))) and mask
 }
 
 fun rotateLeft(x: ULong, shifts: Int, bitWidth: Int = 64): ULong {
     val normalizedShifts = shifts % bitWidth
-    return (x shl normalizedShifts) or (x shr (bitWidth - normalizedShifts))
+    val mask: ULong = if (bitWidth >= ULong.SIZE_BITS) ULong.MAX_VALUE else (1uL shl bitWidth) - 1uL
+    val value = x and mask
+    if (normalizedShifts == 0) return value
+    return ((value shl normalizedShifts) or (value shr (bitWidth - normalizedShifts))) and mask
 }
 
-fun rotateLeft(x: UByte, shifts: Int, bitWidth: Int = 8): UByte {
-    val normalizedShifts = shifts % bitWidth
-    return ((x.toUInt() shl normalizedShifts) or (x.toUInt() shr (bitWidth - normalizedShifts))).toUByte()
-}
+fun rotateLeft(x: UByte, shifts: Int, bitWidth: Int = 8): UByte =
+    rotateLeft(x.toUInt(), shifts, bitWidth).toUByte()
 
-fun rotateLeft(x: UShort, shifts: Int, bitWidth: Int = 16): UShort {
-    val normalizedShifts = shifts % bitWidth
-    return ((x.toUInt() shl normalizedShifts) or (x.toUInt() shr (bitWidth - normalizedShifts))).toUShort()
-}
+fun rotateLeft(x: UShort, shifts: Int, bitWidth: Int = 16): UShort =
+    rotateLeft(x.toUInt(), shifts, bitWidth).toUShort()
 
 /**
  * Rotate the bits of x to the right by shifts positions.
@@ -69,23 +71,25 @@ fun rotateLeft(x: UShort, shifts: Int, bitWidth: Int = 16): UShort {
  */
 fun rotateRight(x: UInt, shifts: Int, bitWidth: Int = 32): UInt {
     val normalizedShifts = shifts % bitWidth
-    return (x shr normalizedShifts) or (x shl (bitWidth - normalizedShifts))
+    val mask: UInt = if (bitWidth >= UInt.SIZE_BITS) UInt.MAX_VALUE else (1u shl bitWidth) - 1u
+    val value = x and mask
+    if (normalizedShifts == 0) return value
+    return ((value shr normalizedShifts) or (value shl (bitWidth - normalizedShifts))) and mask
 }
 
 fun rotateRight(x: ULong, shifts: Int, bitWidth: Int = 64): ULong {
     val normalizedShifts = shifts % bitWidth
-    return (x shr normalizedShifts) or (x shl (bitWidth - normalizedShifts))
+    val mask: ULong = if (bitWidth >= ULong.SIZE_BITS) ULong.MAX_VALUE else (1uL shl bitWidth) - 1uL
+    val value = x and mask
+    if (normalizedShifts == 0) return value
+    return ((value shr normalizedShifts) or (value shl (bitWidth - normalizedShifts))) and mask
 }
 
-fun rotateRight(x: UByte, shifts: Int, bitWidth: Int = 8): UByte {
-    val normalizedShifts = shifts % bitWidth
-    return ((x.toUInt() shr normalizedShifts) or (x.toUInt() shl (bitWidth - normalizedShifts))).toUByte()
-}
+fun rotateRight(x: UByte, shifts: Int, bitWidth: Int = 8): UByte =
+    rotateRight(x.toUInt(), shifts, bitWidth).toUByte()
 
-fun rotateRight(x: UShort, shifts: Int, bitWidth: Int = 16): UShort {
-    val normalizedShifts = shifts % bitWidth
-    return ((x.toUInt() shr normalizedShifts) or (x.toUInt() shl (bitWidth - normalizedShifts))).toUShort()
-}
+fun rotateRight(x: UShort, shifts: Int, bitWidth: Int = 16): UShort =
+    rotateRight(x.toUInt(), shifts, bitWidth).toUShort()
 
 /**
  * Array operations for left shift.

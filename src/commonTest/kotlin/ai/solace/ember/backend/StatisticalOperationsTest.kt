@@ -11,7 +11,7 @@ import kotlin.test.*
  */
 class StatisticalOperationsTest {
     
-    private val backend = OptimizedMegaTensorBackend()
+    private val backend = DefaultCpuBackend()
     private val statsOps = StatisticalOperations(backend)
     
     @Test

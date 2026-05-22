@@ -15,7 +15,7 @@ import kotlin.math.*
  */
 class MathematicalOperationsTest {
 
-    private val backend = OptimizedMegaTensorBackend()
+    private val backend = DefaultCpuBackend()
     private val mathOps = MathematicalOperations(backend)
 
     @Test

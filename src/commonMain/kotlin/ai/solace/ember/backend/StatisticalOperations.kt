@@ -5,19 +5,19 @@ import ai.solace.ember.backend.storage.TensorStorage
 import kotlin.math.*
 
 /**
- * Statistical functions for the OptimizedMegaTensorBackend.
+ * Statistical functions for the DefaultCpuBackend.
  * 
  * This class provides statistical operations including descriptive statistics,
  * aggregation functions, and data analysis operations that were missing
  * in the original implementation.
  */
-class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
+class StatisticalOperations(private val backend: DefaultCpuBackend) {
     
     /**
      * Computes the mean (average) of tensor elements.
      */
-    fun mean(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun mean(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         
         if (axis != null) {
             throw UnsupportedOperationException("Axis-specific mean not yet implemented")
@@ -44,14 +44,14 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
         val resultStorage = TensorStorage.createOptimalStorage(DType.FLOAT64, 1)
         setStorageValue(resultStorage, 0, meanValue, DType.FLOAT64)
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, resultShape, t.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, resultShape, t.device)
     }
     
     /**
      * Computes the variance of tensor elements.
      */
-    fun variance(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false, ddof: Int = 0): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun variance(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false, ddof: Int = 0): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         
         if (axis != null) {
             throw UnsupportedOperationException("Axis-specific variance not yet implemented")
@@ -83,13 +83,13 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
         val resultStorage = TensorStorage.createOptimalStorage(DType.FLOAT64, 1)
         setStorageValue(resultStorage, 0, varianceValue, DType.FLOAT64)
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, resultShape, t.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, resultShape, t.device)
     }
     
     /**
      * Computes the standard deviation of tensor elements.
      */
-    fun std(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false, ddof: Int = 0): OptimizedMegaTensorBackend.OptimizedMegaTensor {
+    fun std(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false, ddof: Int = 0): DefaultCpuBackend.DefaultCpuTensor {
         val varianceTensor = variance(tensor, axis, keepDims, ddof)
         val varianceValue = convertToDouble(getStorageValue(varianceTensor.storage, 0))
         
@@ -104,8 +104,8 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes the median of tensor elements.
      */
-    fun median(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun median(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         
         if (axis != null) {
             throw UnsupportedOperationException("Axis-specific median not yet implemented")
@@ -139,14 +139,14 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
         val resultStorage = TensorStorage.createOptimalStorage(DType.FLOAT64, 1)
         setStorageValue(resultStorage, 0, medianValue, DType.FLOAT64)
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, resultShape, t.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, resultShape, t.device)
     }
     
     /**
      * Computes the minimum value of tensor elements.
      */
-    fun min(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun min(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         
         if (axis != null) {
             throw UnsupportedOperationException("Axis-specific min not yet implemented")
@@ -171,14 +171,14 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
         val resultStorage = TensorStorage.createOptimalStorage(t.dtype, 1)
         setStorageValue(resultStorage, 0, minValue, t.dtype)
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, resultShape, t.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, resultShape, t.device)
     }
     
     /**
      * Computes the maximum value of tensor elements.
      */
-    fun max(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun max(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         
         if (axis != null) {
             throw UnsupportedOperationException("Axis-specific max not yet implemented")
@@ -203,14 +203,14 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
         val resultStorage = TensorStorage.createOptimalStorage(t.dtype, 1)
         setStorageValue(resultStorage, 0, maxValue, t.dtype)
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, resultShape, t.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, resultShape, t.device)
     }
     
     /**
      * Computes the sum of tensor elements.
      */
-    fun sum(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun sum(tensor: Any, axis: IntArray? = null, keepDims: Boolean = false): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         
         if (axis != null) {
             throw UnsupportedOperationException("Axis-specific sum not yet implemented")
@@ -225,7 +225,8 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
         
         // Create scalar result tensor - promote to appropriate type
         val resultDType = when (t.dtype) {
-            DType.BOOL, DType.UINT8, DType.INT32 -> DType.INT64
+            DType.BOOL -> DType.INT32
+            DType.UINT8, DType.INT32 -> DType.INT64
             DType.INT64 -> DType.INT64
             DType.FLOAT32 -> DType.FLOAT32
             DType.FLOAT64 -> DType.FLOAT64
@@ -235,14 +236,14 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
         val resultStorage = TensorStorage.createOptimalStorage(resultDType, 1)
         setStorageValue(resultStorage, 0, sum, resultDType)
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, resultShape, t.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, resultShape, t.device)
     }
     
     /**
      * Computes the cumulative sum of tensor elements.
      */
-    fun cumSum(tensor: Any, axis: Int? = null): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun cumSum(tensor: Any, axis: Int? = null): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         
         if (axis != null) {
             throw UnsupportedOperationException("Axis-specific cumsum not yet implemented")
@@ -250,7 +251,8 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
         
         // For flattened cumulative sum
         val resultDType = when (t.dtype) {
-            DType.BOOL, DType.UINT8, DType.INT32 -> DType.INT64
+            DType.BOOL -> DType.INT32
+            DType.UINT8, DType.INT32 -> DType.INT64
             DType.INT64 -> DType.INT64
             DType.FLOAT32 -> DType.FLOAT32
             DType.FLOAT64 -> DType.FLOAT64
@@ -265,14 +267,14 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
             setStorageValue(resultStorage, i, cumulativeSum, resultDType)
         }
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, t.shape, t.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, t.shape, t.device)
     }
     
     /**
      * Finds the indices of the maximum values along an axis.
      */
-    fun argMax(tensor: Any, axis: Int? = null): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun argMax(tensor: Any, axis: Int? = null): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         
         if (axis != null) {
             throw UnsupportedOperationException("Axis-specific argmax not yet implemented")
@@ -298,14 +300,14 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
         val resultStorage = TensorStorage.createOptimalStorage(DType.INT32, 1)
         setStorageValue(resultStorage, 0, maxIndex, DType.INT32)
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, intArrayOf(), t.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, intArrayOf(), t.device)
     }
     
     /**
      * Computes specified percentile of tensor elements.
      */
-    fun percentile(tensor: Any, q: Double, axis: IntArray? = null, keepDims: Boolean = false): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun percentile(tensor: Any, q: Double, axis: IntArray? = null, keepDims: Boolean = false): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         
         if (axis != null) {
             throw UnsupportedOperationException("Axis-specific percentile not yet implemented")
@@ -344,7 +346,7 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
         val resultStorage = TensorStorage.createOptimalStorage(DType.FLOAT64, 1)
         setStorageValue(resultStorage, 0, percentileValue, DType.FLOAT64)
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, resultShape, t.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, resultShape, t.device)
     }
     
     // Helper functions
@@ -357,7 +359,6 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
             is TensorStorage.NativeLongStorage -> storage.get(index)
             is TensorStorage.NativeFloatStorage -> storage.get(index)
             is TensorStorage.NativeDoubleStorage -> storage.get(index)
-            is TensorStorage.MegaNumberStorage -> storage.get(index)
         }
     }
     
@@ -380,9 +381,6 @@ class StatisticalOperations(private val backend: OptimizedMegaTensorBackend) {
             }
             is TensorStorage.NativeDoubleStorage -> {
                 storage.set(index, convertToDouble(value))
-            }
-            is TensorStorage.MegaNumberStorage -> {
-                throw UnsupportedOperationException("MegaNumber storage not yet implemented for statistical operations")
             }
         }
     }

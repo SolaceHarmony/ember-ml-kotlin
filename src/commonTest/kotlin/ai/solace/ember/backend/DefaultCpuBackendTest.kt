@@ -8,14 +8,14 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
- * Tests for the OptimizedMegaTensorBackend.
+ * Tests for the DefaultCpuBackend.
  * 
  * These tests verify that the optimized backend works correctly
  * and provides the expected memory efficiency improvements.
  */
-class OptimizedMegaTensorBackendTest {
+class DefaultCpuBackendTest {
 
-    private val backend = OptimizedMegaTensorBackend()
+    private val backend = DefaultCpuBackend()
 
     @Test
     fun testCreateBooleanTensor() {
@@ -251,8 +251,8 @@ class OptimizedMegaTensorBackendTest {
         // The optimized storage uses:
         // - BooleanArray: ~1 MB (1 byte per boolean in Kotlin)
         // 
-        // Compared to the previous MegaNumber storage which would use:
-        // - Array<MegaNumber>: ~32+ MB (each MegaNumber uses 32-bit chunks)
+        // The native primitive-array storage selected for these DTypes uses:
+        // - one primitive element per logical element, no boxing
         // 
         // This represents approximately 32x memory improvement for boolean tensors!
         

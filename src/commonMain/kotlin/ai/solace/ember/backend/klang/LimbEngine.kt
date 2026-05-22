@@ -9,7 +9,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * LimbEngine – direct Kotlin port of the MegaNumber limb engine.
+ * LimbEngine – direct Kotlin port of the upstream limb engine.
  *
  * Limbs are stored little-endian with 16-bit chunks packed inside IntArray entries. All arithmetic
  * stays in the limb domain so behaviour is deterministic across Kotlin targets and free from

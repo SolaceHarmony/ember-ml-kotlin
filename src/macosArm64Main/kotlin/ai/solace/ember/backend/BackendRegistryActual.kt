@@ -3,20 +3,22 @@ package ai.solace.ember.backend
 import ai.solace.ember.backend.metal.MetalBackend
 
 /**
- * Registers the macOS-shipping backends: MegaTensor (CPU) and Metal (GPU).
- * MegaTensor is selected as the default when no backend has been explicitly set.
+ * Registers the macOS-shipping backends: the default CPU backend (using
+ * native Kotlin storage for every supported DType) and Metal (GPU).
+ * The CPU backend is selected as the default when no backend has been
+ * explicitly set.
  */
 actual fun initializePlatformBackends() {
-    BackendRegistry.registerBackend("mega", MegaTensorBackend())
+    BackendRegistry.registerBackend("cpu", DefaultCpuBackend())
     BackendRegistry.registerBackend("metal", MetalBackend())
-    if (BackendRegistry.getBackend("mega") != null) {
-        BackendRegistry.setBackend("mega")
+    if (BackendRegistry.getBackend("cpu") != null) {
+        BackendRegistry.setBackend("cpu")
     }
 }
 
 /**
  * Selects the highest-performance backend available on Apple hardware:
- * Metal when reachable, otherwise MegaTensor.
+ * Metal when reachable, otherwise the native CPU backend.
  */
 actual fun autoSelectBackend(): String {
     BackendRegistry.ensureBackendsInitialized()
@@ -25,6 +27,6 @@ actual fun autoSelectBackend(): String {
         BackendRegistry.setBackend("metal")
         return "metal"
     }
-    BackendRegistry.setBackend("mega")
-    return "mega"
+    BackendRegistry.setBackend("cpu")
+    return "cpu"
 }

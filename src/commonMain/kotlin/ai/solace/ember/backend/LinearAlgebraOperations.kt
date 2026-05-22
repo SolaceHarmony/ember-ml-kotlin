@@ -5,20 +5,20 @@ import ai.solace.ember.backend.storage.TensorStorage
 import kotlin.math.*
 
 /**
- * Linear algebra functions for the OptimizedMegaTensorBackend.
+ * Linear algebra functions for the DefaultCpuBackend.
  * 
  * This class provides basic linear algebra operations including matrix operations,
  * decompositions, and numerical linear algebra functions that are critical
  * for machine learning applications.
  */
-class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
+class LinearAlgebraOperations(private val backend: DefaultCpuBackend) {
     
     /**
      * Computes the dot product of two vectors or matrix multiplication.
      */
-    fun dot(tensor1: Any, tensor2: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t1 = tensor1 as OptimizedMegaTensorBackend.OptimizedMegaTensor
-        val t2 = tensor2 as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun dot(tensor1: Any, tensor2: Any): DefaultCpuBackend.DefaultCpuTensor {
+        val t1 = tensor1 as DefaultCpuBackend.DefaultCpuTensor
+        val t2 = tensor2 as DefaultCpuBackend.DefaultCpuTensor
         
         // For now, implement 1D vector dot product
         if (t1.shape.size != 1 || t2.shape.size != 1) {
@@ -47,15 +47,15 @@ class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
         val resultStorage = TensorStorage.createOptimalStorage(resultDType, 1)
         setStorageValue(resultStorage, 0, dotProduct, resultDType)
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, intArrayOf(), t1.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, intArrayOf(), t1.device)
     }
     
     /**
      * Computes the matrix multiplication of two tensors.
      */
-    fun matmul(tensor1: Any, tensor2: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t1 = tensor1 as OptimizedMegaTensorBackend.OptimizedMegaTensor
-        val t2 = tensor2 as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun matmul(tensor1: Any, tensor2: Any): DefaultCpuBackend.DefaultCpuTensor {
+        val t1 = tensor1 as DefaultCpuBackend.DefaultCpuTensor
+        val t2 = tensor2 as DefaultCpuBackend.DefaultCpuTensor
         
         // Basic 2D matrix multiplication
         if (t1.shape.size != 2 || t2.shape.size != 2) {
@@ -91,14 +91,14 @@ class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
             }
         }
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, intArrayOf(m, p), t1.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, intArrayOf(m, p), t1.device)
     }
     
     /**
      * Computes the transpose of a matrix.
      */
-    fun transpose(tensor: Any, axes: IntArray? = null): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun transpose(tensor: Any, axes: IntArray? = null): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         
         if (axes != null) {
             throw UnsupportedOperationException("Custom axes for transpose not yet implemented")
@@ -123,7 +123,7 @@ class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
                     }
                 }
                 
-                return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, intArrayOf(cols, rows), t.device)
+                return DefaultCpuBackend.DefaultCpuTensor(resultStorage, intArrayOf(cols, rows), t.device)
             }
             else -> {
                 throw UnsupportedOperationException("Transpose for tensors with ${t.shape.size} dimensions not yet implemented")
@@ -134,8 +134,8 @@ class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes the determinant of a square matrix.
      */
-    fun determinant(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun determinant(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         
         if (t.shape.size != 2) {
             throw IllegalArgumentException("Determinant requires a 2D matrix")
@@ -179,14 +179,14 @@ class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
         val resultStorage = TensorStorage.createOptimalStorage(DType.FLOAT64, 1)
         setStorageValue(resultStorage, 0, det, DType.FLOAT64)
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, intArrayOf(), t.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, intArrayOf(), t.device)
     }
     
     /**
      * Computes the trace (sum of diagonal elements) of a matrix.
      */
-    fun trace(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun trace(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         
         if (t.shape.size != 2) {
             throw IllegalArgumentException("Trace requires a 2D matrix")
@@ -207,14 +207,14 @@ class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
         val resultStorage = TensorStorage.createOptimalStorage(t.dtype, 1)
         setStorageValue(resultStorage, 0, traceSum, t.dtype)
         
-        return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, intArrayOf(), t.device)
+        return DefaultCpuBackend.DefaultCpuTensor(resultStorage, intArrayOf(), t.device)
     }
     
     /**
      * Computes the Frobenius norm of a matrix.
      */
-    fun norm(tensor: Any, ord: String = "fro"): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun norm(tensor: Any, ord: String = "fro"): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         
         when (ord) {
             "fro" -> {
@@ -232,7 +232,7 @@ class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
                 val resultStorage = TensorStorage.createOptimalStorage(DType.FLOAT64, 1)
                 setStorageValue(resultStorage, 0, normValue, DType.FLOAT64)
                 
-                return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, intArrayOf(), t.device)
+                return DefaultCpuBackend.DefaultCpuTensor(resultStorage, intArrayOf(), t.device)
             }
             else -> {
                 throw UnsupportedOperationException("Norm type '$ord' not yet implemented")
@@ -243,8 +243,8 @@ class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
     /**
      * Computes the inverse of a square matrix (basic implementation for small matrices).
      */
-    fun inverse(tensor: Any): OptimizedMegaTensorBackend.OptimizedMegaTensor {
-        val t = tensor as OptimizedMegaTensorBackend.OptimizedMegaTensor
+    fun inverse(tensor: Any): DefaultCpuBackend.DefaultCpuTensor {
+        val t = tensor as DefaultCpuBackend.DefaultCpuTensor
         
         if (t.shape.size != 2) {
             throw IllegalArgumentException("Inverse requires a 2D matrix")
@@ -266,7 +266,7 @@ class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
                 val resultStorage = TensorStorage.createOptimalStorage(DType.FLOAT64, 1)
                 setStorageValue(resultStorage, 0, 1.0 / value, DType.FLOAT64)
                 
-                return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, intArrayOf(1, 1), t.device)
+                return DefaultCpuBackend.DefaultCpuTensor(resultStorage, intArrayOf(1, 1), t.device)
             }
             2 -> {
                 val a = convertToDouble(getStorageValue(t.storage, 0))
@@ -286,7 +286,7 @@ class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
                 setStorageValue(resultStorage, 2, -c / det, DType.FLOAT64)
                 setStorageValue(resultStorage, 3, a / det, DType.FLOAT64)
                 
-                return OptimizedMegaTensorBackend.OptimizedMegaTensor(resultStorage, intArrayOf(2, 2), t.device)
+                return DefaultCpuBackend.DefaultCpuTensor(resultStorage, intArrayOf(2, 2), t.device)
             }
             else -> {
                 throw UnsupportedOperationException("Matrix inversion for ${n}x${n} matrices not yet implemented")
@@ -304,7 +304,6 @@ class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
             is TensorStorage.NativeLongStorage -> storage.get(index)
             is TensorStorage.NativeFloatStorage -> storage.get(index)
             is TensorStorage.NativeDoubleStorage -> storage.get(index)
-            is TensorStorage.MegaNumberStorage -> storage.get(index)
         }
     }
     
@@ -327,9 +326,6 @@ class LinearAlgebraOperations(private val backend: OptimizedMegaTensorBackend) {
             }
             is TensorStorage.NativeDoubleStorage -> {
                 storage.set(index, convertToDouble(value))
-            }
-            is TensorStorage.MegaNumberStorage -> {
-                throw UnsupportedOperationException("MegaNumber storage not yet implemented for linear algebra operations")
             }
         }
     }

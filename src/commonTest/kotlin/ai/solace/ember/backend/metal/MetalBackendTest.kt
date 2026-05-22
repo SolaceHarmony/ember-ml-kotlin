@@ -129,9 +129,9 @@ class MetalBackendTest {
         
         val selectedBackend = ai.solace.ember.backend.autoSelectBackend()
         
-        // Should select either "metal" (if available) or "mega" (fallback)
+        // Should select either "metal" (if available) or "cpu" (fallback)
         assertTrue(
-            selectedBackend == "metal" || selectedBackend == "mega",
+            selectedBackend == "metal" || selectedBackend == "cpu",
             "Auto-selected backend should be either 'metal' or 'mega'"
         )
         
