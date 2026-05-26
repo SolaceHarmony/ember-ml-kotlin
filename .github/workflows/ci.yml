@@ -2,7 +2,6 @@ name: CI
 
 on:
   workflow_dispatch:
-
 # Least-privilege default for any inline job in this file. The reusable
 # workflows invoked below declare their own permissions; this top-level
 # block only applies to direct jobs in ci.yml itself.
@@ -30,8 +29,28 @@ permissions:
 # called workflow's own `contents: read` declaration and break checkout.
 # `contents: read` matches what each called workflow needs.
 jobs:
+  ios:
+    uses: ./.github/workflows/ios.yml
+    permissions:
+      contents: read
   macos:
     uses: ./.github/workflows/macos.yml
+    permissions:
+      contents: read
+  tvos:
+    uses: ./.github/workflows/tvos.yml
+    permissions:
+      contents: read
+  watchos:
+    uses: ./.github/workflows/watchos.yml
+    permissions:
+      contents: read
+  android:
+    uses: ./.github/workflows/android.yml
+    permissions:
+      contents: read
+  android-native:
+    uses: ./.github/workflows/android-native.yml
     permissions:
       contents: read
   linux:
@@ -44,5 +63,9 @@ jobs:
       contents: read
   js:
     uses: ./.github/workflows/js.yml
+    permissions:
+      contents: read
+  wasm:
+    uses: ./.github/workflows/wasm.yml
     permissions:
       contents: read
