@@ -1,69 +1,42 @@
 name: "CodeQL Advanced"
 
-# Job names, step names, and matrix shape follow GitHub's canonical
-# "CodeQL Advanced" Code Scanning template exactly. The Code Scanning UI
-# registers configurations keyed off `(workflow_path, job_id, category)`
-# tuples and shows status using template-default identifiers; deviating
-# from those names produces orphan configuration cards in the UI that
-# can't be cleaned up via API (PR-merge analyses are non-deletable).
-#
-# Two matrix entries cover the languages CodeQL detects in this repo:
-#   - actions             (source-only)
-#   - javascript-typescript (source-only)
-#
-# This repo dropped its Android target (and every other JVM-class-emitting
-# target) when ember-ml-kotlin was switched to the published klang surface.
-# Without compileAndroidMain there is no JVM-class output for CodeQL's
-# java-kotlin extractor to trace, so java-kotlin is not part of the matrix.
-# Kotlin sources still live in the repo; reintroducing java-kotlin scanning
-# would require adding a JVM-class-producing target back to build.gradle.kts.
-
 on:
   schedule:
-    - cron: "0 7 * * 1"
+    - cron: '44 16 * * 0'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  analyze:
-    name: Analyze (${{ matrix.language }})
-    runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+  actions:
+    uses: ./.github/workflows/codeql-actions.yml
     permissions:
-      # required for SARIF upload
-      security-events: write
-      # required by codeql-action/analyze@v4 in private repos
       actions: read
-      # required to fetch internal or private CodeQL packs from GHCR
-      packages: read
       contents: read
+      packages: read
+      security-events: write
 
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - language: actions
-            build-mode: none
-          - language: javascript-typescript
-            build-mode: none
+  java-kotlin:
+    uses: ./.github/workflows/codeql-java-kotlin.yml
+    permissions:
+      actions: read
+      contents: read
+      packages: read
+      security-events: write
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
+  android:
+    uses: ./.github/workflows/codeql-android.yml
+    permissions:
+      actions: read
+      contents: read
+      packages: read
+      security-events: write
 
-      # Initializes the CodeQL tools for scanning.
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
-        with:
-          languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.build-mode }}
-          # Restores+stores the CodeQL bundle and dependency cache between
-          # runs. Default off in Advanced Setup; turning on cuts ~30-60s
-          # off the init step on warm cache.
-          dependency-caching: true
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
-        with:
-          category: "/language:${{ matrix.language }}"
+  javascript-typescript:
+    uses: ./.github/workflows/codeql-javascript-typescript.yml
+    permissions:
+      actions: read
+      contents: read
+      packages: read
+      security-events: write

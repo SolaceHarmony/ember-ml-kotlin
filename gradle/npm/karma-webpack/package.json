@@ -1,6 +1,6 @@
 {
   "name": "karma-webpack",
-  "version": "5.0.1-kotlinmania.0",
+  "version": "5.0.1-kotlinmania.1",
   "description": "Use webpack with karma",
   "license": "MIT",
   "repository": "webpack-contrib/karma-webpack",
@@ -14,6 +14,6 @@
   "dependencies": {
     "glob": "^13.0.6",
     "minimatch": "^10.2.5",
-    "webpack-merge": "^4.1.5"
+    "webpack-merge": "^4.2.2"
   }
 }
