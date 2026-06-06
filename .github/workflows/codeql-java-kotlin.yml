@@ -44,7 +44,7 @@ jobs:
         run: |
           export JAVA_TOOL_OPTIONS="-javaagent:${CODEQL_EXTRACTOR_JAVA_ROOT}/tools/codeql-java-agent.jar=java,kotlin"
           echo "JAVA_TOOL_OPTIONS=${JAVA_TOOL_OPTIONS}"
-          ./gradlew --no-daemon codeqlCompileJvm -Pkotlinmania.codeql=true --no-configuration-cache
+          ./gradlew --no-daemon --project-dir codeql-build codeqlCompileJvm -Pkotlinmania.codeql=true --no-configuration-cache
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
