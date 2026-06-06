@@ -24,11 +24,13 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "datetime" }
 collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "collectionsImmutable" }
 
+klang = { module = "io.github.kotlinmania:klang", version = "0.8.0" }
 [bundles]
 ember-ml-commonMain = [
-  "kotlinx-coroutines-core",
-  "kotlinx-serialization-core",
-  "kotlinx-serialization-json",
-  "kotlinx-datetime",
-  "collections-immutable",
+    "kotlinx-coroutines-core",
+    "kotlinx-serialization-core",
+    "kotlinx-serialization-json",
+    "kotlinx-datetime",
+    "collections-immutable",
+    "klang",
 ]
