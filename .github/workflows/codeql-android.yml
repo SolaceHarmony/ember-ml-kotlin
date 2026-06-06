@@ -42,8 +42,11 @@ jobs:
           build-mode: manual
           dependency-caching: true
 
+      - name: Install Android platform
+        run: sdkmanager "platforms;android-34"
+
       - name: Build Android extraction target
-        run: ./gradlew --no-daemon setupAndroidSdk compileAndroidMain -Pkotlinmania.codeql=true --no-configuration-cache
+        run: ./gradlew --no-daemon --project-dir codeql-build codeqlCompileAndroid -Pkotlinmania.codeql=true --no-configuration-cache
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
