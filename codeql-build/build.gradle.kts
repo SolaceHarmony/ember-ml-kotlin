@@ -121,6 +121,21 @@ fun registerCodeqlCompileTask(
         outputs.dir(outDir)
         outputs.dir(aarExtractDir)
 
+        onlyIf("selected CodeQL Kotlin source sets contain sources") {
+            val commonSourceFiles = commonSources.files
+            val sourceFiles = sources.files
+            if (commonSourceFiles.isEmpty() || sourceFiles.isEmpty()) {
+                logger.lifecycle(
+                    "Skipping $taskName: no Kotlin sources found for common source sets " +
+                        "${codeqlKotlinCommonSourceSetNames.joinToString(",")} or target source sets " +
+                        sourceSetNames.joinToString(","),
+                )
+                false
+            } else {
+                true
+            }
+        }
+
         doFirst {
             outDir.get().asFile.mkdirs()
             val extractedJars =
@@ -139,13 +154,7 @@ fun registerCodeqlCompileTask(
                 (codeqlSourceClasspath.resolve() + extractedJars + androidClasspath)
                     .joinToString(File.pathSeparator) { it.absolutePath }
             val commonSourceFiles = commonSources.files.toMutableList()
-            require(commonSourceFiles.isNotEmpty()) {
-                "project.codeql.kotlinCommonSourceSets must resolve to at least one Kotlin source file"
-            }
             val sourceFiles = sources.files.toMutableList()
-            require(sourceFiles.isNotEmpty()) {
-                "$taskName source sets must resolve to at least one Kotlin source file"
-            }
             args =
                 listOf(
                     "-d",

@@ -46,7 +46,10 @@ jobs:
         run: sdkmanager "platforms;android-34"
 
       - name: Build Android extraction target
-        run: ./gradlew --no-daemon --project-dir codeql-build codeqlCompileAndroid -Pkotlinmania.codeql=true --no-configuration-cache
+        run: |
+          export JAVA_TOOL_OPTIONS="-javaagent:${CODEQL_EXTRACTOR_JAVA_ROOT}/tools/codeql-java-agent.jar=java,kotlin"
+          echo "JAVA_TOOL_OPTIONS=${JAVA_TOOL_OPTIONS}"
+          ./gradlew --no-daemon --project-dir codeql-build codeqlCompileAndroid -Pkotlinmania.codeql=true --no-configuration-cache
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
