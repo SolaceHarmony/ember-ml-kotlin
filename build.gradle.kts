@@ -50,7 +50,7 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")
-                implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.4.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.5.0")
                 implementation("org.jetbrains.kotlinx:atomicfu:0.32.1")
                 implementation("io.github.kotlinmania:klang:0.8.1")
             }
