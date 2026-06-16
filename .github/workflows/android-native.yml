@@ -23,7 +23,7 @@ jobs:
           java-version: '21'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6.1.0
+        uses: gradle/actions/setup-gradle@v6.2.0
 
       # The four androidNative* targets cross-compile on any host (NDK
       # is bundled with kotlin-native). Tests require an Android emulator
