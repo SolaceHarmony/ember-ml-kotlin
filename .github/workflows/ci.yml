@@ -29,6 +29,10 @@ permissions:
 # called workflow's own `contents: read` declaration and break checkout.
 # `contents: read` matches what each called workflow needs.
 jobs:
+  jvm:
+    uses: ./.github/workflows/jvm.yml
+    permissions:
+      contents: read
   ios:
     uses: ./.github/workflows/ios.yml
     permissions:
@@ -67,5 +71,9 @@ jobs:
       contents: read
   wasm:
     uses: ./.github/workflows/wasm.yml
+    permissions:
+      contents: read
+  swift:
+    uses: ./.github/workflows/swift.yml
     permissions:
       contents: read

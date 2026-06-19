@@ -23,14 +23,13 @@ jobs:
           java-version: '21'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6.1.0
+        uses: gradle/actions/setup-gradle@v6.2.0
         with:
           cache-provider: basic
 
       - name: Build and test Windows target
         run: >
           ./gradlew
-          setupAndroidSdk
           mingwX64Test
           --no-configuration-cache
 
