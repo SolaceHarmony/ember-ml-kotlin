@@ -310,14 +310,15 @@ val ensureAndroidSdk by tasks.registering {
 
 // Secondary net: order every AGP Android task after the installer (a no-op on
 // warm runs). Excludes androidNative* (Kotlin/Native) and the installer itself.
-tasks.matching { task ->
-    val taskName = task.name
-    taskName != "ensureAndroidSdk" &&
-        taskName.contains("Android") &&
-        !taskName.contains("AndroidNative")
-}.configureEach {
-    dependsOn(ensureAndroidSdk)
-}
+tasks
+    .matching { task ->
+        val taskName = task.name
+        taskName != "ensureAndroidSdk" &&
+            taskName.contains("Android") &&
+            !taskName.contains("AndroidNative")
+    }.configureEach {
+        dependsOn(ensureAndroidSdk)
+    }
 
 // Gap #9b: KGP-generated bridge boilerplate and KotlinCoroutineSupport runtime
 // produce warnings (unchecked casts, unused expressions, opt-in requirements)
