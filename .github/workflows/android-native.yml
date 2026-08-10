@@ -14,10 +14,10 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v6
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v5.6.0
+        uses: actions/setup-java@v5.2.0
         with:
           distribution: zulu
           java-version: '21'
@@ -25,14 +25,14 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6.2.0
 
-      # The four androidNative* targets cross-compile on any host. Kotlin/Native
-      # test binaries are built by the full target gate; this workflow provides
-      # explicit compile coverage for every Android Native target.
+      # The androidNativeArm64 and androidNativeX64 targets cross-compile on any
+      # host. 32-bit targets (androidNativeArm32, androidNativeX86) were retired
+      # 2026-06-25 per AGENTS.md §5.5.3. Kotlin/Native test binaries are built by
+      # the full target gate; this workflow provides explicit compile coverage
+      # for the remaining Android Native targets.
       - name: Compile Android Native targets
         run: >
           ./gradlew
-          compileKotlinAndroidNativeArm32
           compileKotlinAndroidNativeArm64
-          compileKotlinAndroidNativeX86
           compileKotlinAndroidNativeX64
           --no-configuration-cache
