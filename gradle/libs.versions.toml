@@ -1,9 +1,9 @@
 [versions]
-kotlin = "2.4.0"
+kotlin = "2.4.10"
 coroutines = "1.11.0"
 serialization = "1.11.0"
 datetime = "0.8.0"
-collectionsImmutable = "0.5.0"
+collectionsImmutable = "0.5.1"
 androidKmp = "9.3.1"
 detekt = "1.23.8"
 ktlint = "14.2.0"
