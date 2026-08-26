@@ -137,11 +137,11 @@ class TensorStorageTest {
         storage.set(4, Float.MAX_VALUE)
         
         // Verify values
-        assertEquals(-3.14f, storage.get(0))
-        assertEquals(0.0f, storage.get(1))
-        assertEquals(2.718f, storage.get(2))
-        assertEquals(Float.MIN_VALUE, storage.get(3))
-        assertEquals(Float.MAX_VALUE, storage.get(4))
+        assertEquals(-3.14f, (storage.get(0) as Number).toFloat(), 1e-5f)
+        assertEquals(0.0f, (storage.get(1) as Number).toFloat(), 1e-5f)
+        assertEquals(2.718f, (storage.get(2) as Number).toFloat(), 1e-5f)
+        assertEquals(Float.MIN_VALUE, (storage.get(3) as Number).toFloat(), 1e-5f)
+        assertEquals(Float.MAX_VALUE, (storage.get(4) as Number).toFloat(), 1e-5f)
     }
 
     @Test

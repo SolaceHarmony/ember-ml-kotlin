@@ -10,11 +10,19 @@ import ai.solace.ember.tensor.common.EmberTensor
 sealed class TrainingMessage
 
 /**
+ * A pair of input tensor and target tensor for training.
+ */
+data class TrainingSample(
+    val input: EmberTensor,
+    val target: EmberTensor,
+)
+
+/**
  * Message to start training.
  */
 data class StartTrainingMessage(
     val model: Module,
-    val data: List<Pair<EmberTensor, EmberTensor>>, // (input, target) pairs
+    val data: List<TrainingSample>,
     val epochs: Int,
     val learningRate: Float
 ) : TrainingMessage()

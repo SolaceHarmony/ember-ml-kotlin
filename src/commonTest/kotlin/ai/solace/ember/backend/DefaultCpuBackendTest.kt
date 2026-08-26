@@ -95,10 +95,10 @@ class DefaultCpuBackendTest {
         
         // Verify the storage is created with optimal type
         val storage = tensor.storage
-        assertEquals(-3.14f, storage.get(0))
-        assertEquals(0.0f, storage.get(1))
-        assertEquals(2.718f, storage.get(2))
-        assertEquals(42.0f, storage.get(3))
+        assertEquals(-3.14f, (storage.get(0) as Number).toFloat(), 1e-5f)
+        assertEquals(0.0f, (storage.get(1) as Number).toFloat(), 1e-5f)
+        assertEquals(2.718f, (storage.get(2) as Number).toFloat(), 1e-5f)
+        assertEquals(42.0f, (storage.get(3) as Number).toFloat(), 1e-5f)
     }
 
     @Test

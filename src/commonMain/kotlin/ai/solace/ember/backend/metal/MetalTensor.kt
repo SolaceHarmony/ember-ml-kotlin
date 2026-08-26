@@ -89,8 +89,8 @@ class MetalTensor private constructor(
     /**
      * Releases the tensor resources.
      */
-    fun release() {
-        buffer.release()
+    fun dispose() {
+        buffer.dispose()
     }
 
     companion object {

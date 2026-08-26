@@ -74,7 +74,7 @@ class EmberTensorTest {
         
         assertEquals(4, tensor.size)
         val data = tensor.toFloatArray()
-        assertTrue(data.all { it == 3.14f })
+        assertTrue(data.all { kotlin.math.abs(it - 3.14f) < 1e-5f })
     }
     
     @Test

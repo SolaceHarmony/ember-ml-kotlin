@@ -74,6 +74,7 @@ object Ember {
     /**
      * Create a tensor from a 1D list.
      */
+    @kotlin.jvm.JvmName("array1D")
     fun array(values: List<Number>, dtype: DType = DType.Float32): EmberTensor {
         return EmberTensor.fromList(values, dtype)
     }
@@ -81,6 +82,7 @@ object Ember {
     /**
      * Create a tensor from a 2D list (matrix).
      */
+    @kotlin.jvm.JvmName("array2D")
     fun array(values: List<List<Number>>, dtype: DType = DType.Float32): EmberTensor {
         return EmberTensor.fromList2D(values, dtype)
     }

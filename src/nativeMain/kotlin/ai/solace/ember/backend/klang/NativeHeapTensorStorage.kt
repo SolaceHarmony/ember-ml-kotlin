@@ -19,7 +19,7 @@ import kotlin.math.max
  * API mirrors KlangHeapTensorStorage for easy swapping in benchmarks.
  */
 @OptIn(ExperimentalForeignApi::class)
-object NativeHeapTensorStorage {
+internal object NativeHeapTensorStorage {
 
     data class Buffer(val ptr: CPointer<ByteVar>, val sizeBytes: Int) {
         fun free() = nativeHeap.free(ptr.rawValue)

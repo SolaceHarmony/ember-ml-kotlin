@@ -8,6 +8,7 @@ androidKmp = "9.3.2"
 detekt = "1.23.8"
 ktlint = "14.2.0"
 kotlinxBenchmark = "0.4.18"
+klang = "0.8.2"
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -25,6 +26,8 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "datetime" }
 collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "collectionsImmutable" }
 kotlinx-benchmark-runtime = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-runtime", version.ref = "kotlinxBenchmark" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+klang = { module = "io.github.kotlinmania:klang", version.ref = "klang" }
 
 [bundles]
 ember-ml-commonMain = [
@@ -33,4 +36,5 @@ ember-ml-commonMain = [
   "kotlinx-serialization-json",
   "kotlinx-datetime",
   "collections-immutable",
+  "klang",
 ]

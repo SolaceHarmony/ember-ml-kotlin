@@ -186,17 +186,17 @@ sealed class Scalar {
     // Boolean scalar
     // ============================================
     
-    data class Bool(val value: Boolean) : Scalar() {
+    data class Boolean(val value: kotlin.Boolean) : Scalar() {
         override val dtype = DType.Bool
         override fun toDouble() = if (value) 1.0 else 0.0
         override fun toFloat() = if (value) 1.0f else 0.0f
         override fun toInt() = if (value) 1 else 0
         override fun toLong() = if (value) 1L else 0L
         
-        operator fun not() = Bool(!value)
-        infix fun and(other: Bool) = Bool(value && other.value)
-        infix fun or(other: Bool) = Bool(value || other.value)
-        infix fun xor(other: Bool) = Bool(value xor other.value)
+        operator fun not() = Boolean(!value)
+        infix fun and(other: Boolean) = Boolean(value && other.value)
+        infix fun or(other: Boolean) = Boolean(value || other.value)
+        infix fun xor(other: Boolean) = Boolean(value xor other.value)
         
         override fun toString() = value.toString()
     }
@@ -219,7 +219,7 @@ sealed class Scalar {
         /**
          * Create scalar from boolean.
          */
-        fun fromBoolean(value: Boolean): Scalar = Bool(value)
+        fun fromBoolean(value: kotlin.Boolean): Scalar = Boolean(value)
         const val DEFAULT_FLOAT128_DIGITS = 64
     }
 }
