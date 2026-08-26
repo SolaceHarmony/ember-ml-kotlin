@@ -46,27 +46,18 @@ abstract class Layer : Module {
      * Whether this layer is in training mode.
      */
     var training: Boolean = true
-    
-    /**
-     * Sets the training mode of this layer.
-     *
-     * @param training Whether to enable training mode.
-     */
-    fun setTraining(training: Boolean) {
-        this.training = training
-    }
-    
+
     /**
      * Sets the layer to training mode.
      */
     fun train() {
-        setTraining(true)
+        training = true
     }
     
     /**
      * Sets the layer to evaluation mode.
      */
     fun eval() {
-        setTraining(false)
+        training = false
     }
 }

@@ -12,7 +12,7 @@ import kotlinx.coroutines.*
 /**
  * Example message types for computation
  */
-sealed class ComputeMessage : AppMessage() {
+internal sealed class ComputeMessage : AppMessage() {
     data class Add(val a: Double, val b: Double, val replyTo: ActorRef<ComputeResponse>) : ComputeMessage()
     data class Multiply(val a: Double, val b: Double, val replyTo: ActorRef<ComputeResponse>) : ComputeMessage()
 }
@@ -20,7 +20,7 @@ sealed class ComputeMessage : AppMessage() {
 /**
  * Response messages
  */
-sealed class ComputeResponse : AppMessage() {
+internal sealed class ComputeResponse : AppMessage() {
     data class Result(val value: Double) : ComputeResponse()
     data class Error(val message: String) : ComputeResponse()
 }
@@ -28,7 +28,7 @@ sealed class ComputeResponse : AppMessage() {
 /**
  * Simple calculator actor
  */
-class CalculatorActor : AbstractActor<ComputeMessage>() {
+internal class CalculatorActor : AbstractActor<ComputeMessage>() {
     
     override suspend fun receive(message: ComputeMessage) {
         when (message) {
@@ -47,7 +47,7 @@ class CalculatorActor : AbstractActor<ComputeMessage>() {
 /**
  * Actor that collects results
  */
-class CollectorActor : AbstractActor<ComputeResponse>() {
+internal class CollectorActor : AbstractActor<ComputeResponse>() {
     private val results = mutableListOf<Double>()
     
     override suspend fun receive(message: ComputeResponse) {
@@ -68,7 +68,7 @@ class CollectorActor : AbstractActor<ComputeResponse>() {
 /**
  * Example usage of the actor system
  */
-suspend fun actorSystemExample() {
+internal suspend fun actorSystemExample() {
     val system = ActorSystem()
     
     try {

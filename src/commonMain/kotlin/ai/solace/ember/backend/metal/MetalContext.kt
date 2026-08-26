@@ -104,7 +104,7 @@ interface MetalBuffer {
     /**
      * Releases the buffer resources.
      */
-    fun release()
+    fun dispose()
 }
 
 /**
@@ -120,7 +120,7 @@ interface MetalComputePipelineState {
     /**
      * Releases the pipeline state resources.
      */
-    fun release()
+    fun dispose()
 }
 
 /**
@@ -173,7 +173,7 @@ internal class StubMetalBuffer(override val size: Int) : MetalBuffer {
         data.copyInto(this.data, 0, 0, minOf(data.size, this.data.size))
     }
     
-    override fun release() {
+    override fun dispose() {
         // No-op for stub implementation
     }
 }
@@ -185,7 +185,7 @@ internal class StubMetalComputePipelineState : MetalComputePipelineState {
     
     override val maxTotalThreadsPerThreadgroup: Int = 1024
     
-    override fun release() {
+    override fun dispose() {
         // No-op for stub implementation
     }
 }

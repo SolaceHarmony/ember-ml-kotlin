@@ -336,6 +336,14 @@ tasks
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
     if (name.startsWith("compileSwiftExport")) {
         compilerOptions.allWarningsAsErrors.set(false)
+        compilerOptions.optIn.addAll(
+            "kotlinx.coroutines.InternalCoroutinesApi",
+            "kotlinx.coroutines.ExperimentalCoroutinesApi",
+        )
+        compilerOptions.freeCompilerArgs.addAll(
+            "-opt-in=kotlinx.coroutines.InternalCoroutinesApi",
+            "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+        )
     }
 }
 
@@ -466,10 +474,6 @@ kotlin {
     swiftExport {
         moduleName = frameworkName
         flattenPackage = projectNamespace
-        @OptIn(org.jetbrains.kotlin.gradle.swiftexport.ExperimentalSwiftExportDsl::class)
-        configure {
-            settings.put("enableCoroutinesSupport", "true")
-        }
     }
 
     // Android KMP library. Block name is `android` — `androidLibrary` is deprecated in current KGP.
@@ -495,6 +499,7 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
+            implementation(libs.kotlinx.coroutines.test)
         }
         if (benchmarkEnabled) {
             val commonBenchmark = maybeCreate("commonBenchmark")
@@ -880,13 +885,12 @@ val publishToCentralPortal by tasks.registering {
 // ============================================================================
 
 // Exact test lifecycle task. Without this, ./gradlew test is ambiguous between
-// Android test task names. This runs commonTest through the KMP allTests
-// lifecycle and adds the Android host + Swift Export parity tests.
+// Android test task names. This runs commonTest through hostTests and adds the
+// Swift Export parity tests.
 tasks.register("test") {
     group = "verification"
-    description = "Runs the commonTest-backed KMP suite, Android host tests, and Swift Export smoke test."
-    dependsOn("allTests")
-    dependsOn("testAndroidHostTest")
+    description = "Runs the host test suite (jvm, macos, js, wasm, android host) and Swift Export smoke test."
+    dependsOn("hostTests")
     dependsOn("swiftExportSmokeTest")
 }
 
@@ -912,6 +916,41 @@ tasks.register("hostTests") {
     )
 }
 
+tasks.matching { it.name.endsWith("SwiftExport") || it.name.contains("GenerateSPMPackage") }.configureEach {
+    doLast {
+        val spmDir = layout.buildDirectory.dir("SPMPackage").get().asFile
+        if (spmDir.exists()) {
+            spmDir.walkTopDown().forEach { file ->
+                if (file.name == "Package.swift") {
+                    val text = file.readText()
+                    if (!text.contains("platforms:")) {
+                        file.writeText(
+                            text.replaceFirst(
+                                Regex("(name:\\s*\"[^\"]*\",)"),
+                                "\$1\n    platforms: [.macOS(.v14)],",
+                            ),
+                        )
+                    }
+                } else if (file.name == "OrgJetbrainsKotlinxKotlinxCoroutinesCore.swift") {
+                    var text = file.readText()
+                    if (!text.contains("typealias OnCancellationConstructor =")) {
+                        text = text.replace(
+                            "extension ExportedKotlinPackages.kotlinx.coroutines.selects {",
+                            "extension ExportedKotlinPackages.kotlinx.coroutines.selects {\n    public typealias OnCancellationConstructor = (ExportedKotlinPackages.kotlin.Throwable, (any KotlinRuntimeSupport._KotlinBridgeable)?, any ExportedKotlinPackages.kotlin.coroutines.CoroutineContext) -> Swift.Void",
+                        )
+                    }
+                    val targetClosure = "return { _1, _2, _3 in return {\n                let pointerToBlock = KotlinRuntime.KotlinBase(__externalRCRefUnsafe: OrgJetbrainsKotlinxKotlinxCoroutinesCore_internal_functional_type_caller_U28ExportedKotlinPackagesU2EkotlinU2EThrowableU2C20SwiftU2EOptionalU3CanyU20KotlinRuntimeSupportU2E_KotlinBridgeableU3E2C20anyU20ExportedKotlinPackagesU2EkotlinU2EcoroutinesU2ECoroutineContextU29202D3E20SwiftU2EVoid__TypesOfArguments__Swift_UnsafeMutableRawPointer_anyU20ExportedKotlinPackages_kotlinx_coroutines_selects_SelectInstance_Swift_Optional_anyU20KotlinRuntimeSupport__KotlinBridgeable__Swift_Optional_anyU20KotlinRuntimeSupport__KotlinBridgeable___(pointerToBlock.__externalRCRef()!, _1.__externalRCRef(), _2.map { it in it.__externalRCRef() } ?? nil, _3.map { it in it.__externalRCRef() } ?? nil), options: .asBestFittingWrapper)!\n                return { _1, _2, _3 in return { OrgJetbrainsKotlinxKotlinxCoroutinesCore_internal_functional_type_caller_SwiftU2EVoid__TypesOfArguments__Swift_UnsafeMutableRawPointer_ExportedKotlinPackages_kotlin_Throwable_Swift_Optional_anyU20KotlinRuntimeSupport__KotlinBridgeable__anyU20ExportedKotlinPackages_kotlin_coroutines_CoroutineContext__(pointerToBlock.__externalRCRef()!, _1.__externalRCRef(), _2.map { it in it.__externalRCRef() } ?? nil, _3.__externalRCRef()); return () }() }\n            }() }"
+                    val replacementClosure = "return { (_1: ExportedKotlinPackages.kotlin.Throwable, _2: (any KotlinRuntimeSupport._KotlinBridgeable)?, _3: any ExportedKotlinPackages.kotlin.coroutines.CoroutineContext) in\n                    let pointerToBlock = KotlinRuntime.KotlinBase(__externalRCRefUnsafe: OrgJetbrainsKotlinxKotlinxCoroutinesCore_internal_functional_type_caller_U28ExportedKotlinPackagesU2EkotlinU2EThrowableU2C20SwiftU2EOptionalU3CanyU20KotlinRuntimeSupportU2E_KotlinBridgeableU3E2C20anyU20ExportedKotlinPackagesU2EkotlinU2EcoroutinesU2ECoroutineContextU29202D3E20SwiftU2EVoid__TypesOfArguments__Swift_UnsafeMutableRawPointer_anyU20ExportedKotlinPackages_kotlinx_coroutines_selects_SelectInstance_Swift_Optional_anyU20KotlinRuntimeSupport__KotlinBridgeable__Swift_Optional_anyU20KotlinRuntimeSupport__KotlinBridgeable___(pointerToBlock.__externalRCRef()!, _1.__externalRCRef(), _2.map { it in it.__externalRCRef() } ?? nil, _3.__externalRCRef()), options: .asBestFittingWrapper)!\n                    OrgJetbrainsKotlinxKotlinxCoroutinesCore_internal_functional_type_caller_SwiftU2EVoid__TypesOfArguments__Swift_UnsafeMutableRawPointer_ExportedKotlinPackages_kotlin_Throwable_Swift_Optional_anyU20KotlinRuntimeSupport__KotlinBridgeable__anyU20ExportedKotlinPackages_kotlin_coroutines_CoroutineContext__(pointerToBlock.__externalRCRef()!, _1.__externalRCRef(), _2.map { it in it.__externalRCRef() } ?? nil, _3.__externalRCRef())\n                }"
+                    if (text.contains(targetClosure)) {
+                        text = text.replace(targetClosure, replacementClosure)
+                    }
+                    file.writeText(text)
+                }
+            }
+        }
+    }
+}
+
 // Swift Export smoke test — produces the SPM package via embedSwiftExportForXcode
 // (spawned with the Xcode-style env it requires) and runs `swift test` against it,
 // so Swift Export breakage surfaces locally, not only in the swift.yml CI job.
@@ -924,18 +963,23 @@ tasks.register("swiftExportSmokeTest") {
 
     doLast {
         val execOperations = serviceOf<ExecOperations>()
-        val swiftBuildDir =
+        val swiftBuildDirFile =
             layout.buildDirectory
                 .dir("swift-test")
                 .get()
                 .asFile
-                .absolutePath
+        if (swiftBuildDirFile.exists()) {
+            swiftBuildDirFile.deleteRecursively()
+        }
+        swiftBuildDirFile.mkdirs()
+        val swiftBuildDir = swiftBuildDirFile.absolutePath
         execOperations
             .exec {
                 workingDir = projectDir
                 commandLine(
                     "./gradlew",
                     "embedSwiftExportForXcode",
+                    "-Dorg.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=1g",
                     "--no-configuration-cache",
                     "--no-daemon",
                     "--console=plain",
@@ -969,6 +1013,27 @@ tasks.register("swiftExportSmokeTest") {
                     ),
                 )
             }
+        }
+
+        val coroutinesSwift =
+            layout.buildDirectory
+                .file("SPMPackage/macosArm64/Debug/Sources/OrgJetbrainsKotlinxKotlinxCoroutinesCore/OrgJetbrainsKotlinxKotlinxCoroutinesCore.swift")
+                .get()
+                .asFile
+        if (coroutinesSwift.exists()) {
+            var text = coroutinesSwift.readText()
+            if (!text.contains("typealias OnCancellationConstructor =")) {
+                text = text.replace(
+                    "extension ExportedKotlinPackages.kotlinx.coroutines.selects {",
+                    "extension ExportedKotlinPackages.kotlinx.coroutines.selects {\n    public typealias OnCancellationConstructor = (ExportedKotlinPackages.kotlin.Throwable, (any KotlinRuntimeSupport._KotlinBridgeable)?, any ExportedKotlinPackages.kotlin.coroutines.CoroutineContext) -> Swift.Void",
+                )
+            }
+            val targetClosure = "return { _1, _2, _3 in return {\n                let pointerToBlock = KotlinRuntime.KotlinBase(__externalRCRefUnsafe: OrgJetbrainsKotlinxKotlinxCoroutinesCore_internal_functional_type_caller_U28ExportedKotlinPackagesU2EkotlinU2EThrowableU2C20SwiftU2EOptionalU3CanyU20KotlinRuntimeSupportU2E_KotlinBridgeableU3E2C20anyU20ExportedKotlinPackagesU2EkotlinU2EcoroutinesU2ECoroutineContextU29202D3E20SwiftU2EVoid__TypesOfArguments__Swift_UnsafeMutableRawPointer_anyU20ExportedKotlinPackages_kotlinx_coroutines_selects_SelectInstance_Swift_Optional_anyU20KotlinRuntimeSupport__KotlinBridgeable__Swift_Optional_anyU20KotlinRuntimeSupport__KotlinBridgeable___(pointerToBlock.__externalRCRef()!, _1.__externalRCRef(), _2.map { it in it.__externalRCRef() } ?? nil, _3.map { it in it.__externalRCRef() } ?? nil), options: .asBestFittingWrapper)!\n                return { _1, _2, _3 in return { OrgJetbrainsKotlinxKotlinxCoroutinesCore_internal_functional_type_caller_SwiftU2EVoid__TypesOfArguments__Swift_UnsafeMutableRawPointer_ExportedKotlinPackages_kotlin_Throwable_Swift_Optional_anyU20KotlinRuntimeSupport__KotlinBridgeable__anyU20ExportedKotlinPackages_kotlin_coroutines_CoroutineContext__(pointerToBlock.__externalRCRef()!, _1.__externalRCRef(), _2.map { it in it.__externalRCRef() } ?? nil, _3.__externalRCRef()); return () }() }\n            }() }"
+            val replacementClosure = "return { (_1: ExportedKotlinPackages.kotlin.Throwable, _2: (any KotlinRuntimeSupport._KotlinBridgeable)?, _3: any ExportedKotlinPackages.kotlin.coroutines.CoroutineContext) in\n                    let pointerToBlock = KotlinRuntime.KotlinBase(__externalRCRefUnsafe: OrgJetbrainsKotlinxKotlinxCoroutinesCore_internal_functional_type_caller_U28ExportedKotlinPackagesU2EkotlinU2EThrowableU2C20SwiftU2EOptionalU3CanyU20KotlinRuntimeSupportU2E_KotlinBridgeableU3E2C20anyU20ExportedKotlinPackagesU2EkotlinU2EcoroutinesU2ECoroutineContextU29202D3E20SwiftU2EVoid__TypesOfArguments__Swift_UnsafeMutableRawPointer_anyU20ExportedKotlinPackages_kotlinx_coroutines_selects_SelectInstance_Swift_Optional_anyU20KotlinRuntimeSupport__KotlinBridgeable__Swift_Optional_anyU20KotlinRuntimeSupport__KotlinBridgeable___(pointerToBlock.__externalRCRef()!, _1.__externalRCRef(), _2.map { it in it.__externalRCRef() } ?? nil, _3.__externalRCRef()), options: .asBestFittingWrapper)!\n                    OrgJetbrainsKotlinxKotlinxCoroutinesCore_internal_functional_type_caller_SwiftU2EVoid__TypesOfArguments__Swift_UnsafeMutableRawPointer_ExportedKotlinPackages_kotlin_Throwable_Swift_Optional_anyU20KotlinRuntimeSupport__KotlinBridgeable__anyU20ExportedKotlinPackages_kotlin_coroutines_CoroutineContext__(pointerToBlock.__externalRCRef()!, _1.__externalRCRef(), _2.map { it in it.__externalRCRef() } ?? nil, _3.__externalRCRef())\n                }"
+            if (text.contains(targetClosure)) {
+                text = text.replace(targetClosure, replacementClosure)
+            }
+            coroutinesSwift.writeText(text)
         }
 
         execOperations

@@ -52,8 +52,8 @@ object EmberDemo {
         
         // Boolean scalars
         println("Boolean Operations:")
-        val t = Scalar.Bool(true)
-        val f = Scalar.Bool(false)
+        val t = Scalar.Boolean(true)
+        val f = Scalar.Boolean(false)
         println("  true AND false = ${(t and f).value}")
         println("  true OR false = ${(t or f).value}")
         println("  true XOR false = ${(t xor f).value}")

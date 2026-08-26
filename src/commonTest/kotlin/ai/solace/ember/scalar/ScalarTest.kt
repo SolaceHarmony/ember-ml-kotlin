@@ -114,8 +114,8 @@ class ScalarTest {
     
     @Test
     fun testBoolLogic() {
-        val t = Scalar.Bool(true)
-        val f = Scalar.Bool(false)
+        val t = Scalar.Boolean(true)
+        val f = Scalar.Boolean(false)
         
         assertEquals(false, (!t).value)
         assertEquals(true, (!f).value)
