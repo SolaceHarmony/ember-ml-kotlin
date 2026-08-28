@@ -88,6 +88,15 @@ val commonBenchmarkDependencyBundle =
             .findBundle(bundleName)
             .orElseThrow { GradleException("Missing libs bundle '$bundleName'") }
     }
+val commonTestBundleName = optionalTrimmedProperty("project.dependencies.commonTestBundle")
+val commonTestDependencyBundle =
+    commonTestBundleName?.let { bundleName ->
+        extensions
+            .getByType(VersionCatalogsExtension::class.java)
+            .named("libs")
+            .findBundle(bundleName)
+            .orElseThrow { GradleException("Missing libs bundle '$bundleName'") }
+    }
 if (benchmarkEnabled && commonBenchmarkDependencyBundle == null) {
     throw GradleException("Feature 'benchmark' requires project.dependencies.commonBenchmarkBundle")
 }
@@ -500,6 +509,7 @@ kotlin {
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)
+            commonTestDependencyBundle?.let { implementation(it) }
         }
         if (benchmarkEnabled) {
             val commonBenchmark = maybeCreate("commonBenchmark")
