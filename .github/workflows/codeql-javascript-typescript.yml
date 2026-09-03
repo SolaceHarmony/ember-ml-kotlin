@@ -1,19 +1,20 @@
-name: Build (WASM)
+name: CodeQL (JavaScript/TypeScript)
 
 on:
   workflow_call:
 
 permissions:
+  actions: read
   contents: read
+  packages: read
+  security-events: write
 
 jobs:
-  build:
-    name: Build and Test (WASM)
+  analyze:
+    name: Analyze (javascript-typescript)
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v7
 
       - name: Set up JDK 21
@@ -42,28 +43,26 @@ jobs:
           npm --version
           yarn --version
 
-      - name: Build and test WASM targets
-        # wasmJs runs under both Chrome (browser) and Node; wasmWasi runs
-        # under Node with the wasi-preview1 shim. The generated
-        # wasmWasiNodeTest runner calls `wasi.finalizeBindings(...)` which
-        # only exists on Node 24+ — that's why build.gradle.kts pins
-        # `kotlinWasmNodeJsSpec` to 24.15.0 (Active LTS "Krypton").
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4.37.9
+        with:
+          languages: javascript-typescript
+          build-mode: none
+          config-file: .github/codeql-javascript-typescript.yml
+          dependency-caching: true
+
+      - name: Generate JavaScript outputs
         env:
           ORG_GRADLE_PROJECT_kotlin_js_yarn_download: "false"
         run: >
           ./gradlew
-          wasmJsBrowserTest
-          wasmJsNodeTest
-          wasmWasiNodeTest
+          jsTestTestDevelopmentExecutableCompileSync
+          wasmJsTestTestDevelopmentExecutableCompileSync
+          compileTestDevelopmentExecutableKotlinWasmWasi
+          -Pkotlinmania.codeql=true
           --no-configuration-cache
 
-      - name: Upload test reports (WASM)
-        if: success() || failure()
-        uses: actions/upload-artifact@v7
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4.37.9
         with:
-          name: test-reports-wasm
-          path: |
-            build/reports/tests/
-            build/test-results/
-          retention-days: 7
-          if-no-files-found: warn
+          category: "/language:javascript-typescript"

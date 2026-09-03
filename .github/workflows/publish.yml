@@ -11,9 +11,8 @@ on:
         required: false
         default: false
 
-# Publishing targets Maven Central via the Central Portal using external
-# secrets; no GitHub-side write permissions are needed. Checkout only requires
-# read.
+# Publishing targets Maven Central via Sonatype OSSRH using external secrets;
+# no GitHub-side write permissions are needed. Checkout only requires read.
 permissions:
   contents: read
 
@@ -64,10 +63,9 @@ jobs:
 
       - name: Publish to Maven Central
         if: ${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.publish) }}
-        run: ./gradlew setupAndroidSdk publishToCentralPortal --no-configuration-cache
+        run: ./gradlew setupAndroidSdk publishAndReleaseToMavenCentral --no-configuration-cache
         env:
           ORG_GRADLE_PROJECT_kotlin_js_yarn_download: "false"
-          ORG_GRADLE_PROJECT_centralPublishingType: "AUTOMATIC"
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}

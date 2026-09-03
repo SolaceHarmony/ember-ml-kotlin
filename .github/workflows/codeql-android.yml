@@ -36,22 +36,16 @@ jobs:
         uses: gradle/actions/setup-gradle@v6.3.0
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
+        uses: github/codeql-action/init@v4.37.9
         with:
           languages: java-kotlin
           build-mode: manual
           dependency-caching: true
 
-      - name: Install Android platform
-        run: sdkmanager "platforms;android-34"
-
       - name: Build Android extraction target
-        run: |
-          export JAVA_TOOL_OPTIONS="-javaagent:${CODEQL_EXTRACTOR_JAVA_ROOT}/tools/codeql-java-agent.jar=java,kotlin"
-          echo "JAVA_TOOL_OPTIONS=${JAVA_TOOL_OPTIONS}"
-          ./gradlew --no-daemon --project-dir codeql-build codeqlCompileAndroid -Pkotlinmania.codeql=true --no-configuration-cache
+        run: ./gradlew --no-daemon setupAndroidSdk compileAndroidMain -Pkotlinmania.codeql=true --no-configuration-cache
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
+        uses: github/codeql-action/analyze@v4.37.9
         with:
           category: "/language:java-kotlin-android"
